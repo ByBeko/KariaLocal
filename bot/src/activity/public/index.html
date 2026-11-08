@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Karia</title>
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="boot" class="boot"><img src="logo.png" alt="Karia"><p id="boot-text">Karia açılıyor...</p></div>
+
+<div id="app" class="app" hidden>
+  <aside class="side">
+    <div class="side-brand"><span class="logo"><img src="logo.png" alt=""></span><strong>Karia</strong></div>
+    <div class="balance" title="Botla aynı bakiye">
+      <img src="emojis/coin.png" alt="">
+      <div><small>Bakiye</small><strong id="balance">0</strong></div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="home" role="tab"><img src="emojis/ev.png" alt="">Ana Sayfa</button>
+      <button class="tab" data-tab="blackjack" role="tab"><img src="emojis/oyun.png" alt="">Oyunlar</button>
+      <button class="tab" data-tab="music" role="tab"><img src="emojis/muzik.png" alt="">Müzik</button>
+      <button class="tab" data-tab="leaderboard" role="tab"><img src="emojis/kupa.png" alt="">Sıralama</button>
+      <div id="admin-nav" class="nav-group" hidden>
+        <button id="admin-toggle" class="admin-toggle" aria-expanded="false" aria-controls="admin-links"><span>Yönetim</span><b id="admin-count" class="badge" hidden></b><i aria-hidden="true">›</i></button>
+        <div id="admin-links" class="nav-group" hidden>
+          <button class="tab" data-tab="overview" role="tab"><img src="emojis/istatistik.png" alt="">Sunucu Paneli</button>
+          <button class="tab" data-tab="tickets" role="tab"><img src="emojis/cankurtaran.png" alt="">Talepler<b id="badge-tickets" class="badge" hidden></b></button>
+          <button class="tab" data-tab="reports" role="tab"><img src="emojis/bayrak.png" alt="">Raporlar<b id="badge-reports" class="badge" hidden></b></button>
+          <button class="tab" data-tab="suggestions" role="tab"><img src="emojis/ampul.png" alt="">Öneriler</button>
+          <button class="tab" data-tab="cases" role="tab"><img src="emojis/tokmak.png" alt="">Cezalar</button>
+          <button class="tab" data-tab="modules" role="tab"><img src="emojis/araclar.png" alt="">Modüller</button>
+          <button class="tab" data-tab="settings" role="tab"><img src="emojis/ayarlar.png" alt="">Ayarlar</button>
+          <button class="tab" data-tab="commands" role="tab"><img src="emojis/kod.png" alt="">Komutlar</button>
+        </div>
+      </div>
+    </nav>
+    <div class="side-user"><span class="avatar" id="avatar-letter"></span><div><strong id="username"></strong><em id="role-badge" class="role"></em></div></div>
+  </aside>
+
+  <div class="content">
+  <h1 id="page-title" class="page-title" hidden></h1>
+
+  <main>
+    <section class="panel plain" data-panel="home"><div id="home"></div></section>
+
+    <section class="panel" data-panel="leaderboard" hidden>
+      <div class="dash-head">
+        <div class="period" id="board-types">
+          <button data-board="seviye" class="active">Seviye</button>
+          <button data-board="para">Coin</button>
+          <button data-board="mesaj">Mesaj</button>
+          <button data-board="ses">Ses</button>
+          <button data-board="davet">Davet</button>
+        </div>
+      </div>
+      <div id="board-list" class="board"></div>
+    </section>
+
+    <div id="game-switch" class="period" role="tablist" hidden>
+      <button data-game="blackjack" class="active"><img src="emojis/kart.png" alt="">Blackjack</button>
+      <button data-game="slot"><img src="emojis/slot_yedi.png" alt="">Slot</button>
+      <button data-game="coin"><img src="emojis/coin.png" alt="">Yazı Tura</button>
+    </div>
+
+    <section id="betbar" class="betbar" hidden>
+      <div class="bet-input">
+        <label for="bet">Bahis</label>
+        <input id="bet" inputmode="numeric" value="100" autocomplete="off">
+      </div>
+      <div class="chips">
+        <button class="chip" data-add="10">+10</button>
+        <button class="chip" data-add="100">+100</button>
+        <button class="chip" data-add="1000">+1K</button>
+        <button class="chip" data-add="5000">+5K</button>
+      </div>
+      <div class="bet-tools">
+        <button data-bet="half">½</button>
+        <button data-bet="double">2×</button>
+        <button data-bet="all">Hepsi</button>
+      </div>
+      <div id="game-info" class="game-info"></div>
+    </section>
+
+    <section class="panel casino" data-panel="blackjack" hidden>
+      <div class="table">
+        <div class="hand"><h3>Krupiye <span id="dealer-total" class="total"></span></h3><div id="dealer" class="cards"></div></div>
+        <svg class="felt-art" viewBox="0 0 600 170" aria-hidden="true">
+          <defs><path id="felt-arc" d="M30 96 Q300 196 570 96"/></defs>
+          <text class="felt-title" x="300" y="50" text-anchor="middle">BLACKJACK</text>
+          <text class="felt-sub" x="300" y="80" text-anchor="middle">3:2 ÖDER</text>
+          <path class="felt-band" d="M6 92 Q300 200 594 92"/>
+          <text class="felt-band-text"><textPath href="#felt-arc" startOffset="50%" text-anchor="middle">KRUPİYE 17'DE DURUR</textPath></text>
+        </svg>
+        <div class="hand"><h3>Sen <span id="player-total" class="total"></span></h3><div id="player" class="cards"></div></div>
+        <div class="actions">
+          <button id="bj-start" class="deal"><img src="emojis/kart.png" alt="">Dağıt</button>
+          <button id="bj-double" hidden><img src="emojis/dolar2.png" alt="">İkiye Katla</button>
+          <button id="bj-hit" hidden><img src="emojis/arti_rozet.png" alt="">Kart Çek</button>
+          <button id="bj-stand" hidden><img src="emojis/onayli.png" alt="">Dur</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel casino slot-room" data-panel="slot" hidden>
+      <div class="cabinet">
+        <div class="marquee"><span class="bulbs"></span><strong>KARIA JACKPOT</strong><em><img src="emojis/alev.png" alt="">777<img src="emojis/alev.png" alt=""></em><span class="bulbs"></span></div>
+        <div class="machine">
+          <div class="reel"><img id="reel0" src="emojis/slot_yedi.png" alt=""></div>
+          <div class="reel"><img id="reel1" src="emojis/slot_yedi.png" alt=""></div>
+          <div class="reel"><img id="reel2" src="emojis/slot_yedi.png" alt=""></div>
+        </div>
+        <div class="cabinet-base"><button id="slot-spin" class="spin-btn"><img src="emojis/slot_yedi.png" alt="">Çevir</button></div>
+        <div class="lever" aria-hidden="true"><i></i></div>
+      </div>
+    </section>
+
+    <section class="panel casino coin-room" data-panel="coin" hidden>
+      <div class="coin-stage">
+        <div id="coin" class="coin"><span>Y</span></div>
+        <svg class="flip-hand" viewBox="0 0 220 170" aria-hidden="true">
+          <path class="sleeve" d="M66 170 L66 118 Q110 104 154 118 L154 170 Z"/>
+          <g class="skin">
+            <rect x="48" y="54" width="124" height="74" rx="30"/>
+            <rect x="60" y="36" width="30" height="48" rx="15"/>
+            <rect x="89" y="30" width="30" height="54" rx="15"/>
+            <rect x="118" y="32" width="30" height="52" rx="15"/>
+            <rect x="146" y="42" width="28" height="44" rx="14"/>
+            <path class="thumb" d="M50 100 Q18 86 26 50 Q32 30 52 36 Q68 44 62 66 L78 92 Z"/>
+          </g>
+        </svg>
+      </div>
+      <div class="actions coin-picks">
+        <button data-pick="yazi"><img src="emojis/coin.png" alt="">Yazı</button>
+        <button data-pick="tura"><img src="emojis/coin.png" alt="">Tura</button>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="music" hidden>
+      <form id="music-form" class="music-form">
+        <input id="music-query" placeholder="Şarkı adı ya da YouTube linki" maxlength="500" autocomplete="off">
+        <button class="primary">Çal</button>
+      </form>
+      <h4>Sıradaki Şarkılar <span id="music-count" class="queue-count"></span></h4>
+      <ol id="music-list" class="queue"></ol>
+      <div class="player">
+        <div class="player-track">
+          <img id="music-cover" src="emojis/kulaklik.png" alt="">
+          <div><strong id="music-title">Bir şarkı aç</strong><small id="music-artist">Şu an çalmıyor</small></div>
+        </div>
+        <div class="player-center">
+          <div class="player-buttons">
+            <button id="music-shuffle" aria-label="Karıştır" title="Karıştır" disabled><img src="emojis/karistir.png" alt=""></button>
+            <button id="music-prev" class="flip" aria-label="Önceki şarkı" title="Önceki" disabled><img src="emojis/atla.png" alt=""></button>
+            <button id="music-pause" class="play" aria-label="Oynat veya duraklat" disabled><img id="music-pause-icon" src="emojis/oynat.png" alt=""></button>
+            <button id="music-skip" aria-label="Sonraki şarkı" title="Sonraki" disabled><img src="emojis/atla.png" alt=""></button>
+            <button id="music-loop" aria-label="Döngü" title="Döngü: kapalı" disabled><img src="emojis/yenile.png" alt=""><b id="music-loop-one" hidden>1</b></button>
+          </div>
+          <div class="player-time"><span id="music-now">0:00</span><div class="player-bar"><i id="music-fill"></i></div><span id="music-total">0:00</span></div>
+        </div>
+        <div class="player-right">
+          <button id="music-stop" aria-label="Müziği durdur" title="Durdur" disabled><img src="emojis/durdur.png" alt=""></button>
+          <img class="vol-icon" src="emojis/kulaklik.png" alt="">
+          <input id="music-volume" type="range" min="0" max="150" value="70" aria-label="Ses düzeyi" disabled>
+        </div>
+      </div>
+      <p class="hint">Ses, bulunduğun ses kanalında bot üzerinden çalar.</p>
+    </section>
+
+    <section class="panel plain" data-panel="overview" hidden><div id="overview"></div></section>
+
+    <section class="panel" data-panel="tickets" hidden>
+      <div id="ticket-list" class="items"></div>
+      <div id="ticket-view" class="thread" hidden></div>
+    </section>
+
+    <section class="panel" data-panel="reports" hidden>
+      <div id="report-list" class="items"></div>
+    </section>
+
+    <section class="panel" data-panel="suggestions" hidden>
+      <div id="suggestion-list" class="items"></div>
+    </section>
+
+    <section class="panel" data-panel="cases" hidden>
+      <div id="case-list" class="items"></div>
+    </section>
+
+    <section class="panel" data-panel="modules" hidden>
+      <div id="module-grid" class="modules"></div>
+    </section>
+
+    <section class="panel" data-panel="settings" hidden>
+      <input id="set-search" class="field" placeholder="Ayar ara" autocomplete="off">
+      <div id="set-list"></div>
+    </section>
+
+    <section class="panel" data-panel="commands" hidden>
+      <input id="cmd-search" class="field" placeholder="Komut ara" autocomplete="off">
+      <select id="cmd-select" class="field" size="7" aria-label="Komut"></select>
+      <div id="cmd-form" class="cmd-form"></div>
+      <div class="actions"><button id="cmd-run" class="primary" disabled>Çalıştır</button></div>
+      <pre id="cmd-output" class="output" hidden></pre>
+    </section>
+
+    <p id="message" class="message" role="status"></p>
+  </main>
+  </div>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
