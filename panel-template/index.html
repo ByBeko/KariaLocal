@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Karia Panel | Discord sunucun için kontrol merkezi</title>
+<meta name="description" content="Karia botunun moderasyon, karşılama, otorol ve yapay zekâ ayarlarını tek panelden yönet.">
+<meta name="theme-color" content="#030706">
+<link rel="icon" href="karia-icon.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#030706;--surface:rgba(255,255,255,.035);--surface-2:rgba(255,255,255,.06);
+  --line:rgba(255,255,255,.09);--line-2:rgba(255,255,255,.16);
+  --text:#f4f7f5;--muted:#a3aeaa;--dim:#6f7b76;
+  --mint:#7ff0c3;--green:#36c98d;--blue:#4b9fe0;
+  --max:1160px;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font:400 16px/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
+a{color:inherit;text-decoration:none}
+img,svg{display:block;max-width:100%}
+.wrap{width:min(100% - 32px,var(--max));margin-inline:auto}
+:focus-visible{outline:2px solid var(--mint);outline-offset:3px;border-radius:6px}
+
+/* Üst menü */
+.nav{position:absolute;inset:0 0 auto;z-index:5}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:84px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:20px;letter-spacing:-.02em}
+.brand img{width:32px;height:32px;border-radius:9px}
+.brand i{font-style:normal;color:var(--mint)}
+.links{display:flex;gap:34px;font-size:14.5px;color:#d5ddd9}
+.links a{transition:color .2s}
+.links a:hover{color:#fff}
+.pill{display:inline-flex;align-items:center;height:42px;padding:0 22px;border-radius:99px;background:#fff;color:#07100c;font-size:14.5px;font-weight:600;transition:transform .2s,background .2s}
+.pill:hover{background:var(--mint);transform:translateY(-1px)}
+
+/* Hero */
+.hero{position:relative;padding-top:170px;text-align:center;isolation:isolate}
+.sky{position:absolute;inset:0 0 auto;height:900px;z-index:-2;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:linear-gradient(#000 45%,transparent);mask-image:linear-gradient(#000 45%,transparent)}
+.stars{position:absolute;inset:0 0 auto;height:760px;z-index:-1;pointer-events:none;opacity:.75;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%,#fff,transparent),radial-gradient(1px 1px at 24% 58%,#cfe,transparent),
+    radial-gradient(1.4px 1.4px at 37% 12%,#fff,transparent),radial-gradient(1px 1px at 47% 70%,#fff,transparent),
+    radial-gradient(1px 1px at 61% 30%,#dff,transparent),radial-gradient(1.4px 1.4px at 73% 64%,#fff,transparent),
+    radial-gradient(1px 1px at 84% 18%,#fff,transparent),radial-gradient(1px 1px at 93% 48%,#cfe,transparent),
+    radial-gradient(1px 1px at 7% 76%,#fff,transparent),radial-gradient(1px 1px at 55% 8%,#fff,transparent)}
+.tag{display:inline-block;padding:6px 16px;border:1px solid rgba(127,240,195,.2);border-radius:99px;background:rgba(127,240,195,.07);color:var(--mint);font-size:14px}
+h1{margin-top:24px;font-size:clamp(38px,6.1vw,72px);line-height:1.08;font-weight:600;letter-spacing:-.045em}
+.lead{max-width:590px;margin:24px auto 0;color:#c4cdc9;font-size:clamp(16px,1.5vw,18px)}
+.cta{display:inline-flex;align-items:center;justify-content:center;height:58px;margin-top:36px;padding:0 44px;border-radius:99px;font-weight:600;
+  background:linear-gradient(180deg,rgba(54,201,141,.42),rgba(16,74,54,.55));
+  border:1px solid rgba(127,240,195,.55);
+  box-shadow:0 0 34px rgba(54,201,141,.28),inset 0 1px 0 rgba(255,255,255,.2);transition:box-shadow .25s,transform .25s}
+.cta:hover{transform:translateY(-2px);box-shadow:0 0 54px rgba(54,201,141,.5),inset 0 1px 0 rgba(255,255,255,.3)}
+
+/* Ufuk ışığı ve panel görüntüsü */
+.stage{position:relative;margin-top:84px}
+.horizon{position:absolute;inset:-300px 0 0;z-index:-1;overflow:hidden;pointer-events:none;
+  -webkit-mask-image:linear-gradient(#000 62%,transparent 96%);mask-image:linear-gradient(#000 62%,transparent 96%)}
+.horizon::before{content:"";position:absolute;left:50%;top:80px;width:1000px;height:440px;transform:translateX(-50%);filter:blur(60px);opacity:.9;
+  background:radial-gradient(50% 58% at 50% 62%,rgba(101,214,139,.62),rgba(42,160,120,.3) 58%,transparent 100%)}
+.horizon::after{content:"";position:absolute;left:50%;top:330px;width:max(1900px,165vw);aspect-ratio:1;border-radius:50%;transform:translateX(-50%);
+  background:radial-gradient(closest-side,#020504 96%,#06110d 100%);
+  box-shadow:0 -1px 0 rgba(190,255,220,.55),0 -14px 54px rgba(116,231,167,.5),-420px -40px 150px rgba(75,159,224,.5),420px -40px 150px rgba(217,180,120,.28),0 -80px 190px rgba(54,201,141,.32)}
+.frame{position:relative;padding:10px;border:1px solid var(--line-2);border-radius:26px;background:rgba(8,15,12,.62);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 40px 110px rgba(0,0,0,.6)}
+.frame::before{content:"";position:absolute;top:-1px;left:26px;width:150px;height:1px;background:linear-gradient(90deg,transparent,var(--mint))}
+.frame::after{content:"";position:absolute;top:-3px;left:174px;width:5px;height:5px;border-radius:50%;background:var(--mint);box-shadow:0 0 12px 3px rgba(127,240,195,.75)}
+.frame img{width:100%;height:auto;border-radius:17px}
+
+/* Bölümler */
+section.block{padding:clamp(76px,10vw,130px) 0 0}
+.head{max-width:640px;margin:0 auto clamp(36px,5vw,56px);text-align:center}
+.eyebrow{color:var(--mint);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+h2{margin-top:12px;font-size:clamp(30px,4vw,46px);line-height:1.14;font-weight:600;letter-spacing:-.035em}
+.head p{margin-top:14px;color:var(--muted)}
+
+.card{border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,var(--surface-2),var(--surface));transition:border-color .25s,transform .25s}
+.modules{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.mod{padding:26px}
+.mod:hover{border-color:rgba(127,240,195,.32);transform:translateY(-3px)}
+.ico{display:grid;place-items:center;width:44px;height:44px;border:1px solid rgba(127,240,195,.2);border-radius:13px;background:rgba(127,240,195,.08);color:var(--mint)}
+.ico svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+h3{margin-top:18px;font-size:18px;font-weight:600;letter-spacing:-.015em}
+.mod p,.step p{margin-top:7px;color:var(--muted);font-size:15px}
+
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(32px,6vw,84px);align-items:center}
+.split h2{margin-top:12px}
+.split>div>p{margin-top:16px;color:var(--muted)}
+.checks{display:grid;gap:12px;margin-top:26px;padding:0;list-style:none}
+.checks li{position:relative;padding-left:30px;color:#dce3e0;font-size:15.5px}
+.checks li::before{content:"";position:absolute;left:0;top:4px;width:18px;height:18px;border-radius:50%;background:rgba(127,240,195,.14)}
+.checks li::after{content:"";position:absolute;left:6px;top:9px;width:7px;height:4px;border-left:1.8px solid var(--mint);border-bottom:1.8px solid var(--mint);transform:rotate(-45deg)}
+.crop-box{position:relative;isolation:isolate;max-width:430px;margin-inline:auto;width:100%}
+.crop-box::before{content:"";position:absolute;inset:-14% 0;z-index:-1;background:radial-gradient(closest-side,rgba(54,201,141,.3),transparent);filter:blur(24px)}
+.crop{position:relative;aspect-ratio:373/253;overflow:hidden;border:1px solid var(--line-2);border-radius:22px}
+.crop img{position:absolute;max-width:none;width:409.1%;left:-296.2%;top:-41.1%}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
+.step{padding:28px;counter-increment:s}
+.step::before{content:counter(s,decimal-leading-zero);color:var(--mint);font-size:14px;font-weight:600}
+.step h3{margin-top:12px}
+
+.final{position:relative;margin-top:clamp(76px,10vw,130px);padding:clamp(52px,8vw,88px) 24px;overflow:hidden;text-align:center;isolation:isolate;border:1px solid var(--line-2);border-radius:30px;background:#050b09}
+.final::before{content:"";position:absolute;left:50%;bottom:-340px;z-index:-1;width:900px;height:520px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(101,214,139,.55),rgba(75,159,224,.2) 62%,transparent);filter:blur(30px)}
+.final p{max-width:480px;margin:14px auto 0;color:#c4cdc9}
+
+footer{margin-top:64px;border-top:1px solid var(--line)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:14px 30px;align-items:center;justify-content:space-between;padding:30px 0;color:var(--dim);font-size:14px}
+footer nav{display:flex;flex-wrap:wrap;gap:8px 26px}
+footer a:hover{color:#fff}
+
+.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.js .reveal.in{opacity:1;transform:none}
+
+@media (max-width:900px){
+  .links{display:none}
+  .modules,.steps{grid-template-columns:repeat(2,1fr)}
+  .split{grid-template-columns:1fr}
+}
+@media (max-width:600px){
+  .nav .wrap{height:72px}
+  .hero{padding-top:128px}
+  .modules,.steps{grid-template-columns:1fr}
+  .stage{margin-top:60px}
+  .frame{padding:5px;border-radius:15px}
+  .frame img{border-radius:10px}
+  .frame::before,.frame::after{display:none}
+  .horizon::before{width:560px}
+  .pill{height:38px;padding:0 17px;font-size:13.5px}
+  .cta{height:54px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important}
+  .js .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="karia-icon.png" alt="" width="32" height="32"><span>Karia<i>.</i></span></a>
+    <nav class="links" aria-label="Ana menü">
+      <a href="#moduller">Modüller</a>
+      <a href="#canli">Canlı Durum</a>
+      <a href="#baslangic">Başlangıç</a>
+      <a href="https://discord.gg/karia" rel="noopener">Discord</a>
+    </nav>
+    <a class="pill" href="/login">Giriş Yap</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="sky" aria-hidden="true"></div>
+    <div class="stars" aria-hidden="true"></div>
+    <div class="wrap">
+      <span class="tag">Discord sunucun için kontrol merkezi</span>
+      <h1>Sunucunu Tek Yerden Yönet.<br>Gerisini Karia Halletsin.</h1>
+      <p class="lead">Moderasyon, karşılama, otorol ve yapay zekâ ayarlarının hepsi tek panelde. Değişikliklerin anında geçerli olur.</p>
+      <a class="cta" href="/login">Panele Git</a>
+    </div>
+    <div class="stage">
+      <div class="horizon" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="frame">
+          <img src="panel.png" width="1526" height="861" alt="Karia panelinin sunucu ana sayfası: canlı durum kartı, sunucu istatistikleri ve modül listesi">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="moduller">
+    <header class="head reveal">
+      <span class="eyebrow">Modüller</span>
+      <h2>İhtiyacın olan her şey tek menüde</h2>
+      <p>Her modülü ayrı ayrı aç, kapat ve sunucuna göre ayarla.</p>
+    </header>
+    <div class="modules">
+      <article class="card mod reveal">
+        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.1 7.9-7.5 9.5-4.4-1.6-7.5-4.9-7.5-9.5V6z"/><path d="M9 12l2.2 2.2L15.2 10"/></svg></span>
+        <h3>Moderasyon</h3>
+        <p>Link, küfür, spam ve flood engelleri ile moderasyon logları.</p>
+      </article>
+      <article class="card mod reveal">
+        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/></svg></span>
+        <h3>Hoş Geldin &amp; Görüşürüz</h3>
+        <p>Sunucuya girenleri karşıla, ayrılanlar için kanalına mesaj gönder.</p>
+      </article>
+      <article class="card mod reveal">
+        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9.5" cy="8" r="4"/><path d="M2.5 20.5c.6-3.9 3.3-6 7-6 2 0 3.700.6 5 1.800M18.500 13v7M15 16.500h7"/></svg></span>
+        <h3>Otorol</h3>
+        <p>Yeni üyelere ve botlara katıldıkları anda doğru rolü ver.</p>
+      </article>
+      <article class="card mod reveal">
+        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.900 5.100L19 10l-5.100 1.900L12 17l-1.900-5.100L5 10l5.100-1.900z"/><path d="M19 16l.8 2.200L22 19l-2.200.8L19 22l-.8-2.200L16 19l2.200-.8z"/></svg></span>
+        <h3>AI Asistanı</h3>
+        <p>Sunucundaki sohbetlere yapay zekâ desteği ekle.</p>
+      </article>
+      <article class="card mod reveal">
+        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h13v14a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v10a2 2 0 0 1-2 2M8 9h5M8 13h5M8 17h3"/></svg></span>
+        <h3>Anime Haber</h3>
+        <p>Anime haberlerini seçtiğin kanala otomatik olarak düşür.</p>
+      </article>
+      <article class="card mod reveal">
+        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M9 16v-5M14 16V8M19 16v-8"/></svg></span>
+        <h3>İstatistik &amp; Denetim</h3>
+        <p>Sunucunun gidişatını izle, panelde yapılan işlemleri kayıttan gör.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="block wrap" id="canli">
+    <div class="split">
+      <div class="reveal">
+        <span class="eyebrow">Canlı Durum</span>
+        <h2>Botun ne yaptığını anında gör</h2>
+        <p>Gecikme, çalışma süresi ve veritabanı bağlantısı panelin ilk ekranında. Bir sorun olduğunda aramak zorunda kalmazsın.</p>
+        <ul class="checks">
+          <li>Ayarlar kaydedildiği anda veritabanına yazılır</li>
+          <li>Birden fazla sunucuyu aynı hesaptan yönetirsin</li>
+          <li>Aradığın ayara menü aramasıyla hızlıca ulaşırsın</li>
+        </ul>
+      </div>
+      <div class="crop-box reveal">
+        <div class="crop"><img src="panel.png" alt="Canlı durum kartı: bot çevrimiçi, gecikme, çalışma süresi ve veritabanı bağlantısı"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="baslangic">
+    <header class="head reveal">
+      <span class="eyebrow">Başlangıç</span>
+      <h2>Üç adımda hazırsın</h2>
+    </header>
+    <div class="steps">
+      <article class="card step reveal"><h3>Discord ile giriş yap</h3><p>Ayrı bir hesap açman gerekmez.</p></article>
+      <article class="card step reveal"><h3>Sunucunu seç</h3><p>Yönettiğin sunucular panelde listelenir.</p></article>
+      <article class="card step reveal"><h3>Modülleri ayarla</h3><p>İstediklerini aç, kanal ve rolleri seç.</p></article>
+    </div>
+
+    <div class="final reveal">
+      <h2>Sunucun seni bekliyor</h2>
+      <p>Panele gir, ilk ayarlarını birkaç dakikada tamamla.</p>
+      <a class="cta" href="/login">Panele Git</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Karia</span>
+    <nav aria-label="Alt menü">
+      <a href="https://karia.live">karia.live</a>
+      <a href="https://karia.live/yasal/gizlilik.html">Gizlilik</a>
+      <a href="https://karia.live/yasal/hizmet-kosullari.html">Hizmet Koşulları</a>
+      <a href="https://discord.gg/karia" rel="noopener">Discord</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+const io = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
+  for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+}, { rootMargin: '0px 0px -8% 0px' }) : null;
+document.querySelectorAll('.reveal').forEach((el) => io ? io.observe(el) : el.classList.add('in'));
+</script>
+</body>
+</html>
