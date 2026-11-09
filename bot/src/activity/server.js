@@ -3,16 +3,15 @@ import http from 'node:http';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { UserError } from '../utils/errors.js';
-import { getBalance, addMoney, takeMoney, parseBet, ensureEnabled, lockGame, MIN_BET, MAX_BET } from '../systems/economy.js';
-import { spinSlot, slotOutcome, newDeck, handTotal, isBlackjack, blackjackPayout, dealerPlay } from '../systems/casino.js';
+import { getBalance, MIN_BET, MAX_BET } from '../systems/economy.js';
+import { coinflip, slot, roulette, blackjackStart, blackjackMove, activeBlackjack } from './games.js';
 import { getQueue, playQuery, requireVoice, voteSkip, stopMusic, goBack } from '../systems/music.js';
 import { adminRoute, isPanelAdmin } from './admin.js';
-import { homeView, leaderboardView, claimDailyReward, sendSuggestion } from './home.js';
+import { homeView, leaderboardView, claimDailyReward, sendSuggestion, sendReport } from './home.js';
 
 const PUBLIC_DIR = path.join(import.meta.dirname, 'public');
 const API = 'https://discord.com/api/v10';
 const TOKEN_TTL = 10 * 60_000;
-const BLACKJACK_IDLE = 3 * 60_000;
 const MIN_INTERVAL = 120;
 const MAX_BODY = 16 * 1024;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml' };
@@ -31,39 +30,6 @@ function loadStatic(dir = PUBLIC_DIR, base = '') {
 
 /** Hata metnindeki Discord biçimlerini arayüz için temizler */
 export const plain = (text) => text.replace(/<a?:\w+:\d+>/g, '').replace(/\*\*|`/g, '').replace(/\s{2,}/g, ' ').trim();
-
-const games = new Map(); // kullanıcı -> blackjack eli
-
-function cardView(game, reveal) {
-  const card = (c) => ({ r: c.r, s: c.s[0] });
-  return {
-    bet: game.bet,
-    player: game.player.map(card),
-    playerTotal: handTotal(game.player),
-    dealer: reveal ? game.dealer.map(card) : [card(game.dealer[0])],
-    dealerTotal: reveal ? handTotal(game.dealer) : null,
-    hidden: !reveal,
-  };
-}
-
-function finishGame(guildId, userId, game, outcome) {
-  clearTimeout(game.timer);
-  games.delete(userId);
-  game.unlock();
-  const payout = blackjackPayout(game.bet, outcome);
-  const balance = addMoney(guildId, userId, payout);
-  return { ...cardView(game, true), active: false, outcome, net: payout - game.bet, balance };
-}
-
-function touchGame(guildId, userId, game) {
-  clearTimeout(game.timer);
-  game.timer = setTimeout(() => {
-    if (games.get(userId) === game) finishGame(guildId, userId, game, dealerPlay(game.deck, game.dealer, game.player));
-  }, BLACKJACK_IDLE);
-  game.timer.unref?.();
-}
-
-const activeView = (guildId, userId, game) => ({ ...cardView(game, false), active: true, canDouble: game.player.length === 2 && getBalance(guildId, userId) >= game.bet });
 
 const youtubeId = (track) => track.thumbnail?.match(/^https:\/\/i\.ytimg\.com\/vi\/([\w-]{11})\//)?.[1] ?? null;
 
@@ -112,72 +78,6 @@ async function trackThumb(guild, id) {
     thumbs.set(id, Buffer.from(await res.arrayBuffer()));
   }
   return thumbs.get(id);
-}
-
-function coinflip(guildId, userId, body) {
-  ensureEnabled(guildId);
-  const bet = parseBet(body.bet, guildId, userId);
-  const pick = body.pick === 'tura' ? 'tura' : 'yazi';
-  takeMoney(guildId, userId, bet);
-  const result = Math.random() < 0.5 ? 'yazi' : 'tura';
-  const won = result === pick;
-  return { pick, result, won, net: won ? bet : -bet, balance: addMoney(guildId, userId, won ? bet * 2 : 0) };
-}
-
-function slot(guildId, userId, body) {
-  ensureEnabled(guildId);
-  const bet = parseBet(body.bet, guildId, userId);
-  const unlock = lockGame(guildId, userId);
-  try {
-    takeMoney(guildId, userId, bet);
-    const reels = [spinSlot(), spinSlot(), spinSlot()];
-    const { n, multiplier } = slotOutcome(reels);
-    const payout = Math.floor(bet * multiplier);
-    return { reels: reels.map((s) => s.key), matches: n, multiplier, net: payout - bet, balance: addMoney(guildId, userId, payout) };
-  } finally {
-    unlock();
-  }
-}
-
-function blackjackStart(guildId, userId, body) {
-  ensureEnabled(guildId);
-  const bet = parseBet(body.bet, guildId, userId);
-  const unlock = lockGame(guildId, userId);
-  let game;
-  try {
-    takeMoney(guildId, userId, bet);
-    const deck = newDeck();
-    game = { bet, deck, player: [deck.pop(), deck.pop()], dealer: [deck.pop(), deck.pop()], unlock };
-  } catch (error) {
-    unlock();
-    throw error;
-  }
-  if (isBlackjack(game.player) || isBlackjack(game.dealer)) {
-    const outcome = isBlackjack(game.player) && isBlackjack(game.dealer) ? 'push' : isBlackjack(game.player) ? 'blackjack' : 'lose';
-    return finishGame(guildId, userId, game, outcome);
-  }
-  games.set(userId, game);
-  touchGame(guildId, userId, game);
-  return { ...activeView(guildId, userId, game), balance: getBalance(guildId, userId) };
-}
-
-function blackjackMove(guildId, userId, move) {
-  const game = games.get(userId);
-  if (!game) throw new UserError('Devam eden bir elin yok.');
-  if (move === 'double') {
-    if (game.player.length !== 2) throw new UserError('Sadece ilk iki kartta ikiye katlayabilirsin.');
-    takeMoney(guildId, userId, game.bet);
-    game.bet *= 2;
-    game.player.push(game.deck.pop());
-    return finishGame(guildId, userId, game, handTotal(game.player) > 21 ? 'bust' : dealerPlay(game.deck, game.dealer, game.player));
-  }
-  if (move === 'stand') return finishGame(guildId, userId, game, dealerPlay(game.deck, game.dealer, game.player));
-  game.player.push(game.deck.pop());
-  const value = handTotal(game.player);
-  if (value > 21) return finishGame(guildId, userId, game, 'bust');
-  if (value === 21) return finishGame(guildId, userId, game, dealerPlay(game.deck, game.dealer, game.player));
-  touchGame(guildId, userId, game);
-  return { ...activeView(guildId, userId, game), balance: getBalance(guildId, userId) };
 }
 
 export function startActivityServer(client, { port = Number(process.env.ACTIVITY_PORT || 8787), guildId = process.env.GUILD_ID } = {}) {
@@ -237,13 +137,13 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
     }
 
     if (req.method === 'GET' && pathname === '/state') {
-      const game = games.get(id);
-      return { user, isAdmin: isPanelAdmin(member), balance: getBalance(guildId, id), blackjack: game ? activeView(guildId, id, game) : null, music: musicView(guild()) };
+      return { user, isAdmin: isPanelAdmin(member), balance: getBalance(guildId, id), blackjack: activeBlackjack(guildId, id), music: musicView(guild()) };
     }
     if (req.method === 'GET' && pathname === '/home') return homeView(guild(), member);
     const board = pathname.match(/^\/leaderboard\/(\w+)$/);
     if (req.method === 'GET' && board) return leaderboardView(guild(), id, board[1]);
     if (req.method === 'POST' && pathname === '/daily') return claimDailyReward(guild(), id);
+    if (req.method === 'POST' && pathname === '/report') return sendReport(guild(), member, body.target, body.reason);
     if (req.method === 'POST' && pathname === '/suggest') return sendSuggestion(client, guild(), member, body.text);
     if (pathname.startsWith('/admin/')) return adminRoute(client, guild(), member, req.method, pathname, body);
     if (req.method === 'GET' && pathname === '/music') return musicView(guild());
@@ -256,6 +156,8 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
       case '/blackjack/hit': return blackjackMove(guildId, id, 'hit');
       case '/blackjack/stand': return blackjackMove(guildId, id, 'stand');
       case '/blackjack/double': return blackjackMove(guildId, id, 'double');
+      case '/blackjack/split': return blackjackMove(guildId, id, 'split');
+      case '/roulette': return roulette(guildId, id, body);
       case '/music/play': {
         const query = String(body.query ?? '').trim().slice(0, 500);
         if (!query) throw new UserError('Şarkı adı ya da link yaz.');

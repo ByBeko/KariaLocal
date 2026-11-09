@@ -9,7 +9,7 @@ export const currency = () => e('dolar2', '🪙');
 export const MIN_BET = 10;
 export const MAX_BET = 50_000;
 export const STARTING_BALANCE = 200;
-export const DAILY_REWARD = 10;
+export const DAILY_REWARD = 100;
 const DAILY_COOLDOWN = 20 * 3_600_000;
 
 const q = {
@@ -87,11 +87,24 @@ export function parseBet(input, guildId, userId) {
   return amount;
 }
 
-/** Kullanıcı başına tek oyun (blackjack sürerken başka bahis açılmasın) */
+export const GAME_COOLDOWN = 5_000; // bir oyun bittikten sonra yenisi için beklenen süre
+
+/**
+ * Kullanıcı başına tek oyun (blackjack sürerken başka bahis açılmasın) ve oyunlar arası 5 saniye bekleme.
+ * Dönen fonksiyon oyun bitince çağrılır; bekleme o andan başlar. unlock(false) beklemeyi başlatmaz (oyun açılamadıysa).
+ */
 const playing = new Set();
+const lastPlay = new Map();
 export function lockGame(guildId, userId) {
   const key = `${guildId}:${userId}`;
   if (playing.has(key)) throw new UserError('Zaten devam eden bir oyunun var, önce onu bitir.');
+  const wait = (lastPlay.get(key) ?? 0) + GAME_COOLDOWN - Date.now();
+  if (wait > 0) throw new UserError(`Yeni oyun için **${Math.ceil(wait / 1000)} sn** bekle.`);
   playing.add(key);
-  return () => playing.delete(key);
+  return (mark = true) => {
+    playing.delete(key);
+    if (!mark) return;
+    if (lastPlay.size > 5000) lastPlay.clear();
+    lastPlay.set(key, Date.now());
+  };
 }

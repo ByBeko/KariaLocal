@@ -35,10 +35,14 @@ function setBalance(value) {
   $('balance').textContent = fmt(value);
 }
 
+let sayTimer = 0;
+// Bildirim üstte görünür ve kendiliğinden kaybolur
 function say(text, kind = 'info') {
-  const el = $('message');
-  el.textContent = text;
-  el.className = `message ${kind}`;
+  const box = $('message');
+  clearTimeout(sayTimer);
+  box.textContent = text;
+  box.className = `message ${kind}`;
+  if (text) sayTimer = setTimeout(() => { box.textContent = ''; }, kind === 'lose' ? 6000 : 4500);
 }
 
 const netText = (net) => (net > 0 ? `+${fmt(net)}` : fmt(net));
@@ -58,12 +62,13 @@ async function guarded(action) {
 }
 
 // ── Sekmeler ──
-const GAMES = ['blackjack', 'slot', 'coin'];
+const GAMES = ['blackjack', 'slot', 'coin', 'roulette'];
 
 const GAME_INFO = {
   blackjack: [['kupa', 'Kazanç', '2×'], ['kart', 'Blackjack', '2,5×'], ['yenile', 'Beraberlik', 'İade']],
   slot: [['slot_yedi', 'Üçlü', '50×'], ['elmas', 'Üçlü', '20×'], ['zil', 'Üçlü', '10×'], ['kalp', 'Üçlü', '5×'], ['hediye', 'Üçlü', '4×'], ['kurabiye', 'Üçlü', '3×'], ['coin', 'Herhangi ikili', '1,5×']],
   coin: [['coin', 'Doğru tahmin', '2×'], ['yenile', 'Şans', '%50']],
+  roulette: [['elmas', 'Tek sayı', '36×'], ['kalp', 'Kırmızı / Siyah / Tek / Çift', '2×'], ['zil', 'Düzine / Sütun', '3×']],
 };
 
 function drawGameInfo(name) {
@@ -146,22 +151,32 @@ function cardEl(card) {
 const OUTCOME = { blackjack: 'BLACKJACK!', win: 'Kazandın!', push: 'Berabere', lose: 'Krupiye kazandı', bust: "21'i geçtin" };
 
 function drawBlackjack(g) {
-  $('player').replaceChildren(...g.player.map(cardEl));
+  const multi = g.hands.length > 1;
+  $('player').classList.toggle('multi', multi);
+  $('player').replaceChildren(...(multi
+    ? g.hands.map((h, i) => el('div', { className: `subhand${g.active && i === g.current ? ' current' : ''}` },
+      el('div', { className: 'cards' }, ...h.cards.map(cardEl)),
+      el('span', { className: 'total', textContent: `${h.total}${h.outcome ? ` • ${OUTCOME[h.outcome]}` : ''}` })))
+    : g.player.map(cardEl)));
   $('dealer').replaceChildren(...g.dealer.map(cardEl), ...(g.hidden ? [cardEl(null)] : []));
-  $('player-total').textContent = g.playerTotal;
+  $('player-total').textContent = multi ? '' : g.playerTotal;
   $('dealer-total').textContent = g.dealerTotal ?? '';
   $('bj-start').hidden = g.active;
   $('bj-hit').hidden = !g.active;
   $('bj-stand').hidden = !g.active;
   $('bj-double').hidden = !g.active;
   $('bj-double').disabled = !g.canDouble;
+  $('bj-split').hidden = !(g.active && g.canSplit);
   setBalance(g.balance);
   if (g.active) say(`Bahis: ${fmt(g.bet)}`);
-  else say(`${OUTCOME[g.outcome]} ${g.net ? netText(g.net) : ''}`.trim(), g.net > 0 ? 'win' : g.net < 0 ? 'lose' : 'info');
+  else {
+    const result = multi ? g.hands.map((h, i) => `El ${i + 1}: ${OUTCOME[h.outcome]}`).join(' • ') : OUTCOME[g.outcome];
+    say(`${result} ${g.net ? netText(g.net) : ''}`.trim(), g.net > 0 ? 'win' : g.net < 0 ? 'lose' : 'info');
+  }
 }
 
 $('bj-start').addEventListener('click', () => guarded(async () => drawBlackjack(await api('/blackjack/start', { bet: String(betValue()) }))));
-for (const [id, move] of [['bj-hit', 'hit'], ['bj-stand', 'stand'], ['bj-double', 'double']]) {
+for (const [id, move] of [['bj-hit', 'hit'], ['bj-stand', 'stand'], ['bj-double', 'double'], ['bj-split', 'split']]) {
   $(id).addEventListener('click', () => guarded(async () => drawBlackjack(await api(`/blackjack/${move}`, {}))));
 }
 
@@ -209,6 +224,120 @@ for (const b of document.querySelectorAll('[data-pick]')) {
   }));
 }
 
+// ── Rulet ──
+const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+const REDS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
+const rouletteBets = new Map();
+const rouletteOrder = []; // geri almak için son bahisler
+let lastRouletteBets = null;
+let wheelDeg = 0;
+let spinning = false;
+const numColor = (n) => (n === 0 ? 'green' : REDS.has(n) ? 'red' : 'black');
+
+function buildWheel() {
+  const slice = 360 / WHEEL.length;
+  const colors = { green: '#1f9a6a', red: '#c62f3a', black: '#15191d' };
+  const wheel = $('wheel');
+  wheel.style.background = `conic-gradient(${WHEEL.map((n, i) => `${colors[numColor(n)]} ${(i * slice).toFixed(3)}deg ${((i + 1) * slice).toFixed(3)}deg`).join(',')})`;
+  // Sayılar çarkla birlikte döner
+  wheel.replaceChildren(...WHEEL.map((n, i) => {
+    const mark = el('span', { className: 'wn', textContent: String(n) });
+    mark.style.transform = `rotate(${((i + 0.5) * slice).toFixed(3)}deg) translateY(calc(var(--wr) * -1))`;
+    return mark;
+  }));
+}
+
+function buildRouletteBoard() {
+  const cells = [];
+  const add = (key, text, cls, area) => {
+    const b = el('button', { className: `rc ${cls}`, type: 'button', textContent: text });
+    b.dataset.key = key;
+    b.style.gridArea = area;
+    cells.push(b);
+  };
+  add('n0', '0', 'green', '1 / 1 / 4 / 2');
+  for (let col = 0; col < 12; col++) for (let row = 0; row < 3; row++) { const n = col * 3 + (3 - row); add(`n${n}`, String(n), numColor(n), `${row + 1} / ${col + 2} / ${row + 2} / ${col + 3}`); }
+  [['c3', '2:1'], ['c2', '2:1'], ['c1', '2:1']].forEach(([key, text], row) => add(key, text, 'out', `${row + 1} / 14 / ${row + 2} / 15`));
+  [['d1', '1-12'], ['d2', '13-24'], ['d3', '25-36']].forEach(([key, text], i) => add(key, text, 'out', `4 / ${2 + i * 4} / 5 / ${6 + i * 4}`));
+  [['low', '1-18'], ['even', 'Çift'], ['red', 'Kırmızı'], ['black', 'Siyah'], ['odd', 'Tek'], ['high', '19-36']]
+    .forEach(([key, text], i) => add(key, text, key === 'red' ? 'red' : key === 'black' ? 'black' : 'out', `5 / ${2 + i * 2} / 6 / ${4 + i * 2}`));
+  $('roulette-board').replaceChildren(...cells);
+}
+
+function renderRouletteBets() {
+  let total = 0;
+  for (const b of $('roulette-board').children) {
+    const amount = rouletteBets.get(b.dataset.key);
+    if (amount) { b.dataset.bet = amount >= 1000 ? `${+(amount / 1000).toFixed(1)}K` : String(amount); total += amount; }
+    else delete b.dataset.bet;
+  }
+  $('roulette-total').textContent = total ? `Toplam: ${fmt(total)}` : 'Masa boş';
+}
+
+function placeRouletteBet(key) {
+  const amount = betValue();
+  if (amount < limits.minBet) throw new Error(`Her bahis en az ${limits.minBet} coin olmalı.`);
+  rouletteBets.set(key, (rouletteBets.get(key) ?? 0) + amount);
+  rouletteOrder.push(key);
+  renderRouletteBets();
+}
+
+$('roulette-board').addEventListener('click', (event) => {
+  const cell = event.target.closest('.rc');
+  if (!cell || spinning) return;
+  try { placeRouletteBet(cell.dataset.key); } catch (error) { say(error.message, 'lose'); }
+});
+$('roulette-board').addEventListener('contextmenu', (event) => {
+  const cell = event.target.closest('.rc');
+  if (!cell || spinning) return;
+  event.preventDefault();
+  rouletteBets.delete(cell.dataset.key);
+  renderRouletteBets();
+});
+$('roulette-undo').addEventListener('click', () => {
+  if (spinning) return;
+  const key = rouletteOrder.pop();
+  if (!key || !rouletteBets.has(key)) return;
+  const left = rouletteBets.get(key) - betValue();
+  if (left >= limits.minBet) rouletteBets.set(key, left); else rouletteBets.delete(key);
+  renderRouletteBets();
+});
+$('roulette-clear').addEventListener('click', () => { if (spinning) return; rouletteBets.clear(); rouletteOrder.length = 0; renderRouletteBets(); });
+$('roulette-repeat').addEventListener('click', () => {
+  if (spinning || !lastRouletteBets) return;
+  rouletteBets.clear();
+  for (const [key, amount] of lastRouletteBets) rouletteBets.set(key, amount);
+  renderRouletteBets();
+});
+$('roulette-spin').addEventListener('click', () => guarded(async () => {
+  if (spinning) return;
+  if (!rouletteBets.size) throw new Error('Önce masaya bahis koy.');
+  spinning = true;
+  try {
+    const bets = Object.fromEntries(rouletteBets);
+    const r = await api('/roulette', { bets });
+    lastRouletteBets = new Map(rouletteBets);
+    setBalance(r.balance - r.payout); // bahis düşmüş hali, kazanç top durunca görünür
+    say('');
+    $('roulette-result').textContent = '';
+    const slice = 360 / WHEEL.length;
+    const target = 360 - (WHEEL.indexOf(r.result) + 0.5) * slice;
+    wheelDeg = Math.ceil(wheelDeg / 360) * 360 + 360 * 5 + target;
+    const wheel = $('wheel');
+    wheel.style.transition = 'transform 4s cubic-bezier(.15,.6,.1,1)';
+    wheel.style.transform = `rotate(${wheelDeg}deg)`;
+    await sleep(4200);
+    $('roulette-result').textContent = r.result;
+    $('roulette-result').className = `roulette-result ${r.color}`;
+    setBalance(r.balance);
+    say(`${r.result} ${{ green: 'yeşil', red: 'kırmızı', black: 'siyah' }[r.color]} geldi. ${netText(r.net)}`, r.net > 0 ? 'win' : r.net < 0 ? 'lose' : 'info');
+    rouletteBets.clear();
+    rouletteOrder.length = 0;
+    renderRouletteBets();
+  } finally {
+    spinning = false;
+  }
+}));
 // ── Müzik ──
 const LOOP_LABEL = { off: 'kapalı', track: 'şarkı', queue: 'sıra' };
 const mmss = (total) => {
@@ -383,13 +512,35 @@ function drawOptions(options) {
   box.replaceChildren(...options.map(optionField));
 }
 
+// Komutlar yardım menüsü gibi kategorilere ayrılır; "Bota Mesaj Yazdır" Yönetim grubunda bir komut gibi durur.
+const CMD_CATEGORIES = [
+  ['bilgi', 'Genel', 'ev'],
+  ['topluluk', 'Topluluk', 'kupa'],
+  ['muzik', 'Müzik', 'muzik'],
+  ['eglence', 'Ekonomi', 'oyun'],
+  ['analiz', 'Analiz', 'istatistik'],
+  ['moderasyon', 'Moderasyon', 'tokmak'],
+  ['sunucu', 'Sunucu', 'araclar'],
+  ['yonetim', 'Yönetim', 'ayarlar'],
+];
+const SAY_COMMAND = { name: '__say__', category: 'yonetim', description: 'Botun ağzından bir kanala mesaj yazdır: normal ya da embed', pseudo: true };
+
+function markCommand() {
+  for (const b of document.querySelectorAll('.cmd-item')) b.classList.toggle('active', b.dataset.name === $('cmd-select').value);
+}
+
 function drawCommandForm() {
   resetConfirm();
+  const isSay = $('cmd-select').value === '__say__';
+  $('say-card').hidden = !isSay;
+  $('cmd-card').hidden = isSay;
+  markCommand();
+  if (isSay) return;
   const cmd = selectedCommand();
   $('cmd-output').hidden = true;
   $('cmd-run').disabled = !cmd;
-  if (!cmd) return $('cmd-form').replaceChildren();
-  const parts = [el('p', { className: 'hint left', textContent: cmd.description })];
+  if (!cmd) return $('cmd-form').replaceChildren(el('p', { className: 'hint left', textContent: 'Soldan bir komut seç. Bota mesaj yazdırmak için Yönetim grubuna bak.' }));
+  const parts = [el('h3', { className: 'cmd-title', textContent: `/${cmd.name}` }), el('p', { className: 'hint left', textContent: cmd.description })];
   const channel = selectFrom(channelItems([0, 5, 2]), '', 'Kanal seç');
   channel.id = 'cmd-channel';
   channel.value = admin.lastChannel ?? '';
@@ -410,16 +561,30 @@ function drawCommandList() {
   const query = $('cmd-search').value.toLocaleLowerCase('tr').trim();
   const select = $('cmd-select');
   const current = select.value;
-  const groups = new Map();
-  for (const c of admin.commands) {
-    if (!`${c.name} ${c.description}`.toLocaleLowerCase('tr').includes(query)) continue;
+  const groups = new Map(CMD_CATEGORIES.map(([key]) => [key, []]));
+  for (const c of [...admin.commands, SAY_COMMAND]) {
+    if (!`${c.name} ${c.description} ${c.pseudo ? 'bota mesaj yazdır embed' : ''}`.toLocaleLowerCase('tr').includes(query)) continue;
     if (!groups.has(c.category)) groups.set(c.category, []);
     groups.get(c.category).push(c);
   }
-  select.replaceChildren(...[...groups].map(([category, list]) =>
-    el('optgroup', { label: category }, ...list.map((c) => el('option', { value: c.name, textContent: `/${c.name}` })))));
+  select.replaceChildren(el('option', { value: '', textContent: '' }), ...[...groups.values()].flat().map((c) => el('option', { value: c.name, textContent: c.name })));
+  const sections = [...groups].filter(([, list]) => list.length).map(([key, list]) => {
+    const [, label, icon] = CMD_CATEGORIES.find((c) => c[0] === key) ?? [key, key, 'araclar'];
+    return el('section', { className: 'cmd-group' },
+      el('h5', {}, el('img', { src: `emojis/${icon}.png`, alt: '' }), label, el('em', { textContent: String(list.length) })),
+      ...list.map((c) => {
+        const button = el('button', { className: 'cmd-item', type: 'button' },
+          el('strong', { textContent: c.pseudo ? 'Bota Mesaj Yazdır' : `/${c.name}` }),
+          el('small', { textContent: c.description.split(/[.:(]/)[0].trim() }));
+        button.dataset.name = c.name;
+        button.addEventListener('click', () => { select.value = c.name; drawCommandForm(); });
+        return button;
+      }));
+  });
+  $('cmd-list').replaceChildren(...(sections.length ? sections : [empty('Komut bulunamadı.')]));
   select.value = current;
-  if (select.value !== current) drawCommandForm();
+  if (select.value !== current) { select.value = ''; drawCommandForm(); }
+  markCommand();
 }
 
 function resetConfirm() {
@@ -454,6 +619,110 @@ function runCommand() {
   });
 }
 
+// ── Bota mesaj yazdır ──
+let sayMode = 'normal';
+function drawSay() {
+  const select = $('say-channel');
+  const keep = select.value || admin.lastSayChannel || '';
+  select.replaceChildren(el('option', { value: '', textContent: 'Kanal seç' }), ...channelItems([0, 5]).map((c) => el('option', { value: c.value, textContent: c.label })));
+  select.value = keep;
+}
+
+function drawSayPreview() {
+  const text = $('say-text').value.trim();
+  const box = $('say-preview');
+  box.hidden = !text;
+  box.className = `say-preview${sayMode === 'embed' ? ' embed' : ''}`;
+  const title = $('say-title').value.trim();
+  box.replaceChildren(...(sayMode === 'embed' && title ? [el('strong', { textContent: title })] : []), ...renderMarkdown(text));
+}
+
+for (const b of document.querySelectorAll('[data-say]')) {
+  b.addEventListener('click', () => {
+    sayMode = b.dataset.say;
+    for (const x of document.querySelectorAll('[data-say]')) x.classList.toggle('active', x === b);
+    $('say-title').hidden = sayMode !== 'embed';
+    drawSayPreview();
+  });
+}
+// @ ile üye ya da rol, # ile kanal seçilir; seçilen Discord etiketi olarak yazıya girer
+const MENTION_AT_END = /(?<![\w<@#&])([@#])([\p{L}\p{N}_-]*)$/u;
+let suggestItems = [];
+let suggestIndex = 0;
+
+function suggestFor(sign, query) {
+  const q = query.toLocaleLowerCase('tr');
+  const hit = (name) => name.toLocaleLowerCase('tr').includes(q);
+  if (sign === '#') {
+    return admin.channels.filter((c) => [0, 5].includes(c.type) && hit(c.name)).slice(0, 8)
+      .map((c) => ({ label: `#${plainChannel(c.name)}`, hint: 'kanal', insert: `<#${c.id}>` }));
+  }
+  const readable = (name) => /[\p{L}\p{N}]/u.test(name) && !/-{3,}/.test(name); // ayraç rolleri ve harfsiz adlar listelenmez
+  const people = admin.members.filter((m) => readable(m.name) && hit(m.name)).slice(0, 5).map((m) => ({ label: `@${m.name}`, hint: m.bot ? 'bot' : 'üye', insert: `<@${m.id}>` }));
+  const groups = admin.roles.filter((r) => r.name !== '@everyone' && readable(r.name) && hit(r.name)).slice(0, 4).map((r) => ({ label: `@${r.name}`, hint: 'rol', insert: `<@&${r.id}>` }));
+  return [...people, ...groups];
+}
+
+function closeSuggest() {
+  suggestItems = [];
+  $('say-suggest').hidden = true;
+}
+
+function drawSuggest() {
+  $('say-suggest').replaceChildren(...suggestItems.map((item, i) => {
+    const row = el('button', { type: 'button', className: `suggest-item${i === suggestIndex ? ' active' : ''}` }, el('strong', { textContent: item.label }), el('small', { textContent: item.hint }));
+    row.addEventListener('mousedown', (event) => { event.preventDefault(); pickSuggest(i); });
+    return row;
+  }));
+  $('say-suggest').hidden = !suggestItems.length;
+}
+
+function updateSuggest() {
+  const area = $('say-text');
+  const match = admin && area.value.slice(0, area.selectionStart).match(MENTION_AT_END);
+  suggestItems = match ? suggestFor(match[1], match[2]) : [];
+  suggestIndex = 0;
+  drawSuggest();
+}
+
+function pickSuggest(i) {
+  const area = $('say-text');
+  const pos = area.selectionStart;
+  const match = area.value.slice(0, pos).match(MENTION_AT_END);
+  if (!match || !suggestItems[i]) return closeSuggest();
+  const start = pos - match[0].length;
+  const insert = `${suggestItems[i].insert} `;
+  area.value = area.value.slice(0, start) + insert + area.value.slice(pos);
+  area.setSelectionRange(start + insert.length, start + insert.length);
+  closeSuggest();
+  drawSayPreview();
+  area.focus();
+}
+
+$('say-text').addEventListener('input', () => { drawSayPreview(); updateSuggest(); });
+$('say-text').addEventListener('click', updateSuggest);
+$('say-text').addEventListener('blur', () => setTimeout(closeSuggest, 120));
+$('say-text').addEventListener('keydown', (event) => {
+  if (!suggestItems.length) return;
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    suggestIndex = (suggestIndex + (event.key === 'ArrowDown' ? 1 : -1) + suggestItems.length) % suggestItems.length;
+    drawSuggest();
+  } else if (event.key === 'Enter' || event.key === 'Tab') {
+    event.preventDefault();
+    pickSuggest(suggestIndex);
+  } else if (event.key === 'Escape') closeSuggest();
+});
+$('say-title').addEventListener('input', drawSayPreview);
+$('say-channel').addEventListener('change', () => { if (admin) admin.lastSayChannel = $('say-channel').value; });
+$('say-send').addEventListener('click', () => guarded(async () => {
+  await api('/admin/say', { channelId: $('say-channel').value, mode: sayMode, title: $('say-title').value, text: $('say-text').value });
+  $('say-text').value = '';
+  $('say-title').value = '';
+  drawSayPreview();
+  say('Mesaj gönderildi.', 'win');
+}));
+
 async function loadAdmin() {
   if (admin) return;
   try {
@@ -461,6 +730,7 @@ async function loadAdmin() {
     drawSettings();
     drawModules();
     drawCommandList();
+    drawSay();
   } catch (error) {
     say(error.message, 'lose');
   }
@@ -646,6 +916,52 @@ const loadCases = () => guarded(async () => {
     el('div', {}, el('strong', { textContent: `#${c.id} • ${c.type} • ${c.user}` }), el('p', { textContent: c.reason }), el('small', { textContent: `Yetkili: ${c.mod} • ${when(c.at)}` })))) : [empty('Henüz ceza kaydı yok.')]));
 });
 
+// ── Discord yazısını (kalın, italik, madde, başlık, emoji) arayüz fontuyla çizer; HTML eklenmez ──
+const MD_INLINE = /(<@&\d+>|<@!?\d+>|<#\d+>|\*\*[^*\n]+\*\*|__[^_\n]+__|~~[^~\n]+~~|`[^`\n]+`|\*[^*\n]+\*|_[^_\n]+_|:[A-Za-z0-9_]+:|(?<![\w<])[@#][\p{L}\p{N}_-]+)/gu;
+const mention = (text) => el('span', { className: 'mention', textContent: text });
+const plainChannel = (name) => name.replace(/^[^\p{L}\p{N}]+/u, '');
+
+function mdInline(text) {
+  const nodes = [];
+  let last = 0;
+  for (const m of text.matchAll(MD_INLINE)) {
+    if (m.index > last) nodes.push(text.slice(last, m.index));
+    const t = m[0];
+    if (t.startsWith('<@&')) nodes.push(mention(`@${admin?.roles.find((r) => r.id === t.slice(3, -1))?.name ?? 'rol'}`));
+    else if (t.startsWith('<@')) nodes.push(mention(`@${admin?.members.find((u) => u.id === t.replace(/\D/g, ''))?.name ?? 'üye'}`));
+    else if (t.startsWith('<#')) nodes.push(mention(`#${plainChannel(admin?.channels.find((c) => c.id === t.slice(2, -1))?.name ?? 'kanal')}`));
+    else if (t[0] === '@' || t[0] === '#') nodes.push(mention(t)); // duyurulardaki düz yazı etiketleri
+    else if (t.startsWith('**')) nodes.push(el('strong', {}, ...mdInline(t.slice(2, -2))));
+    else if (t.startsWith('__')) nodes.push(el('u', {}, ...mdInline(t.slice(2, -2))));
+    else if (t.startsWith('~~')) nodes.push(el('s', {}, ...mdInline(t.slice(2, -2))));
+    else if (t[0] === '`') nodes.push(el('code', { textContent: t.slice(1, -1) }));
+    else if (t[0] === ':') {
+      if (t.startsWith(':Karia_')) {
+        const img = el('img', { className: 'emo', src: `emojis/${t.slice(7, -1)}.png`, alt: '' });
+        img.addEventListener('error', () => img.remove(), { once: true });
+        nodes.push(img);
+      } else if (!/^:[A-Za-z_]{2,}:$/.test(t)) nodes.push(t); // başka sunucu emojileri çizilemez, saat gibi yazılar kalır
+    } else nodes.push(el('em', {}, ...mdInline(t.slice(1, -1))));
+    last = m.index + t.length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+}
+
+function renderMarkdown(text) {
+  return String(text).split('\n').map((line) => {
+    const heading = line.match(/^#{1,3} (.*)/);
+    if (heading) return el('div', { className: 'md-h' }, ...mdInline(heading[1]));
+    const small = line.match(/^-# (.*)/);
+    if (small) return el('div', { className: 'md-sub' }, ...mdInline(small[1]));
+    const quote = line.match(/^> ?(.*)/);
+    if (quote) return el('div', { className: 'md-q' }, ...mdInline(quote[1]));
+    const item = line.match(/^\s*[-*] (.*)/);
+    if (item) return el('div', { className: 'md-li' }, el('span', { textContent: '•' }), el('span', {}, ...mdInline(item[1])));
+    return line.trim() ? el('div', { className: 'md-p' }, ...mdInline(line)) : el('div', { className: 'md-gap' });
+  });
+}
+
 // ── Üye ana sayfası ──
 function waitText(at) {
   const minutes = Math.ceil((at - Date.now()) / 60000);
@@ -675,13 +991,25 @@ async function loadHome() {
     fill.style.width = `${progress}%`;
     const name = $('username').textContent;
     const input = el('textarea', { className: 'field', maxLength: 1500, placeholder: 'Sunucu, Minecraft, bot ya da site için aklındaki fikri yaz' });
-    const send = el('form', { className: 'suggest' }, input, el('button', { textContent: 'Gönder', className: 'primary' }));
+    const send = el('form', { className: 'suggest compact' }, input, el('button', { textContent: 'Gönder', className: 'primary' }));
     send.addEventListener('submit', (event) => {
       event.preventDefault();
       guarded(async () => {
         await api('/suggest', { text: input.value });
         input.value = '';
         say('Önerin gönderildi. Teşekkürler!', 'win');
+      });
+    });
+    const reportWho = selectFrom((h.members ?? []).map((m) => ({ value: m.id, label: m.name })), '', 'Kimi bildiriyorsun?');
+    const reportText = el('textarea', { className: 'field', maxLength: 500, placeholder: 'Ne oldu? (en az 5 karakter)' });
+    const report = el('form', { className: 'report' }, reportWho, reportText, el('button', { textContent: 'Yetkililere Bildir', className: 'primary' }));
+    report.addEventListener('submit', (event) => {
+      event.preventDefault();
+      guarded(async () => {
+        await api('/report', { target: reportWho.value, reason: reportText.value });
+        reportText.value = '';
+        reportWho.value = '';
+        say('Raporun yetkililere iletildi. Teşekkürler.', 'win');
       });
     });
     $('home').replaceChildren(
@@ -696,11 +1024,13 @@ async function loadHome() {
         card('Sıralaman', h.level.rank ? `#${h.level.rank}` : '-'),
         card('Haftalık Mesaj', fmt(h.week.messages)),
         card('Haftalık Ses', h.week.voice)),
-      el('div', { className: 'grid2' },
+      el('div', { className: 'grid2 home-cols' },
         el('div', { className: 'box' }, el('h4', { textContent: 'Duyurular' }), ...(h.announcements.length
-          ? h.announcements.slice(0, 5).map((a) => el('div', { className: 'ann' }, el('p', { textContent: a.text }), el('small', { textContent: when(a.at) })))
+          ? h.announcements.slice(0, 5).map((a) => el('div', { className: 'ann' }, el('div', { className: 'ann-body' }, ...renderMarkdown(a.text)), el('small', { textContent: when(a.at) })))
           : [empty('Henüz duyuru yok.')])),
-        el('div', { className: 'box' }, el('h4', { textContent: 'Öneri Gönder' }), send)),
+        el('div', { className: 'stack' },
+          el('div', { className: 'box' }, el('h4', { textContent: 'Şikayet Et' }), report),
+          el('div', { className: 'box' }, el('h4', { textContent: 'Öneri Gönder' }), send))),
     );
   } catch (error) {
     say(error.message, 'lose');
@@ -754,8 +1084,10 @@ for (const b of document.querySelectorAll('[data-board]')) {
   });
 }
 
-const DASH = { home: loadHome, leaderboard: loadBoard, overview: loadOverview, tickets: loadTickets, reports: loadReports, suggestions: loadSuggestions, cases: loadCases, modules: loadAdmin, settings: loadAdmin, commands: loadAdmin };
+const DASH = { home: loadHome,  leaderboard: loadBoard, overview: loadOverview, tickets: loadTickets, reports: loadReports, suggestions: loadSuggestions, cases: loadCases, modules: loadAdmin, settings: loadAdmin, commands: loadAdmin };
 
+buildWheel();
+buildRouletteBoard();
 $('set-search').addEventListener('input', drawSettings);
 $('cmd-search').addEventListener('input', drawCommandList);
 $('cmd-select').addEventListener('change', drawCommandForm);

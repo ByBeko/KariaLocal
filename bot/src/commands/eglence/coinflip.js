@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { e } from '../../utils/emojis.js';
-import { parseBet, takeMoney, addMoney, fmt, ensureEnabled } from '../../systems/economy.js';
+import { parseBet, takeMoney, addMoney, fmt, ensureEnabled, lockGame } from '../../systems/economy.js';
 
 const SPIN_MS = 1500;
 const label = (side) => (side === 'yazi' ? 'Yazı' : 'Tura');
@@ -21,18 +21,23 @@ export default {
     const bet = parseBet(interaction.options.getString('miktar', true), guild.id, user.id);
     const raw = (interaction.options.getString('secim') ?? 'yazi').toLocaleLowerCase('tr').replace('ı', 'i');
     const pick = raw.startsWith('t') ? 'tura' : 'yazi';
-    takeMoney(guild.id, user.id, bet);
+    const unlock = lockGame(guild.id, user.id); // oyun bitince 5 saniye beklenir
+    try {
+      takeMoney(guild.id, user.id, bet);
 
-    const result = Math.random() < 0.5 ? 'yazi' : 'tura';
-    const won = result === pick;
-    if (won) addMoney(guild.id, user.id, bet * 2);
+      const result = Math.random() < 0.5 ? 'yazi' : 'tura';
+      const won = result === pick;
+      if (won) addMoney(guild.id, user.id, bet * 2);
 
-    const head = `**${member.displayName}**, ${fmt(bet)} bastı ve **${label(pick)}** seçti.`;
-    await interaction.reply({ content: `${head}\n${e('yenile', '🔄')} Para dönüyor...`, allowedMentions: { parse: [] } });
-    await new Promise((r) => setTimeout(r, SPIN_MS));
-    await interaction.editReply({
-      content: `${head}\n${e('coin', '🪙')} **${label(result)}** geldi, ${won ? `${fmt(bet * 2)} kazandın!` : 'kaybettin.'}`,
-      allowedMentions: { parse: [] },
-    });
+      const head = `**${member.displayName}**, ${fmt(bet)} bastı ve **${label(pick)}** seçti.`;
+      await interaction.reply({ content: `${head}\n${e('yenile', '🔄')} Para dönüyor...`, allowedMentions: { parse: [] } });
+      await new Promise((r) => setTimeout(r, SPIN_MS));
+      await interaction.editReply({
+        content: `${head}\n${e('coin', '🪙')} **${label(result)}** geldi, ${won ? `${fmt(bet * 2)} kazandın!` : 'kaybettin.'}`,
+        allowedMentions: { parse: [] },
+      });
+    } finally {
+      unlock();
+    }
   },
 };

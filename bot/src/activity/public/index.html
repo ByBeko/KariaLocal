@@ -62,6 +62,7 @@
       <button data-game="blackjack" class="active"><img src="emojis/kart.png" alt="">Blackjack</button>
       <button data-game="slot"><img src="emojis/slot_yedi.png" alt="">Slot</button>
       <button data-game="coin"><img src="emojis/coin.png" alt="">Yazı Tura</button>
+      <button data-game="roulette"><img src="emojis/oyun.png" alt="">Rulet</button>
     </div>
 
     <section id="betbar" class="betbar" hidden>
@@ -90,12 +91,13 @@
           <defs><path id="felt-arc" d="M30 96 Q300 196 570 96"/></defs>
           <text class="felt-title" x="300" y="50" text-anchor="middle">BLACKJACK</text>
           <text class="felt-sub" x="300" y="80" text-anchor="middle">3:2 ÖDER</text>
-          <path class="felt-band" d="M6 92 Q300 200 594 92"/>
+          <path class="felt-band" d="M-140 84 Q300 206 740 84"/>
           <text class="felt-band-text"><textPath href="#felt-arc" startOffset="50%" text-anchor="middle">KRUPİYE 17'DE DURUR</textPath></text>
         </svg>
         <div class="hand"><h3>Sen <span id="player-total" class="total"></span></h3><div id="player" class="cards"></div></div>
         <div class="actions">
           <button id="bj-start" class="deal"><img src="emojis/kart.png" alt="">Dağıt</button>
+          <button id="bj-split" hidden><img src="emojis/kart.png" alt="">İkiye Ayır</button>
           <button id="bj-double" hidden><img src="emojis/dolar2.png" alt="">İkiye Katla</button>
           <button id="bj-hit" hidden><img src="emojis/arti_rozet.png" alt="">Kart Çek</button>
           <button id="bj-stand" hidden><img src="emojis/onayli.png" alt="">Dur</button>
@@ -134,6 +136,20 @@
       <div class="actions coin-picks">
         <button data-pick="yazi"><img src="emojis/coin.png" alt="">Yazı</button>
         <button data-pick="tura"><img src="emojis/coin.png" alt="">Tura</button>
+      </div>
+    </section>
+
+    <section class="panel casino roulette-room" data-panel="roulette" hidden>
+      <div class="roulette">
+        <div class="wheel-box"><div id="wheel" class="wheel"></div><div class="wheel-pin"></div><div id="roulette-result" class="roulette-result"></div></div>
+        <div id="roulette-board" class="roulette-board"></div>
+        <div class="roulette-tools">
+          <button id="roulette-undo" type="button">Geri al</button>
+          <button id="roulette-clear" type="button">Temizle</button>
+          <button id="roulette-repeat" type="button">Tekrarla</button>
+          <span id="roulette-total" class="roulette-total">Masa boş</span>
+          <button id="roulette-spin" class="spin-btn" type="button"><img src="emojis/oyun.png" alt="">Çevir</button>
+        </div>
       </div>
     </section>
 
@@ -197,11 +213,34 @@
     </section>
 
     <section class="panel" data-panel="commands" hidden>
-      <input id="cmd-search" class="field" placeholder="Komut ara" autocomplete="off">
-      <select id="cmd-select" class="field" size="7" aria-label="Komut"></select>
-      <div id="cmd-form" class="cmd-form"></div>
-      <div class="actions"><button id="cmd-run" class="primary" disabled>Çalıştır</button></div>
-      <pre id="cmd-output" class="output" hidden></pre>
+      <div class="cmd-layout">
+        <aside class="cmd-side">
+          <input id="cmd-search" class="field" placeholder="Komut ara" autocomplete="off">
+          <select id="cmd-select" aria-label="Komut"></select>
+          <div id="cmd-list" class="cmd-list"></div>
+        </aside>
+        <div class="cmd-main">
+          <div id="say-card" class="say-card" hidden>
+            <h4>Bota Mesaj Yazdır</h4>
+            <div class="say-row">
+              <select id="say-channel" class="field" aria-label="Kanal"></select>
+              <div class="period say-mode"><button data-say="normal" class="active">Normal</button><button data-say="embed">Embed</button></div>
+            </div>
+            <input id="say-title" class="field" placeholder="Embed başlığı (isteğe bağlı)" maxlength="200" hidden>
+            <div class="say-text-wrap">
+              <textarea id="say-text" class="field" rows="4" maxlength="2000" placeholder="Bot ne yazsın? @ ile üye ya da rol, # ile kanal etiketleyebilirsin"></textarea>
+              <div id="say-suggest" class="suggest-pop" hidden></div>
+            </div>
+            <div id="say-preview" class="say-preview" hidden></div>
+            <div class="actions left"><button id="say-send" class="primary">Gönder</button></div>
+          </div>
+          <div id="cmd-card" class="cmd-card">
+            <div id="cmd-form" class="cmd-form"><p class="hint left">Soldan bir komut seç. Bota mesaj yazdırmak için Yönetim grubuna bak.</p></div>
+            <div class="actions left"><button id="cmd-run" class="primary" disabled>Çalıştır</button></div>
+            <pre id="cmd-output" class="output" hidden></pre>
+          </div>
+        </div>
+      </div>
     </section>
 
     <p id="message" class="message" role="status"></p>

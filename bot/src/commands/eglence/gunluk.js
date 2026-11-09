@@ -3,7 +3,7 @@ import { claimDaily, fmt, ensureEnabled } from '../../systems/economy.js';
 
 export default {
   aliases: ['daily', 'gunlukodul', 'günlük'],
-  data: new SlashCommandBuilder().setName('gunluk').setDescription('Günlük 10 coin ödülünü al.'),
+  data: new SlashCommandBuilder().setName('gunluk').setDescription('Günlük 100 coin ödülünü al.'),
 
   async execute(interaction) {
     ensureEnabled(interaction.guild.id);

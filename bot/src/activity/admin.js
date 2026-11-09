@@ -7,6 +7,7 @@ import { runCommand } from '../core/runner.js';
 import { checkAccess, getLevel, Level } from '../utils/permissions.js';
 import { UserError } from '../utils/errors.js';
 import { sendLog } from '../utils/logger.js';
+import { brandEmbed } from '../utils/embeds.js';
 import { isStaffCommand } from '../systems/help.js';
 import { KIND_CHECK, KIND_NAME } from '../commands/yonetim/ayarla.js';
 import config from '../config.js';
@@ -167,16 +168,16 @@ async function resolveValues(client, guild, options, input) {
 }
 
 /** Discord biçimlerini (emoji, etiket, zaman) okunur düz yazıya çevirir */
-export function cleanText(guild, text) {
+export function cleanText(guild, text, { markdown = false } = {}) {
   const name = (map, id, prefix) => `${prefix}${map.get(id)?.name ?? id}`;
   return String(text ?? '')
-    .replace(/<a?:\w+:\d+>/g, '')
-    .replace(/<#(\d+)>/g, (_, id) => (guild.channels.cache.has(id) ? name(guild.channels.cache, id, '#') : ''))
+    .replace(/<a?:(\w+):\d+>/g, markdown ? ':$1:' : '') // markdown: emoji adı kalır, arayüz kendi emojisini koyar
+    .replace(/<#(\d+)>/g, (_, id) => (guild.channels.cache.has(id) ? `#${guild.channels.cache.get(id).name.replace(/^[^\p{L}\p{N}]+/u, '')}` : ''))
     .replace(/<@&(\d+)>/g, (_, id) => name(guild.roles.cache, id, '@'))
     .replace(/<@!?(\d+)>/g, (_, id) => `@${guild.members.cache.get(id)?.displayName ?? id}`)
     .replace(/<\/([^:>]+):\d+>/g, '/$1')
     .replace(/<t:(\d+)(:\w)?>/g, (_, s) => new Date(Number(s) * 1000).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }))
-    .replace(/\*\*|`|^#{1,3} |^> ?|^-# /gm, '')
+    .replace(markdown ? /^$/gm : /\*\*|`|^#{1,3} |^> ?|^-# /gm, '') // markdown istenirse biçimlendirme arayüzde çizilir
     .replace(/[ \t]{2,}/g, ' ')
     .trim();
 }
@@ -393,6 +394,50 @@ const caseList = (guild) =>
     id: Number(c.id), type: CASE_TYPES[c.type]?.label ?? c.type, kind: c.type, user: nameOf(guild, c.user_id), mod: nameOf(guild, c.mod_id), reason: c.reason, at: Number(c.created_at),
   }));
 
+/**
+ * Yazıdaki "@isim" ve "#kanal" ifadelerini Discord etiketlerine çevirir. Sadece tam eşleşenler çevrilir:
+ * üye adı ya da takma adı, rol adı, kanal adı (emoji öneki olmadan). Boşluklu adlar için arayüzdeki öneri listesi kullanılır.
+ */
+export function resolveMentions(guild, text) {
+  const lower = (s) => s.toLocaleLowerCase('tr');
+  const channels = new Map();
+  for (const c of guild.channels.cache.values()) if (c.isTextBased?.() && !c.isThread?.()) channels.set(lower(c.name.replace(/^[^\p{L}\p{N}]+/u, '')), c.id);
+  const members = new Map();
+  for (const m of guild.members.cache.values()) for (const n of [m.displayName, m.user.username]) if (n && !members.has(lower(n))) members.set(lower(n), m.id);
+  const roles = new Map();
+  for (const r of guild.roles.cache.values()) if (r.id !== guild.id) roles.set(lower(r.name), r.id);
+  return text.replace(/(?<![\w<@#&])([@#])([\p{L}\p{N}_-]+)/gu, (all, sign, name) => {
+    const key = lower(name);
+    if (sign === '#') return channels.has(key) ? `<#${channels.get(key)}>` : all;
+    if (key === 'everyone' || key === 'here') return all;
+    if (members.has(key)) return `<@${members.get(key)}>`;
+    return roles.has(key) ? `<@&${roles.get(key)}>` : all;
+  });
+}
+
+/** Panelden botun ağzından mesaj yazdırır: düz yazı ya da embed. Etiketler bildirim göndermez. */
+async function sayAsBot(guild, member, body) {
+  const channel = guild.channels.cache.get(String(body.channelId ?? ''));
+  if (!channel || ![ChannelType.GuildText, ChannelType.GuildAnnouncement].includes(channel.type)) throw new UserError('Mesajın gideceği yazı kanalını seç.');
+  if (!channel.permissionsFor(guild.members.me)?.has(['ViewChannel', 'SendMessages'])) throw new UserError('O kanala yazma iznim yok.');
+  const embed = body.mode === 'embed';
+  const text = resolveMentions(guild, String(body.text ?? '').trim());
+  if (!text) throw new UserError('Önce bir mesaj yaz.');
+  if (text.length > (embed ? 4000 : 2000)) throw new UserError(embed ? 'Embed metni en fazla 4000 karakter olabilir.' : 'Mesaj en fazla 2000 karakter olabilir.');
+  const title = String(body.title ?? '').trim().slice(0, 256);
+  const built = embed ? brandEmbed().setDescription(text) : null;
+  if (built && title) built.setTitle(title);
+  // Yalnızca metinde geçen üye ve roller etiketlenir; @everyone ve @here asla bildirim göndermez
+  const allowedMentions = {
+    parse: [],
+    users: [...new Set([...text.matchAll(/<@!?(\d{17,20})>/g)].map((m) => m[1]))].slice(0, 20),
+    roles: [...new Set([...text.matchAll(/<@&(\d{17,20})>/g)].map((m) => m[1]))].slice(0, 20),
+  };
+  const sent = await channel.send(embed ? { embeds: [built], allowedMentions } : { content: text, allowedMentions });
+  await sendLog(guild, 'log_staff', { content: `${member} panelden ${channel} kanalına bot ile ${embed ? 'embed' : 'normal'} mesaj gönderdi.`, allowedMentions: { parse: [] } });
+  return { ok: true, url: sent.url };
+}
+
 export async function adminRoute(client, guild, member, method, path, body) {
   if (!isPanelAdmin(member)) return { __status: 403, error: 'Bu bölüm sadece yöneticiler içindir.' };
   if (method === 'GET') {
@@ -418,6 +463,7 @@ export async function adminRoute(client, guild, member, method, path, body) {
   }
   if (method === 'GET' && path === '/admin/overview') return overview(client, guild, member);
   if (method === 'POST' && path === '/admin/setting') return changeSetting(guild, member, body);
+  if (method === 'POST' && path === '/admin/say') return sayAsBot(guild, member, body);
   if (method === 'POST' && path === '/admin/run') return runPanelCommand(client, guild, member, body);
   return { __status: 404, error: 'Bulunamadı.' };
 }

@@ -7,6 +7,7 @@ import { userStats, leaderboard, formatVoice } from '../systems/stats.js';
 import { inviteLeaderboard } from '../systems/invites.js';
 import { findGuideChannel } from '../systems/guide.js';
 import { cleanText, runPanelCommand } from './admin.js';
+import { submitReport } from '../commands/topluluk/rapor.js';
 
 const ANNOUNCE_TTL = 60_000;
 const announceCache = new Map();
@@ -18,7 +19,7 @@ async function announcements(guild) {
   const batch = channel?.isTextBased() ? await channel.messages.fetch({ limit: 8 }).catch(() => null) : null;
   const items = batch
     ? [...batch.values()]
-        .map((m) => ({ text: cleanText(guild, m.content || m.embeds[0]?.description || m.embeds[0]?.title || '').slice(0, 220), at: m.createdTimestamp }))
+        .map((m) => ({ text: cleanText(guild, m.content || m.embeds[0]?.description || m.embeds[0]?.title || '', { markdown: true }).slice(0, 420), at: m.createdTimestamp }))
         .filter((m) => m.text)
         .slice(0, 5)
     : [];
@@ -38,6 +39,11 @@ export async function homeView(guild, member) {
     dailyAt: nextDaily(guild.id, id),
     server: { name: guild.name, members: humans, boosts: guild.premiumSubscriptionCount ?? 0, inVoice: guild.members.cache.filter((m) => m.voice.channelId && !m.user.bot).size },
     announcements: await announcements(guild),
+    members: guild.members.cache
+      .filter((m) => !m.user.bot && m.id !== id)
+      .map((m) => ({ id: m.id, name: m.displayName }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'tr'))
+      .slice(0, 400),
   };
 }
 
@@ -66,4 +72,14 @@ export async function sendSuggestion(client, guild, member, text) {
   const channelId = getSetting(guild.id, 'suggestion_channel');
   if (!channelId) throw new UserError('Öneri kanalı henüz ayarlanmamış.');
   return runPanelCommand(client, guild, member, { name: 'oneri', channelId, values: { oneri: String(text ?? '').trim() } });
+}
+
+/** Etkinlikten üye bildirme: /rapor ile aynı kurallar (bekleme süresi, rapor kanalı, kayıt) */
+export async function sendReport(guild, member, targetId, reason) {
+  const target = guild.members.cache.get(String(targetId ?? ''))?.user;
+  if (!target) throw new UserError('Bildirmek istediğin üyeyi seç.');
+  const text = String(reason ?? '').trim();
+  if (text.length < 5 || text.length > 500) throw new UserError('Sebep 5 ile 500 karakter arasında olmalı.');
+  await submitReport({ guild, user: member.user, target, reason: text });
+  return { ok: true };
 }

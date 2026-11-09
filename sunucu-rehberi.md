@@ -16,6 +16,12 @@ Karia'ya hoş geldin! Yazılım, oyun ve Minecraft'ı bir araya getiren bu toplu
 | Rollerini seç | #roller | Kanalı görüntüle |
 | Sohbete katıl | #sohbet | Mesaj gönder |
 
+Rehberde ayrıca şunları anlat (kanal değil, açıklama olarak yaz):
+
+- **Seviye:** Mesaj yazarak ve seste vakit geçirerek XP kazanılır. Her seviye yaklaşık 5 gün sürer. Seviye 5, 10, 15 ve böyle 50'ye kadar her 5 seviyede bir rol verilir.
+- **Etkinlik:** Ses kanalındayken Etkinlikler menüsünden Karia Local'i aç. Blackjack, slot, yazı tura, rulet, müzik ve sıralamalar orada. Her oyundan sonra 5 saniye beklenir.
+- **Roller:** Oryantasyon sorularından ilgi alanı ve bildirim rollerini seç. Ruh hali ve rozet seçimi de orada.
+
 ## Kaynak sayfaları
 
 | Başlık | Kanal | Açıklama |

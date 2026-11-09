@@ -207,4 +207,32 @@ db.exec(`
     streak     INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (guild_id, user_id)
   );
+
+  -- ── Minecraft hesap bağlama ──
+  CREATE TABLE IF NOT EXISTS mc_links (
+    guild_id  TEXT NOT NULL,
+    user_id   TEXT NOT NULL,
+    uuid      TEXT NOT NULL,
+    name      TEXT NOT NULL,
+    linked_at INTEGER NOT NULL,
+    PRIMARY KEY (guild_id, user_id),
+    UNIQUE (guild_id, uuid)
+  );
+  CREATE TABLE IF NOT EXISTS mc_link_codes (
+    code       TEXT PRIMARY KEY,
+    guild_id   TEXT NOT NULL,
+    uuid       TEXT NOT NULL,
+    name       TEXT NOT NULL,
+    expires_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS mc_transactions (
+    guild_id TEXT NOT NULL,
+    tx_id    TEXT NOT NULL,
+    uuid     TEXT NOT NULL,
+    amount   INTEGER NOT NULL,
+    balance  INTEGER NOT NULL,
+    reason   TEXT NOT NULL,
+    at       INTEGER NOT NULL,
+    PRIMARY KEY (guild_id, tx_id)
+  );
 `);

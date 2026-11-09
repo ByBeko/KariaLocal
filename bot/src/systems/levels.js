@@ -10,26 +10,20 @@ export const MSG_XP = [10, 20]; // mesaj başına rastgele XP aralığı
 export const MSG_COOLDOWN = 60_000; // aynı kişi dakikada bir XP alır (spam'le kasılmasın)
 export const VOICE_XP_PER_MIN = 3; // seste dakika başına (en az 2 kişi varken)
 
+// Her seviye aynı XP ister. Düzenli aktif bir üye günde ortalama 600 XP kazanır (yaklaşık 40 mesaj ve biraz ses),
+// bu yüzden 3000 XP bir seviye için yaklaşık 5 gün demektir.
+export const XP_PER_LEVEL = 3000;
+
 /** L. seviyeden L+1'e geçmek için gereken XP */
-export const xpToNext = (level) => 300 + 120 * level + 12 * level * level;
+export const xpToNext = () => XP_PER_LEVEL;
 
 /** Toplam XP'den seviye ve seviye içi ilerleme */
 export function levelFromXp(xp) {
-  let level = 0;
-  let rest = xp;
-  while (rest >= xpToNext(level)) {
-    rest -= xpToNext(level);
-    level++;
-  }
-  return { level, current: rest, needed: xpToNext(level) };
+  return { level: Math.floor(xp / XP_PER_LEVEL), current: xp % XP_PER_LEVEL, needed: XP_PER_LEVEL };
 }
 
 /** Bir seviyeye ulaşmak için gereken toplam XP */
-export function totalXpFor(level) {
-  let total = 0;
-  for (let l = 0; l < level; l++) total += xpToNext(l);
-  return total;
-}
+export const totalXpFor = (level) => level * XP_PER_LEVEL;
 
 const q = {
   get: db.prepare('SELECT * FROM levels WHERE guild_id=? AND user_id=?'),

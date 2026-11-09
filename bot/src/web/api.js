@@ -10,6 +10,7 @@ import { getBalance, richBoard } from '../systems/economy.js';
 import { getProfile, levelBoard } from '../systems/levels.js';
 import { leaderboard, serverStats, userStats } from '../systems/stats.js';
 import { getServerStatus, mcEnabled, mcIp } from '../systems/minecraft.js';
+import { changeBalance, createLinkCode, linkOf, playerView, redeemLinkCode, unlink } from '../systems/mcLink.js';
 
 const MAX_BODY = 16 * 1024;
 const BOARD_SIZE = 15;
@@ -96,6 +97,7 @@ function profileView(guild, member) {
     roles,
     level: getProfile(guild.id, member.id),
     balance: getBalance(guild.id, member.id),
+    minecraft: linkOf(guild.id, member.id),
     stats: {
       days: STATS_DAYS,
       messages: stats.messages,
@@ -133,7 +135,21 @@ async function route(client, guild, req, url, body) {
   if (!member) return { __status: 403, error: 'Bu bölüm sadece Karia üyeleri içindir.' };
 
   if (pathname === '/leaderboard' && req.method === 'GET') return boardView(guild, url.searchParams.get('type') ?? 'seviye');
+  if (pathname === '/minecraft/link' && req.method === 'POST') return { minecraft: redeemLinkCode(guild.id, member.id, body.code) };
+  if (pathname === '/minecraft/unlink' && req.method === 'POST') {
+    unlink(guild.id, member.id);
+    return { minecraft: null };
+  }
   if (pathname.startsWith('/admin/')) return adminRoute(client, guild, member, req.method, pathname, body);
+  return { __status: 404, error: 'Bulunamadı.' };
+}
+
+// Minecraft eklentisinin kapısı: kendi anahtarıyla çalışır ve yalnızca bu uçlara erişir, panel yetkisi taşımaz.
+function pluginRoute(guild, req, url, body) {
+  const { pathname } = url;
+  if (req.method === 'POST' && pathname === '/mc/link-code') return createLinkCode(guild.id, body.uuid, body.name);
+  if (req.method === 'GET' && pathname === '/mc/player') return playerView(guild.id, url.searchParams.get('uuid'));
+  if (req.method === 'POST' && pathname === '/mc/balance') return changeBalance(guild.id, body.uuid, body.amount, body.txId, body.reason);
   return { __status: 404, error: 'Bulunamadı.' };
 }
 
@@ -147,7 +163,10 @@ export function startWebApi(client, { port = Number(process.env.WEB_API_PORT || 
       res.end(JSON.stringify(payload));
     };
     try {
-      if (!sameSecret(req.headers['x-api-secret'] ?? '', secret)) return send(401, { error: 'Yetkisiz.' });
+      const url = new URL(req.url, 'http://x');
+      const fromPlugin = url.pathname.startsWith('/mc/');
+      const expected = fromPlugin ? process.env.MC_API_SECRET : secret;
+      if (!expected || !sameSecret(req.headers['x-api-secret'] ?? '', expected)) return send(401, { error: 'Yetkisiz.' });
       const guild = client.guilds.cache.get(guildId);
       if (!guild) return send(503, { error: 'Bot sunucuya bağlı değil.' });
 
@@ -164,7 +183,7 @@ export function startWebApi(client, { port = Number(process.env.WEB_API_PORT || 
           return send(400, { error: 'Geçersiz istek.' });
         }
       }
-      const { __status, ...payload } = await route(client, guild, req, new URL(req.url, 'http://x'), body);
+      const { __status, ...payload } = fromPlugin ? pluginRoute(guild, req, url, body) : await route(client, guild, req, url, body);
       send(__status ?? 200, payload);
     } catch (error) {
       if (error instanceof UserError) return send(400, { error: plain(error.message) });
