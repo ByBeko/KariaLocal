@@ -23,6 +23,7 @@ const DESCRIPTION_LIMIT = 400;
 const describe = (icon) => [
   `${icon('icon_turkuaz', '💠')} Karia'nın resmi botuyum`,
   `${icon('baglanti', '🌐')} https://karia.live/`,
+  `${icon('asagi', '⬇️')} Komutlar aşağıda`,
 ].join('\n');
 // Özel emojilerle sınırı aşarsa normal emojilerle yazılır
 const botDescription = () => {
