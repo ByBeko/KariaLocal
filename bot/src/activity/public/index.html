@@ -239,6 +239,25 @@
         <input id="social-title" class="field" maxlength="100" placeholder="Başlık" autocomplete="off">
         <textarea id="social-description" class="field" maxlength="2000" rows="4" placeholder="Açıklama ve etiketler"></textarea>
         <div id="social-targets" class="social-targets"></div>
+        <fieldset id="social-tiktok" class="social-tiktok" hidden>
+          <legend>TikTok ayarları</legend>
+          <p id="tt-account" class="hint left">Hesap bilgisi alınıyor...</p>
+          <label class="tt-field"><span>Kimler görebilir</span>
+            <select id="tt-privacy" class="field"><option value="" disabled selected>Seç</option></select>
+          </label>
+          <div class="tt-checks">
+            <label><input id="tt-comment" type="checkbox"> Yorumlara izin ver</label>
+            <label><input id="tt-duet" type="checkbox"> Düete izin ver</label>
+            <label><input id="tt-stitch" type="checkbox"> Stitch'e izin ver</label>
+          </div>
+          <label class="tt-commercial"><input id="tt-commercial" type="checkbox"> Bu video bir markayı, ürünü ya da hizmeti tanıtıyor</label>
+          <div id="tt-commercial-box" class="tt-checks" hidden>
+            <label><input id="tt-yourbrand" type="checkbox"> Kendi markan: Karia'yı ya da kendi işini tanıtıyorsun. Video "Tanıtım içeriği" olarak etiketlenir.</label>
+            <label><input id="tt-branded" type="checkbox"> Markalı içerik: Bir markayla ücretli iş birliği. Video "Ücretli ortaklık" olarak etiketlenir.</label>
+          </div>
+          <p id="tt-duration" class="hint left social-limit" hidden></p>
+          <p id="tt-consent" class="hint left tt-consent"></p>
+        </fieldset>
         <progress id="social-progress" class="social-progress" max="100" value="0" hidden></progress>
         <button id="social-send" class="primary" type="submit">Hepsinde Paylaş</button>
       </form>

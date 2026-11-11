@@ -662,6 +662,19 @@ textarea::-webkit-scrollbar{display:none}
 .social-targets{display:flex;flex-wrap:wrap;gap:8px 16px}
 .social-target{display:flex;align-items:center;gap:7px;cursor:pointer}
 .social-progress{width:100%;height:8px;accent-color:var(--accent)}
+.social-tiktok{display:flex;flex-direction:column;gap:9px;margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);min-width:0}
+.social-tiktok[hidden]{display:none}
+.social-tiktok legend{padding:0 6px;font-weight:700}
+.social-tiktok .hint{margin:0}
+.tt-field{display:flex;flex-direction:column;gap:5px}
+.tt-field span{font-size:13px;color:var(--muted)}
+.tt-checks{display:flex;flex-direction:column;gap:6px}
+.tt-checks[hidden]{display:none}
+.tt-checks label,.tt-commercial{display:flex;align-items:flex-start;gap:7px;cursor:pointer;line-height:1.35}
+.tt-checks input,.tt-commercial input{margin-top:3px;accent-color:var(--accent)}
+.tt-checks label:has(input:disabled){opacity:.5;cursor:default}
+#tt-commercial-box{padding-left:22px}
+.tt-consent a{color:var(--accent)}
 .social-post{align-items:flex-start}
 .social-post>div:first-child{flex:1;min-width:0}
 .social-results{display:flex;flex-direction:column;gap:6px;margin-top:9px}

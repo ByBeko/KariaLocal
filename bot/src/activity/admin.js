@@ -17,7 +17,7 @@ import { CASE_TYPES } from '../systems/moderation.js';
 import { getQueue } from '../systems/music.js';
 import { listReports, openReportCount, resolveReport } from '../systems/reports.js';
 import { primeView, addPrimeFromPanel, removePrimeFromPanel } from '../systems/prime.js';
-import { socialView, startConnect, disconnect, beginUpload, publishVideo, retryPost } from '../systems/social.js';
+import { socialView, startConnect, disconnect, beginUpload, publishVideo, retryPost, tiktokCreator } from '../systems/social.js';
 import { mailList, openMail, deleteMail } from '../systems/mailbox.js';
 import { roleProblem, sendButtonRoles } from '../systems/buttonRoles.js';
 import { emojiList } from '../utils/emojis.js';
@@ -468,6 +468,7 @@ export async function adminRoute(client, guild, member, method, path, body) {
     if (path === '/admin/cases') return { cases: caseList(guild) };
     if (path === '/admin/prime') return primeView(guild);
     if (path === '/admin/social') return socialView();
+    if (path === '/admin/social/tiktok') return tiktokCreator();
     if (path === '/admin/social/mails') return mailList();
     const mailRead = path.match(/^\/admin\/social\/mails\/(\d+)$/);
     if (mailRead) return openMail(Number(mailRead[1]));

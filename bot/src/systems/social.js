@@ -52,6 +52,10 @@ db.exec(`
     created_at  INTEGER NOT NULL
   );
 `);
+// Platforma özel paylaşım seçimleri (TikTok gizlilik, etkileşim, ticari içerik); yeniden denemede aynısı kullanılır
+if (!db.prepare('PRAGMA table_info(social_posts)').all().some((c) => c.name === 'options')) {
+  db.exec("ALTER TABLE social_posts ADD COLUMN options TEXT NOT NULL DEFAULT '{}'");
+}
 
 // ── Anahtarların saklanması ──
 const cipherKey = () => createHash('sha256').update(process.env.SOCIAL_TOKEN_KEY ?? '').digest();
@@ -270,13 +274,24 @@ const tiktok = {
   async publish(job) {
     const access = (await session('tiktok')).secrets.access;
     const creator = await tiktokCall('/post/publish/creator_info/query/', access);
-    const canGoPublic = Boolean(process.env.TIKTOK_AUDITED) && creator.privacy_level_options?.includes('PUBLIC_TO_EVERYONE');
+    const pick = job.tiktok;
+    if (!pick?.privacy) throw new Error('TikTok gizlilik seçimi yapılmamış.');
+    // Seçenekler paylaşım anında yeniden kontrol edilir: TikTok hesabın izinleri bu arada değişmiş olabilir
+    if (!creator.privacy_level_options?.includes(pick.privacy)) throw new Error('Seçilen gizlilik bu TikTok hesabında artık kullanılamıyor, yeniden seç.');
     const chunkSize = job.size <= TIKTOK_CHUNK ? job.size : TIKTOK_CHUNK;
     const chunks = Math.floor(job.size / chunkSize);
     let init;
     try {
       init = await tiktokCall('/post/publish/video/init/', access, {
-        post_info: { title: job.caption, privacy_level: canGoPublic ? 'PUBLIC_TO_EVERYONE' : 'SELF_ONLY', disable_duet: false, disable_stitch: false, disable_comment: false },
+        post_info: {
+          title: job.caption,
+          privacy_level: pick.privacy,
+          disable_comment: creator.comment_disabled || !pick.comment,
+          disable_duet: creator.duet_disabled || !pick.duet,
+          disable_stitch: creator.stitch_disabled || !pick.stitch,
+          brand_organic_toggle: Boolean(pick.yourBrand),
+          brand_content_toggle: Boolean(pick.branded),
+        },
         source_info: { source: 'FILE_UPLOAD', video_size: job.size, chunk_size: chunkSize, total_chunk_count: chunks },
       });
     } catch (error) {
@@ -297,7 +312,7 @@ const tiktok = {
       const state = await withRetry(() => tiktokCall('/post/publish/status/fetch/', access, { publish_id: init.publish_id }));
       if (state.status === 'PUBLISH_COMPLETE') {
         const postId = state.publicaly_available_post_id?.[0];
-        return { url: postId && creator.creator_username ? `https://www.tiktok.com/@${creator.creator_username}/video/${postId}` : null, note: canGoPublic ? null : tiktok.limitNote };
+        return { url: postId && creator.creator_username ? `https://www.tiktok.com/@${creator.creator_username}/video/${postId}` : null, note: process.env.TIKTOK_AUDITED ? null : tiktok.limitNote };
       }
       if (state.status === 'FAILED') throw new Error(`TikTok paylaşımı reddetti: ${state.fail_reason ?? 'bilinmeyen neden'}`);
       if (Date.now() > deadline) throw new Error('TikTok videoyu zamanında işleyemedi.');
@@ -402,7 +417,8 @@ const safeError = (error) => String(error?.message || 'Bilinmeyen hata').replace
 
 async function runPost(id, platforms) {
   const post = getPost(id);
-  const job = { file: post.file, mime: post.mime, size: post.size, title: post.title, description: post.description, caption: [post.title, post.description].filter(Boolean).join('\n\n') };
+  const options = JSON.parse(post.options || '{}');
+  const job = { file: post.file, mime: post.mime, size: post.size, title: post.title, description: post.description, caption: [post.title, post.description].filter(Boolean).join('\n\n'), tiktok: options.tiktok };
   await Promise.all(platforms.map(async (platform) => {
     setResult(id, platform, { status: 'running' });
     try {
@@ -415,6 +431,37 @@ async function runPost(id, platforms) {
   }));
   const results = Object.values(JSON.parse(getPost(id).results));
   if (results.every((r) => r.status === 'done')) rmSync(post.file, { force: true });
+}
+
+const TIKTOK_PRIVACY = ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'FOLLOWER_OF_CREATOR', 'SELF_ONLY'];
+
+/** TikTok paylaşım kuralları: gizlilik elle seçilir, ticari içerik açıksa türü belirtilir, markalı içerik gizli olamaz */
+function tiktokChoice(raw = {}) {
+  const privacy = String(raw.privacy ?? '');
+  if (!TIKTOK_PRIVACY.includes(privacy)) throw new UserError('TikTok için kimlerin görebileceğini seç.');
+  const commercial = Boolean(raw.commercial);
+  const yourBrand = commercial && Boolean(raw.yourBrand);
+  const branded = commercial && Boolean(raw.branded);
+  if (commercial && !yourBrand && !branded) throw new UserError('Ticari içerikte "Kendi markan" ya da "Markalı içerik" seçeneklerinden en az birini işaretle.');
+  if (branded && privacy === 'SELF_ONLY') throw new UserError('Markalı içerik "Yalnızca ben" olarak paylaşılamaz; gizliliği değiştir.');
+  return { privacy, comment: Boolean(raw.comment), duet: Boolean(raw.duet), stitch: Boolean(raw.stitch), yourBrand, branded };
+}
+
+/** Panelde TikTok ayarları için hesabın güncel bilgisi: takma ad, izin verilen gizlilikler, kapalı etkileşimler, süre sınırı */
+export async function tiktokCreator() {
+  const account = getAccount('tiktok');
+  if (!account || account.broken) throw new UserError('TikTok hesabı bağlı değil.');
+  const creator = await tiktokCall('/post/publish/creator_info/query/', (await session('tiktok')).secrets.access);
+  return {
+    nickname: creator.creator_nickname ?? account.name,
+    username: creator.creator_username ?? null,
+    avatar: creator.creator_avatar_url ?? null,
+    privacyOptions: (creator.privacy_level_options ?? []).filter((p) => TIKTOK_PRIVACY.includes(p)),
+    commentDisabled: Boolean(creator.comment_disabled),
+    duetDisabled: Boolean(creator.duet_disabled),
+    stitchDisabled: Boolean(creator.stitch_disabled),
+    maxDuration: Number(creator.max_video_post_duration_sec) || null,
+  };
 }
 
 export async function publishVideo(memberId, body) {
@@ -434,14 +481,15 @@ export async function publishVideo(memberId, body) {
     if (!account) throw new UserError('Seçilen hesaplardan biri bağlı değil.');
     if (account.broken) throw new UserError(`${PLATFORMS[platform].label} hesabını yeniden bağla.`);
   }
+  const options = platforms.includes('tiktok') ? { tiktok: tiktokChoice(body.tiktok) } : {};
   if (!(await hasVideoHeader(upload.file))) {
     dropUpload(upload);
     throw new UserError('Bu dosya geçerli bir video değil.');
   }
   dropUpload(upload, true); // Çift tıklama aynı videoyu iki kez paylaşamasın
   const results = Object.fromEntries(platforms.map((p) => [p, { status: 'pending' }]));
-  db.prepare('INSERT INTO social_posts (id, title, description, file, mime, size, results, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(upload.id, title, description, upload.file, upload.mime, upload.size, JSON.stringify(results), memberId, Date.now());
+  db.prepare('INSERT INTO social_posts (id, title, description, file, mime, size, results, options, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(upload.id, title, description, upload.file, upload.mime, upload.size, JSON.stringify(results), JSON.stringify(options), memberId, Date.now());
   runPost(upload.id, platforms).catch((error) => console.error('[Sosyal]', safeError(error)));
   return { title, platforms: platforms.map((p) => PLATFORMS[p].label) };
 }

@@ -1412,12 +1412,107 @@ function socialResult(r) {
   return row;
 }
 
+// TikTok paylaşım kuralları: gizlilik varsayılansız elle seçilir, etkileşimler kapalı başlar, ticari içerik beyan edilir
+const TT_PRIVACY = { PUBLIC_TO_EVERYONE: 'Herkes', FOLLOWER_OF_CREATOR: 'Takipçiler', MUTUAL_FOLLOW_FRIENDS: 'Arkadaşlar (karşılıklı takip)', SELF_ONLY: 'Yalnızca ben' };
+let tiktokCreatorInfo = null;
+let tiktokLoading = false;
+let socialDuration = null;
+const tiktokChosen = () => socialAccounts.some((a) => a.platform === 'tiktok') && !socialOff.has('tiktok');
+
+function legalLink(text, url) {
+  const link = el('a', { href: url, textContent: text });
+  link.addEventListener('click', (event) => { event.preventDefault(); openLink(url); });
+  return link;
+}
+
+function drawTikTokConsent() {
+  const parts = ['Paylaşarak TikTok ', legalLink('Müzik Kullanım Onayı', 'https://www.tiktok.com/legal/page/global/music-usage-confirmation/en')];
+  if ($('tt-branded').checked) parts.push(' ve ', legalLink('Markalı İçerik Politikası', 'https://www.tiktok.com/legal/page/global/bc-policy/en'));
+  parts.push(' koşullarını kabul etmiş olursun. Paylaşımdan sonra videonun profilde görünmesi birkaç dakika sürebilir.');
+  $('tt-consent').replaceChildren(...parts);
+}
+
+function drawTikTokDuration() {
+  const max = tiktokCreatorInfo?.maxDuration;
+  const tooLong = max && socialDuration && socialDuration > max;
+  $('tt-duration').hidden = !tooLong;
+  if (tooLong) $('tt-duration').textContent = `Bu TikTok hesabı en çok ${max} saniyelik video kabul ediyor; seçilen video ${Math.ceil(socialDuration)} saniye.`;
+}
+
+function drawTikTokOptions() {
+  const info = tiktokCreatorInfo;
+  if (!info) return;
+  $('tt-account').textContent = `Paylaşılacak hesap: ${info.nickname}${info.username ? ` (@${info.username})` : ''}`;
+  const select = $('tt-privacy');
+  const current = select.value;
+  select.replaceChildren(el('option', { value: '', disabled: true, selected: !current, textContent: 'Seç' }),
+    ...info.privacyOptions.map((p) => el('option', { value: p, textContent: TT_PRIVACY[p] ?? p, selected: p === current })));
+  for (const [id, off] of [['tt-comment', info.commentDisabled], ['tt-duet', info.duetDisabled], ['tt-stitch', info.stitchDisabled]]) {
+    $(id).disabled = off;
+    if (off) $(id).checked = false;
+    $(id).parentElement.title = off ? 'Bu hesabın TikTok ayarlarında kapalı' : '';
+  }
+  syncBranded();
+  drawTikTokDuration();
+}
+
+// Markalı içerik "Yalnızca ben" olarak paylaşılamaz
+function syncBranded() {
+  const branded = $('tt-branded').checked;
+  const self = [...$('tt-privacy').options].find((o) => o.value === 'SELF_ONLY');
+  if (self) {
+    self.disabled = branded;
+    self.textContent = branded ? 'Yalnızca ben (markalı içerikte kullanılamaz)' : TT_PRIVACY.SELF_ONLY;
+  }
+  if (branded && $('tt-privacy').value === 'SELF_ONLY') {
+    $('tt-privacy').value = '';
+    say('Markalı içerik "Yalnızca ben" olarak paylaşılamaz, gizliliği yeniden seç.', 'lose');
+  }
+  drawTikTokConsent();
+}
+
+async function updateTikTokBox() {
+  const show = tiktokChosen();
+  $('social-tiktok').hidden = !show;
+  if (!show || tiktokCreatorInfo || tiktokLoading) return;
+  tiktokLoading = true;
+  try {
+    tiktokCreatorInfo = await api('/admin/social/tiktok');
+    drawTikTokOptions();
+  } catch (error) {
+    $('tt-account').textContent = `TikTok hesap bilgisi alınamadı: ${error.message}`;
+  } finally {
+    tiktokLoading = false;
+  }
+}
+
+$('tt-commercial').addEventListener('change', () => {
+  $('tt-commercial-box').hidden = !$('tt-commercial').checked;
+  if (!$('tt-commercial').checked) { $('tt-yourbrand').checked = false; $('tt-branded').checked = false; }
+  syncBranded();
+});
+$('tt-branded').addEventListener('change', syncBranded);
+drawTikTokConsent();
+
+function tiktokPayload() {
+  if (!tiktokCreatorInfo) throw new Error('TikTok hesap bilgisi henüz alınmadı, biraz bekleyip yeniden dene.');
+  const privacy = $('tt-privacy').value;
+  if (!privacy) throw new Error('TikTok için kimlerin görebileceğini seç.');
+  const commercial = $('tt-commercial').checked;
+  if (commercial && !$('tt-yourbrand').checked && !$('tt-branded').checked) throw new Error('Ticari içerikte "Kendi markan" ya da "Markalı içerik" seçeneklerinden en az birini işaretle.');
+  const max = tiktokCreatorInfo.maxDuration;
+  if (max && socialDuration && socialDuration > max) throw new Error(`TikTok bu hesapta en çok ${max} saniyelik video kabul ediyor.`);
+  return { privacy, comment: $('tt-comment').checked, duet: $('tt-duet').checked, stitch: $('tt-stitch').checked, commercial, yourBrand: $('tt-yourbrand').checked, branded: $('tt-branded').checked };
+}
+
 function drawSocial(data) {
   socialAccounts = data.accounts.filter((a) => a.name && !a.broken);
+  if (!socialAccounts.some((a) => a.platform === 'tiktok')) tiktokCreatorInfo = null; // Hesap değişirse bilgi yeniden alınır
   $('social-accounts').replaceChildren(...data.accounts.map(socialAccountCard));
+  updateTikTokBox();
   $('social-targets').replaceChildren(...(socialAccounts.length ? socialAccounts.map((a) => {
     const box = el('input', { type: 'checkbox', checked: !socialOff.has(a.platform) });
-    box.addEventListener('change', () => { if (box.checked) socialOff.delete(a.platform); else socialOff.add(a.platform); });
+    box.addEventListener('change', () => { if (box.checked) socialOff.delete(a.platform); else socialOff.add(a.platform); updateTikTokBox(); });
     return el('label', { className: 'social-target' }, box, el('span', { textContent: `${a.label} · ${a.name}` }));
   }) : [el('p', { className: 'hint left', textContent: 'Paylaşım için önce yukarıdan hesap bağla.' })]));
   $('social-list').replaceChildren(...(data.posts.length ? data.posts.map((p) => {
@@ -1537,7 +1632,18 @@ async function uploadSocialVideo(file) {
 }
 
 $('social-file').addEventListener('change', () => {
-  $('social-file-name').textContent = $('social-file').files[0]?.name ?? 'Video seç (MP4 veya MOV, en çok 1 GB)';
+  const file = $('social-file').files[0];
+  $('social-file-name').textContent = file?.name ?? 'Video seç (MP4 veya MOV, en çok 1 GB)';
+  socialDuration = null;
+  drawTikTokDuration();
+  if (!file) return;
+  // TikTok süre sınırı için videonun süresi tarayıcıda okunur; dosya sunucuya gitmeden önce uyarılır
+  const probe = document.createElement('video');
+  const url = URL.createObjectURL(file);
+  probe.preload = 'metadata';
+  probe.onloadedmetadata = () => { socialDuration = Number.isFinite(probe.duration) ? probe.duration : null; URL.revokeObjectURL(url); drawTikTokDuration(); };
+  probe.onerror = () => URL.revokeObjectURL(url);
+  probe.src = url;
 });
 
 // Yükleme uzun sürebilir: genel kilit kullanılmaz, panelin kalanı çalışmaya devam eder
@@ -1550,6 +1656,10 @@ $('social-form').addEventListener('submit', async (event) => {
   if (!file) return say('Önce video seç.', 'lose');
   if (!title) return say('Başlık yaz.', 'lose');
   if (!platforms.length) return say('En az bir hesap seç.', 'lose');
+  let tiktok;
+  if (platforms.includes('tiktok')) {
+    try { tiktok = tiktokPayload(); } catch (error) { return say(error.message, 'lose'); }
+  }
   socialSending = true;
   $('social-send').disabled = true;
   $('social-send').textContent = 'Yükleniyor';
@@ -1557,10 +1667,15 @@ $('social-form').addEventListener('submit', async (event) => {
   $('social-progress').hidden = false;
   try {
     const id = await uploadSocialVideo(file);
-    drawSocial(await api('/admin/social/publish', { id, title, description: $('social-description').value, platforms }));
+    drawSocial(await api('/admin/social/publish', { id, title, description: $('social-description').value, platforms, tiktok }));
     $('social-form').reset();
     $('social-file-name').textContent = 'Video seç (MP4 veya MOV, en çok 1 GB)';
-    say('Video gönderildi, paylaşım durumu aşağıda.', 'win');
+    $('tt-commercial-box').hidden = true;
+    socialDuration = null;
+    $('tt-privacy').value = ''; // Sıfırlamada tarayıcı ilk seçeneği seçebilir; TikTok varsayılan gizlilik istemez
+    drawTikTokOptions();
+    syncBranded();
+    say(tiktok ? 'Video gönderildi. TikTok\'ta profilde görünmesi birkaç dakika sürebilir.' : 'Video gönderildi, paylaşım durumu aşağıda.', 'win');
   } catch (error) {
     say(error.message, 'lose');
   } finally {
