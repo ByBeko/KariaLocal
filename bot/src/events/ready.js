@@ -17,12 +17,27 @@ import { setEmbedClient } from '../utils/embeds.js';
 import { setupLogs, LOG_CHANNELS } from '../commands/yonetim/kurulum.js';
 import { getSetting } from '../core/settings.js';
 
-// Karia'nın turkuaz uygulama emojileri; açılışta emojiler yüklendikten sonra kurulur
-const botDescription = () => [
-  `${e('kalp', '💜')} Karia sunucusunun kendi botu`,
-  `${e('pano', '📜')} Komutlar için **/yardım**`,
-  `${e('baglanti', '🌐')} **karia.live**`,
+// Bot profilindeki "Hakkında" yazısı ve etiketler. Emojiler Karia'nın turkuaz uygulama emojileridir,
+// bu yüzden açılışta emojiler yüklendikten sonra kurulur. Discord sınırı 400 karakter.
+const DESCRIPTION_LIMIT = 400;
+const describe = (icon) => [
+  "**Karia Local** · Karia'nın resmi botu",
+  '',
+  '**Öne çıkanlar**',
+  `${icon('muzik', '🎵')} Müzik, seviye, ekonomi ve oyunlar`,
+  `${icon('kalkan', '🛡️')} Koruma, moderasyon ve kayıtlar`,
+  `${icon('robot', '🤖')} Yapay zekâ ve Discord Etkinliği`,
+  '',
+  `${icon('pano', '📜')} Komutlar: **/yardım**`,
+  `${icon('baglanti', '🌐')} https://karia.live`,
 ].join('\n');
+// Özel emojilerle sınırı aşarsa normal emojilerle yazılır
+const botDescription = () => {
+  const custom = describe(e);
+  return custom.length <= DESCRIPTION_LIMIT ? custom : describe((_, fallback) => fallback);
+};
+// Profilde görünen etiketler (en çok 5, her biri en çok 20 karakter)
+const BOT_TAGS = ['Müzik', 'Seviye', 'Ekonomi', 'Moderasyon', 'Yapay Zeka'];
 
 export default {
   name: Events.ClientReady,
@@ -49,8 +64,10 @@ export default {
       console.log(`✔ ${client.commands.size} komut ${guild.name} sunucusuna yüklendi.`);
       await client.application.fetch();
       const description = botDescription();
-      if (client.application.description !== description) {
-        await client.application.edit({ description }).catch((e) => console.error('[Bot açıklaması]', e.message));
+      const sorted = (tags) => [...tags].sort().join('|'); // Discord etiketleri farklı sırayla döndürebilir
+      const tagsChanged = sorted(client.application.tags ?? []) !== sorted(BOT_TAGS);
+      if (client.application.description !== description || tagsChanged) {
+        await client.application.edit({ description, tags: BOT_TAGS }).catch((e) => console.error('[Bot açıklaması]', e.message));
       }
       await guild.members.fetch(); // log/takviye karşılaştırmaları için üyeleri önbelleğe al
       await cleanupTempChannels(guild);
