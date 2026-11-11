@@ -12,17 +12,16 @@ import { warmUpAI } from '../systems/ai.js';
 import { cacheInvites } from '../systems/invites.js';
 import { setLevelClient, seedFromStats } from '../systems/levels.js';
 import { startTimers } from '../systems/timers.js';
-import { loadAppEmojis } from '../utils/emojis.js';
+import { loadAppEmojis, e } from '../utils/emojis.js';
 import { setEmbedClient } from '../utils/embeds.js';
 import { setupLogs, LOG_CHANNELS } from '../commands/yonetim/kurulum.js';
 import { getSetting } from '../core/settings.js';
 
-const BOT_DESCRIPTION = [
-  "💜 Karia'nın özel botuyum.",
-  '📜 Tüm komutlar için /yardım',
-  '🌐 karia.live',
-  '',
-  '🎵 `Müzik` ⭐ `Seviye` 🪙 `Ekonomi` 🛡️ `Koruma` 🤖 `Yapay zeka`',
+// Karia'nın turkuaz uygulama emojileri; açılışta emojiler yüklendikten sonra kurulur
+const botDescription = () => [
+  `${e('kalp', '💜')} Karia sunucusunun kendi botu`,
+  `${e('pano', '📜')} Komutlar için **/yardım**`,
+  `${e('baglanti', '🌐')} **karia.live**`,
 ].join('\n');
 
 export default {
@@ -49,8 +48,9 @@ export default {
       setCommandIds([...guildCommands.values(), ...globalCommands]);
       console.log(`✔ ${client.commands.size} komut ${guild.name} sunucusuna yüklendi.`);
       await client.application.fetch();
-      if (client.application.description !== BOT_DESCRIPTION) {
-        await client.application.edit({ description: BOT_DESCRIPTION }).catch((e) => console.error('[Bot açıklaması]', e.message));
+      const description = botDescription();
+      if (client.application.description !== description) {
+        await client.application.edit({ description }).catch((e) => console.error('[Bot açıklaması]', e.message));
       }
       await guild.members.fetch(); // log/takviye karşılaştırmaları için üyeleri önbelleğe al
       await cleanupTempChannels(guild);
