@@ -18,10 +18,11 @@ import { setupLogs, LOG_CHANNELS } from '../commands/yonetim/kurulum.js';
 import { getSetting } from '../core/settings.js';
 
 const BOT_DESCRIPTION = [
-  "Karia'nın özel botuyum.",
-  'Tüm komutlar için /yardım',
+  "💜 Karia'nın özel botuyum.",
+  '📜 Tüm komutlar için /yardım',
+  '🌐 karia.live',
   '',
-  '`Müzik` `Seviye` `Ekonomi` `Koruma` `Yapay zeka`',
+  '🎵 `Müzik` ⭐ `Seviye` 🪙 `Ekonomi` 🛡️ `Koruma` 🤖 `Yapay zeka`',
 ].join('\n');
 
 export default {
@@ -32,7 +33,7 @@ export default {
     console.log(`✔ ${await loadAppEmojis(client)} Karia emojisi yüklendi.`);
     setEmbedClient(client);
     // Discord botlarda yalnızca ad ve alt satıra izin verir; resim ve buton gösterilemez
-    client.user.setPresence({ activities: [{ type: ActivityType.Playing, name: 'karia.live | /yardım', state: 'Müzik • Seviye • Oyunlar • Yapay zeka' }], status: 'online' });
+    client.user.setPresence({ activities: [{ type: ActivityType.Playing, name: '/yardım | karia.live' }], status: 'online' });
 
     const guildId = process.env.GUILD_ID;
     const guild = guildId && (await client.guilds.fetch(guildId).catch(() => null));
