@@ -24,7 +24,9 @@ const STATE_TTL = 15 * 60_000;
 const UPLOAD_TTL = 6 * 3600_000;
 const KEEP_FAILED = 3 * 24 * 3600_000;
 const HOUR = 3600_000;
-const IG_API = 'https://graph.instagram.com/v27.0';
+const NEVER = 253402300799000; // 9999-12-31: süresi dolmayan anahtarlar için
+// Yeni Meta uygulamaları Instagram'a "Unified Login" (Facebook Login for Business, sistem kullanıcısı) ile bağlanır
+const IG_API = 'https://graph.facebook.com/v27.0';
 const TT_API = 'https://open.tiktokapis.com/v2';
 
 db.exec(`
@@ -127,20 +129,46 @@ async function readPart(file, start, length) {
 // ── Instagram ──
 const mediaLinks = new Map();
 
+/** Girişte seçilen Instagram hesabı: önce atanan hesaplar, boşsa token'ın izin verdiği hesap kimliği */
+async function instagramAccount(accessToken, headers) {
+  const assigned = await request(`${IG_API}/me/assigned_instagram_accounts?fields=id,username`, { headers }).catch(() => ({}));
+  if (assigned.data?.length) return assigned.data[0];
+  const appToken = `${process.env.INSTAGRAM_APP_ID}|${process.env.INSTAGRAM_APP_SECRET}`;
+  const debug = await request(`${IG_API}/debug_token?${new URLSearchParams({ input_token: accessToken, access_token: appToken })}`);
+  const scopes = debug.data?.granular_scopes ?? [];
+  const granted = ['instagram_content_publish', 'instagram_basic'].map((name) => scopes.find((s) => s.scope === name)?.target_ids?.[0]).find(Boolean);
+  if (granted) {
+    const info = await request(`${IG_API}/${granted}?fields=id,username`, { headers }).catch(() => ({ id: granted }));
+    return { id: String(info.id ?? granted), username: info.username };
+  }
+  // Meta bazı sistem kullanıcısı anahtarlarında hesabı listelemiyor: ayardaki kimlik bu anahtarla okunabiliyorsa o kullanılır
+  const fallback = process.env.INSTAGRAM_ACCOUNT_ID;
+  if (fallback) {
+    const info = await request(`${IG_API}/${encodeURIComponent(fallback)}?fields=id,username`, { headers }).catch((error) => {
+      console.warn(`[Sosyal] instagram yedek hesap okunamadı: ${safeError(error)}`);
+      return null;
+    });
+    if (info?.id) return { id: String(info.id), username: info.username };
+  }
+  console.warn(`[Sosyal] instagram izinleri: ${scopes.map((s) => `${s.scope}(${s.target_ids?.length ?? 0})`).join(', ') || 'yok'}`);
+  return null;
+}
+
 const instagram = {
   label: 'Instagram',
-  env: ['INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET'],
-  refreshBefore: 30 * 24 * HOUR, // Anahtar 60 gün geçerli; süresi dolmadan uzatılır
-  authUrl: (state) => `https://www.instagram.com/oauth/authorize?${new URLSearchParams({ client_id: process.env.INSTAGRAM_APP_ID, redirect_uri: redirectUri('instagram'), response_type: 'code', scope: 'instagram_business_basic,instagram_business_content_publish', state })}`,
+  env: ['INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET', 'INSTAGRAM_CONFIG_ID'],
+  refreshBefore: 0, // Sistem kullanıcısı anahtarının süresi dolmaz
+  // İzinler Meta'daki yapılandırmadan (config_id) gelir; scope gönderilmez
+  authUrl: (state) => `https://www.facebook.com/v27.0/dialog/oauth?${new URLSearchParams({ client_id: process.env.INSTAGRAM_APP_ID, config_id: process.env.INSTAGRAM_CONFIG_ID, redirect_uri: redirectUri('instagram'), response_type: 'code', override_default_response_type: 'true', state })}`,
   async connect(code) {
-    const short = await request('https://api.instagram.com/oauth/access_token', form({ client_id: process.env.INSTAGRAM_APP_ID, client_secret: process.env.INSTAGRAM_APP_SECRET, grant_type: 'authorization_code', redirect_uri: redirectUri('instagram'), code }));
-    const long = await request(`https://graph.instagram.com/access_token?${new URLSearchParams({ grant_type: 'ig_exchange_token', client_secret: process.env.INSTAGRAM_APP_SECRET, access_token: short.access_token })}`);
-    const me = await request(`${IG_API}/me?fields=user_id,username`, { headers: { Authorization: `Bearer ${long.access_token}` } });
-    return { accountId: String(me.user_id), name: `@${me.username}`, secrets: { access: long.access_token }, expiresAt: Date.now() + long.expires_in * 1000 };
+    const token = await request(`${IG_API}/oauth/access_token?${new URLSearchParams({ client_id: process.env.INSTAGRAM_APP_ID, client_secret: process.env.INSTAGRAM_APP_SECRET, redirect_uri: redirectUri('instagram'), code })}`);
+    const headers = { Authorization: `Bearer ${token.access_token}` };
+    const ig = await instagramAccount(token.access_token, headers);
+    if (!ig) throw new UserError('Girişte bir Instagram hesabı seçilmedi. Yeniden bağlanıp @karia.live hesabını seç.');
+    return { accountId: String(ig.id), name: ig.username ? `@${ig.username}` : 'Instagram', secrets: { access: token.access_token }, expiresAt: NEVER };
   },
   async refresh(secrets) {
-    const data = await request(`https://graph.instagram.com/refresh_access_token?${new URLSearchParams({ grant_type: 'ig_refresh_token', access_token: secrets.access })}`);
-    return { secrets: { access: data.access_token }, expiresAt: Date.now() + data.expires_in * 1000 };
+    return { secrets, expiresAt: NEVER };
   },
   async publish(job) {
     const { account, secrets } = await session('instagram');
@@ -491,7 +519,8 @@ async function handleCallback(res, platform, query) {
     page(res, 200, `${PLATFORMS[platform].label} bağlandı`, `${result.name} hesabı artık panelden paylaşım yapabilir. Bu sekmeyi kapatabilirsin.`);
   } catch (error) {
     console.error(`[Sosyal] ${platform} bağlantısı başarısız: ${safeError(error)}`);
-    page(res, 502, 'Bağlantı kurulamadı', safeError(error));
+    // 502 kullanılmaz: Cloudflare 502/504'te bu sayfanın yerine kendi "Bad gateway" sayfasını gösterir
+    page(res, error instanceof UserError ? 400 : 500, 'Bağlantı kurulamadı', safeError(error));
   }
 }
 
