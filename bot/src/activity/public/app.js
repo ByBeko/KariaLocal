@@ -1515,12 +1515,21 @@ function drawSocial(data) {
     box.addEventListener('change', () => { if (box.checked) socialOff.delete(a.platform); else socialOff.add(a.platform); updateTikTokBox(); });
     return el('label', { className: 'social-target' }, box, el('span', { textContent: `${a.label} · ${a.name}` }));
   }) : [el('p', { className: 'hint left', textContent: 'Paylaşım için önce yukarıdan hesap bağla.' })]));
-  $('social-list').replaceChildren(...(data.posts.length ? data.posts.map((p) => {
+  // "Emin misin?" onayı beklenirken otomatik yenileme listeyi yeniden çizip onayı silmesin
+  const confirming = [...$('social-list').querySelectorAll('button.danger')].some((b) => b.textContent === 'Emin misin?');
+  if (!confirming) $('social-list').replaceChildren(...(data.posts.length ? data.posts.map((p) => {
     const actions = el('div', { className: 'item-actions' });
     if (p.canRetry) {
       const retry = el('button', { type: 'button', textContent: 'Başarısızları Yeniden Dene' });
       retry.addEventListener('click', () => guarded(async () => drawSocial(await api('/admin/social/retry', { id: p.id }))));
       actions.append(retry);
+    }
+    // Yalnızca paneldeki kayıt ve sunucudaki dosya silinir; platformlardaki video kalır
+    if (!p.results.some((r) => r.status === 'pending' || r.status === 'running')) {
+      actions.append(confirmButton('Sil', async () => {
+        drawSocial(await api('/admin/social/delete', { id: p.id }));
+        say('Kayıt silindi. Platformlarda yayınlanan video yerinde duruyor.', 'win');
+      }));
     }
     return el('article', { className: 'item social-post' },
       el('div', {}, el('strong', { textContent: p.title }), el('small', { textContent: when(p.at) }), el('div', { className: 'social-results' }, ...p.results.map(socialResult))),

@@ -516,6 +516,17 @@ export function retryPost(id) {
   return { platforms: failed.map((p) => PLATFORMS[p].label) };
 }
 
+/** Paylaşım kaydı ve sunucudaki video dosyası silinir; platformlarda yayınlanmış videolara dokunulmaz */
+export function deletePost(id) {
+  const post = getPost(String(id ?? ''));
+  if (!post) throw new UserError('Paylaşım bulunamadı.');
+  const results = Object.values(JSON.parse(post.results));
+  if (results.some((r) => r.status === 'pending' || r.status === 'running')) throw new UserError('Paylaşım sürerken silinemez, bitmesini bekle.');
+  rmSync(post.file, { force: true });
+  db.prepare('DELETE FROM social_posts WHERE id = ?').run(post.id);
+  return { title: post.title };
+}
+
 export function socialView() {
   const accounts = Object.entries(PLATFORMS).map(([platform, info]) => {
     const account = getAccount(platform);
