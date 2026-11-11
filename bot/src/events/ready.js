@@ -21,12 +21,7 @@ import { getSetting } from '../core/settings.js';
 // bu yüzden açılışta emojiler yüklendikten sonra kurulur. Discord sınırı 400 karakter.
 const DESCRIPTION_LIMIT = 400;
 const describe = (icon) => [
-  "**Karia Local** · Karia'nın resmi botu",
-  '',
-  '**Öne çıkanlar**',
-  `${icon('muzik', '🎵')} Müzik, seviye, ekonomi ve oyunlar`,
-  `${icon('kalkan', '🛡️')} Koruma, moderasyon ve kayıtlar`,
-  `${icon('robot', '🤖')} Yapay zekâ ve Discord Etkinliği`,
+  `${icon('parilti', '✨')} **Karia Local** · Karia'nın resmi botu`,
   '',
   `${icon('pano', '📜')} Komutlar: **/yardım**`,
   `${icon('baglanti', '🌐')} https://karia.live`,
@@ -36,8 +31,8 @@ const botDescription = () => {
   const custom = describe(e);
   return custom.length <= DESCRIPTION_LIMIT ? custom : describe((_, fallback) => fallback);
 };
-// Profilde görünen etiketler (en çok 5, her biri en çok 20 karakter)
-const BOT_TAGS = ['Müzik', 'Seviye', 'Ekonomi', 'Moderasyon', 'Yapay Zeka'];
+// Öne çıkan özellikler profilde etiket olarak görünür (en çok 5, her biri en çok 20 karakter)
+const BOT_TAGS = ['Müzik', 'Seviye & Ekonomi', 'Oyunlar', 'Moderasyon & Koruma', 'Yapay Zeka'];
 
 export default {
   name: Events.ClientReady,
