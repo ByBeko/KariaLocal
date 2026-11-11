@@ -21,9 +21,8 @@ import { getSetting } from '../core/settings.js';
 // bu yüzden açılışta emojiler yüklendikten sonra kurulur. Discord sınırı 400 karakter.
 const DESCRIPTION_LIMIT = 400;
 const describe = (icon) => [
-  `${icon('parilti', '✨')} **Karia Local** · Karia'nın resmi botu`,
-  '',
-  `${icon('pano', '📜')} Komutlar: **/yardım**`,
+  `${icon('logo', '💜')} Karia'nın resmi botuyum`,
+  `${icon('pano', '📜')} Komutlar: **/yardım** · **/seviye** · **/bakiye** · **/cal**`,
   `${icon('baglanti', '🌐')} https://karia.live`,
 ].join('\n');
 // Özel emojilerle sınırı aşarsa normal emojilerle yazılır
