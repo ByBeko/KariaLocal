@@ -3,7 +3,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType, Messa
 import { Level } from '../../utils/permissions.js';
 import { db } from '../../core/database.js';
 import { getRoleMenu } from '../../systems/panels.js';
-import { brandEmbed, replyError, replySuccess } from '../../utils/embeds.js';
+import { kariaEmbed, replyError, replySuccess } from '../../utils/embeds.js';
 
 const upsertStmt = db.prepare(
   'INSERT INTO role_menu (guild_id, role_id, emoji, description) VALUES (?, ?, ?, ?) ON CONFLICT(guild_id, role_id) DO UPDATE SET emoji = excluded.emoji, description = excluded.description',
@@ -37,10 +37,9 @@ export default {
 
     if (sub === 'liste') {
       const items = getRoleMenu(guildId);
-      const embed = brandEmbed()
-        .setTitle(`${e('rozet', '🎭')} Rol menüsü`)
-        .setDescription(items.map((r) => `${r.emoji ?? '•'} <@&${r.role_id}>${r.description ? ` — ${r.description}` : ''}`).join('\n') || 'Boş.')
-        .setFooter({ text: 'Değişikliklerden sonra /panel tur:Rol seçimi ile paneli yeniden gönder' });
+      const embed = kariaEmbed(interaction.client, 'Rol Menüsü', { footer: 'Sonra /panel tur:Rol seçimi' })
+        .setTitle(`${items.length} rol`)
+        .setDescription(items.map((r) => `${r.emoji ?? '•'} <@&${r.role_id}>${r.description ? ` — ${r.description}` : ''}`).join('\n') || 'Boş.');
       return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 

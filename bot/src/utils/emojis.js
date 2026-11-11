@@ -13,6 +13,9 @@ export async function loadAppEmojis(client) {
 /** Karia emojisi; yüklü değilse yedek (unicode) emoji döner. Örn: e('alev', '🔥') */
 export const e = (key, fallback = '') => map.get(key) ?? fallback;
 
+/** Panel seçimleri için yüklü Karia emojileri */
+export const emojiList = () => [...map].map(([name, value]) => ({ name, value })).sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+
 /** Yapay zeka metnindeki normal emojileri siler (özel Karia emojilerine dokunmaz). */
 export const stripEmojis = (text) =>
   text.replace(/(?![©®™])\p{Extended_Pictographic}️?(‍\p{Extended_Pictographic}️?)*[ \t]?/gu, '').trim();

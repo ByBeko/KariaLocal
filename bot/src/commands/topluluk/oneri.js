@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { getSetting } from '../../core/settings.js';
-import { brandEmbed, replyError, replySuccess } from '../../utils/embeds.js';
+import { kariaEmbed, replyError, replySuccess } from '../../utils/embeds.js';
 import { e } from '../../utils/emojis.js';
 
 const cooldowns = new Map();
@@ -23,11 +23,9 @@ export default {
     }
     cooldowns.set(interaction.user.id, Date.now());
 
-    const embed = brandEmbed()
-      .setAuthor({ name: `${interaction.member.displayName} önerdi`, iconURL: interaction.user.displayAvatarURL() })
+    const embed = kariaEmbed(interaction.client, `Öneri · ${interaction.member.displayName}`, { icon: interaction.user.displayAvatarURL(), footer: 'Tepkilerle oy ver' })
       .setDescription(interaction.options.getString('oneri', true))
-      .setFooter({ text: 'Aşağıdaki tepkilerle oy ver • Tartışmak için başlığa yaz' })
-      .setTimestamp();
+      .setThumbnail(interaction.user.displayAvatarURL({ size: 128 }));
 
     const message = await channel.send({ embeds: [embed] });
     // Karia emojisiyle tepki; olmazsa normal emoji

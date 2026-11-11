@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, InteractionContextType } from 'discord.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed } from '../../utils/embeds.js';
 import { requireVoice } from '../../systems/music.js';
 import { e } from '../../utils/emojis.js';
 
@@ -11,6 +11,6 @@ export default {
     const { queue } = requireVoice(interaction.member);
     const paused = queue.togglePause();
     await queue.refreshPanel();
-    await interaction.reply({ embeds: [brandEmbed().setDescription(paused ? `${e('duraklat', '⏸️')} Duraklatıldı. Devam için tekrar yaz.` : `${e('oynat', '▶️')} Devam ediyor.`)] });
+    await interaction.reply({ embeds: [kariaEmbed(null, 'Müzik').setDescription(paused ? `${e('duraklat', '⏸️')} Duraklatıldı. Devam için tekrar yaz.` : `${e('oynat', '▶️')} Devam ediyor.`)] });
   },
 };

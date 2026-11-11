@@ -1,4 +1,3 @@
-import { EmbedBuilder } from 'discord.js';
 import { db } from '../core/database.js';
 import { getSetting } from '../core/settings.js';
 import { getLevel } from '../utils/permissions.js';
@@ -6,6 +5,7 @@ import { sendLog } from '../utils/logger.js';
 import { formatDuration } from '../utils/time.js';
 import { UserError } from '../utils/errors.js';
 import { e } from '../utils/emojis.js';
+import { kariaEmbed } from '../utils/embeds.js';
 
 export const CASE_TYPES = {
   warn: { label: 'Uyarı', get emoji() { return e('unlem', '⚠️'); }, color: 0xf1c40f, verb: 'uyarı aldın' },
@@ -40,17 +40,17 @@ const insertCase = db.prepare(
   'INSERT INTO cases (guild_id, user_id, mod_id, type, reason, duration, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
 );
 
-export function caseEmbed(c) {
+export function caseEmbed(c, { footer } = {}) {
   const type = CASE_TYPES[c.type];
-  const embed = new EmbedBuilder()
+  const embed = kariaEmbed(null, `Moderasyon • Vaka #${c.id}`, { footer })
     .setColor(type.color)
-    .setTitle(`${type.emoji} Vaka #${c.id} • ${type.label}`)
+    .setTitle(`${type.emoji} ${type.label}`)
     .addFields(
-      { name: 'Kullanıcı', value: `<@${c.userId}>\n\`${c.userId}\``, inline: true },
-      { name: 'Yetkili', value: `<@${c.modId}>`, inline: true },
+      { name: `${e('kullanici', '👤')} Kullanıcı`, value: `<@${c.userId}>\n\`${c.userId}\``, inline: true },
+      { name: `${e('kalkan', '🛡️')} Yetkili`, value: `<@${c.modId}>`, inline: true },
+      { name: `${e('kumsaati', '⏱️')} Süre`, value: c.duration ? `**${formatDuration(c.duration)}**` : c.type === 'ban' ? '**Kalıcı**' : '—', inline: true },
     );
-  if (c.duration) embed.addFields({ name: 'Süre', value: formatDuration(c.duration), inline: true });
-  return embed.addFields({ name: 'Sebep', value: c.reason.slice(0, 1024) }).setTimestamp(c.createdAt);
+  return embed.addFields({ name: `${e('kalem', '📝')} Sebep`, value: c.reason.slice(0, 1024) }).setTimestamp(c.createdAt);
 }
 
 /** Vakayı veritabanına yazar ve ceza log kanalına gönderir. */
@@ -67,11 +67,11 @@ export async function recordCase(guild, { userId, modId, type, reason, duration 
 export async function notifyUser(user, guild, { type, reason, duration }) {
   const t = CASE_TYPES[type];
   if (!t.verb) return;
-  const embed = new EmbedBuilder()
+  const embed = kariaEmbed(null, guild.name, { icon: guild.iconURL() ?? undefined })
     .setColor(t.color)
     .setTitle(`${t.emoji} ${guild.name} sunucusunda ${t.verb}`)
-    .addFields({ name: 'Sebep', value: reason.slice(0, 1024) });
-  if (duration) embed.addFields({ name: 'Süre', value: formatDuration(duration) });
+    .addFields({ name: `${e('kalem', '📝')} Sebep`, value: reason.slice(0, 1024) });
+  if (duration) embed.addFields({ name: `${e('kumsaati', '⏱️')} Süre`, value: `**${formatDuration(duration)}**` });
   await user.send({ embeds: [embed] }).catch(() => {});
 }
 

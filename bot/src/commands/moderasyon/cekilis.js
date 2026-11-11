@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType, ChannelType, MessageFlags } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
-import { replySuccess, brandEmbed } from '../../utils/embeds.js';
+import { replySuccess, kariaEmbed } from '../../utils/embeds.js';
 import { UserError } from '../../utils/errors.js';
 import { parseDuration, formatDuration } from '../../utils/time.js';
 import { createGiveaway, endNow, rerollGiveaway, activeGiveaways, getGiveaway, latestGiveaway } from '../../systems/giveaway.js';
@@ -80,7 +80,7 @@ export default {
         (g) => `${e('hediye', '🎉')} **${g.prize}** • <t:${Math.floor(g.ends_at / 1000)}:R> • ${JSON.parse(g.entrants).length} katılımcı • [mesaj](https://discord.com/channels/${g.guild_id}/${g.channel_id}/${g.message_id})`,
       );
       return interaction.reply({
-        embeds: [brandEmbed().setTitle(`${e('konfeti', '🎉')} Devam eden çekilişler`).setDescription(list.join('\n') || 'Şu an çekiliş yok.')],
+        embeds: [kariaEmbed(interaction.client, 'Çekilişler').setTitle(`${list.length} devam eden çekiliş`).setDescription(list.join('\n') || 'Şu an çekiliş yok.')],
         flags: MessageFlags.Ephemeral,
       });
     }

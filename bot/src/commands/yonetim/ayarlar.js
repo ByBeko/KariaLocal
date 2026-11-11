@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType, MessageFlags } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
 import { settingsOfType, formatSetting } from '../../core/settings.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed } from '../../utils/embeds.js';
 import { e } from '../../utils/emojis.js';
 
 const groups = () => [
@@ -22,7 +22,9 @@ export default {
 
   async execute(interaction) {
     const guildId = interaction.guild.id;
-    const embed = brandEmbed().setTitle(`${e('ayarlar', '⚙️')} Karia Bot Ayarları`).setFooter({ text: 'Değiştirmek için /ayarla' });
+    const embed = kariaEmbed(interaction.client, 'Bot Ayarları', { footer: 'Değiştirmek için /ayarla' })
+      .setTitle(interaction.guild.name)
+      .setThumbnail(interaction.guild.iconURL({ size: 256 }));
     for (const [type, title] of groups()) {
       const lines = settingsOfType(type).map(([key, s]) => `**${s.label}:** ${formatSetting(guildId, key)}`);
       embed.addFields({ name: title, value: lines.join('\n').slice(0, 1024) });

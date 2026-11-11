@@ -197,6 +197,35 @@ db.exec(`
     PRIMARY KEY (guild_id, user_id)
   );
 
+  -- ── Tek seferlik coin ödülleri (seviye ve rol) ──
+  CREATE TABLE IF NOT EXISTS coin_rewards (
+    guild_id TEXT NOT NULL,
+    user_id  TEXT NOT NULL,
+    reward   TEXT NOT NULL,
+    coins    INTEGER NOT NULL,
+    at       INTEGER NOT NULL,
+    PRIMARY KEY (guild_id, user_id, reward)
+  );
+
+  -- ── Top.gg oyları (aylık) ──
+  CREATE TABLE IF NOT EXISTS votes (
+    guild_id TEXT NOT NULL,
+    user_id  TEXT NOT NULL,
+    month    TEXT NOT NULL,
+    count    INTEGER NOT NULL DEFAULT 0,
+    last_at  INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (guild_id, user_id, month)
+  );
+
+  -- ── E-posta ile açılan talepler ──
+  CREATE TABLE IF NOT EXISTS mail_tickets (
+    channel_id TEXT PRIMARY KEY,
+    from_addr  TEXT NOT NULL,
+    from_name  TEXT NOT NULL DEFAULT '',
+    subject    TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL
+  );
+
   -- ── Ekonomi ──
   CREATE TABLE IF NOT EXISTS economy (
     guild_id   TEXT NOT NULL,

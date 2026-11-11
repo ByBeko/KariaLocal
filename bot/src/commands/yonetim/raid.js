@@ -2,7 +2,7 @@ import { e } from '../../utils/emojis.js';
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
 import { isRaidActive, setRaid, getRaidEnd } from '../../systems/protection.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed } from '../../utils/embeds.js';
 import { sendLog } from '../../utils/logger.js';
 
 export default {
@@ -38,6 +38,6 @@ export default {
         ? `${e('unlem', '🚨')} Raid modu **açık**, <t:${Math.floor(getRaidEnd(guild.id) / 1000)}:R> kapanacak.`
         : `${e('onayli', '✅')} Raid modu kapalı.`;
     }
-    await interaction.reply({ embeds: [brandEmbed().setDescription(text)] });
+    await interaction.reply({ embeds: [kariaEmbed(null, 'Raid Koruması').setDescription(text)] });
   },
 };

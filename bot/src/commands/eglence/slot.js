@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { e } from '../../utils/emojis.js';
+import { kariaEmbed, label, COLORS } from '../../utils/embeds.js';
 import { parseBet, takeMoney, addMoney, fmt, ensureEnabled, lockGame } from '../../systems/economy.js';
 import { spinSlot, slotOutcome } from '../../systems/casino.js';
 
@@ -27,18 +28,28 @@ export default {
       addMoney(guild.id, user.id, payout);
 
       const spinning = e('yenile', '🔄');
-      const frame = (open, note) => {
+      const frame = (open) => {
         const shown = reels.map((s, i) => (i < open ? icon(s) : spinning));
-        return { content: `${e('oyun', '🎰')} **SLOT**\n┃ ${shown.join(' ┃ ')} ┃\n**${member.displayName}**, ${fmt(bet)} bastı${note}`, allowedMentions: { parse: [] } };
+        const done = open === 3;
+        const embed = kariaEmbed(interaction.client, 'Slot', { icon: user.displayAvatarURL() })
+          .setTitle(done ? (payout ? `${member.displayName} kazandı!` : `${member.displayName} kaybetti`) : 'Makara dönüyor...')
+          .setDescription(`## ┃ ${shown.join(' ┃ ')} ┃`)
+          .addFields(
+            { name: label('dolar2', '💰', 'Bahis'), value: fmt(bet), inline: true },
+            { name: label('alev', '🔥', 'Çarpan'), value: done ? `**${multiplier}x**` : '...', inline: true },
+            { name: label('coin', '🪙', 'Kazanç'), value: done ? (payout ? `+${fmt(payout)}` : `-${fmt(bet)}`) : '...', inline: true },
+          );
+        if (done) embed.setColor(payout ? COLORS.success : COLORS.error);
+        return { embeds: [embed], allowedMentions: { parse: [] } };
       };
 
-      await interaction.reply(frame(0, '...'));
+      await interaction.reply(frame(0));
       for (const open of [1, 2]) {
         await wait();
-        await interaction.editReply(frame(open, '...'));
+        await interaction.editReply(frame(open));
       }
       await wait();
-      await interaction.editReply(frame(3, payout ? ` ve ${fmt(payout)} kazandı! (**${multiplier}x**)` : ' ve kaybetti.'));
+      await interaction.editReply(frame(3));
     } finally {
       unlock();
     }

@@ -2,7 +2,7 @@
 // Yetkililer ek olarak sadece kendilerine görünen "Yetkili Paneli"ni açabilir (seviye seviye ayrılmış).
 import { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ApplicationCommandOptionType as T } from 'discord.js';
 import config from '../config.js';
-import { brandEmbed } from '../utils/embeds.js';
+import { brandEmbed, kariaEmbed, linkRow } from '../utils/embeds.js';
 import { e } from '../utils/emojis.js';
 import { checkAccess, getLevel, Level, LevelName } from '../utils/permissions.js';
 import { quote, fit } from '../utils/style.js';
@@ -177,16 +177,13 @@ export function staffButtonRow() {
   );
 }
 
-const helpEmbed = (member, client, title) => {
-  const embed = brandEmbed()
-    .setAuthor({ name: 'Karia - Yardım Merkezi', iconURL: client.user.displayAvatarURL() })
-    .setThumbnail(member.guild.iconURL({ size: 256 }));
-  return title ? embed.setTitle(title) : embed;
+const helpEmbed = (member, client, title, footer) => {
+  const embed = kariaEmbed(client, 'Yardım Merkezi', { footer }).setThumbnail(member.guild.iconURL({ size: 256 }));
+  return embed.setTitle(title ?? client.user.username);
 };
 
 export function homeView(member, client, ownerId, { staffButton = false } = {}) {
   const total = [...userCommands(member, client).values()].reduce((sum, list) => sum + list.length, 0);
-  const heartId = e('kalp', '').match(/:(\d+)>/)?.[1];
   const embed = helpEmbed(member, client)
     .setDescription([
       `Merhaba **${member.displayName}**!`,
@@ -196,17 +193,14 @@ export function homeView(member, client, ownerId, { staffButton = false } = {}) 
       `${e('zincir', '🔗')} **Hızlı Bağlantılar:**`,
       `• Metin Komut Prefix: ${config.prefixes.map((p) => `\`${p}\``).join(' ')} | Slash Komutları: \`/\``,
       `• Toplam Komut: \`${total}\``,
-    ].join('\n'))
-    .setFooter({ text: 'Karia Local | /yardım', iconURL: heartId ? `https://cdn.discordapp.com/emojis/${heartId}.png` : undefined })
-    .setTimestamp();
-  return { content: '', embeds: [embed], components: components(member, client, ownerId, 'ana', staffButton), allowedMentions: { parse: [] } };
+    ].join('\n'));
+  return { content: '', embeds: [embed], components: [...components(member, client, ownerId, 'ana', staffButton), linkRow()], allowedMentions: { parse: [] } };
 }
 
 export function categoryView(member, client, ownerId, category, { staffButton = false } = {}) {
   const list = userCommands(member, client).get(category) ?? [];
-  const embed = helpEmbed(member, client, `${info(category).emoji} ${info(category).label}`)
-    .setDescription(fit(compactSections(groupedSections(category, list)), 4096) || 'Bu kategoride komut yok.')
-    .setFooter({ text: `${list.length} komut • Örnek ve seçenekler için aşağıdaki menüden seç` });
+  const embed = helpEmbed(member, client, `${info(category).emoji} ${info(category).label}`, `${list.length} komut`)
+    .setDescription(fit(compactSections(groupedSections(category, list)), 4096) || 'Bu kategoride komut yok.');
   return { content: '', embeds: [embed], components: components(member, client, ownerId, category, staffButton), allowedMentions: { parse: [] } };
 }
 

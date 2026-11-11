@@ -1,0 +1,7 @@
+{
+ "parent": "karia:ejder/kanat_sag",
+ "textures": {
+  "skin": "karia:ejder/altin_pul",
+  "particle": "karia:ejder/altin_pul"
+ }
+}

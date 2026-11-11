@@ -13,6 +13,7 @@ import { cacheInvites } from '../systems/invites.js';
 import { setLevelClient, seedFromStats } from '../systems/levels.js';
 import { startTimers } from '../systems/timers.js';
 import { loadAppEmojis } from '../utils/emojis.js';
+import { setEmbedClient } from '../utils/embeds.js';
 import { setupLogs, LOG_CHANNELS } from '../commands/yonetim/kurulum.js';
 import { getSetting } from '../core/settings.js';
 
@@ -29,12 +30,17 @@ export default {
   async execute(client) {
     console.log(`✔ ${client.user.tag} olarak giriş yapıldı.`);
     console.log(`✔ ${await loadAppEmojis(client)} Karia emojisi yüklendi.`);
-    // Discord, botların özel durumunda sunucu/uygulama emojisine izin vermez; bu yüzden düz yazı
-    client.user.setPresence({ activities: [{ type: ActivityType.Custom, name: 'custom', state: 'Karia Local | /yardım' }], status: 'online' });
+    setEmbedClient(client);
+    // Discord botlarda yalnızca ad ve alt satıra izin verir; resim ve buton gösterilemez
+    client.user.setPresence({ activities: [{ type: ActivityType.Playing, name: 'karia.live | /yardım', state: 'Müzik • Seviye • Oyunlar • Yapay zeka' }], status: 'online' });
 
     const guildId = process.env.GUILD_ID;
     const guild = guildId && (await client.guilds.fetch(guildId).catch(() => null));
     if (guild) {
+      // Bot kapalıyken başka bir sunucuya eklendiyse oradan çık
+      for (const other of client.guilds.cache.values()) {
+        if (other.id !== guildId) await other.leave().catch((e) => console.error('[Sunucudan çıkış]', e.message));
+      }
       // Sunucuya özel komutlar anında güncellenir; aynı komut iki listede olursa / menüsünde çift görünür
       const guildCommands = await guild.commands.set(client.commands.filter((c) => !c.global).map((c) => c.data.toJSON()));
       // Tek tek eklenir: toplu güncelleme, Etkinlik açılınca oluşan giriş komutunu silmeye çalışıp hata verir

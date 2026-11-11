@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
 import { runAudit, SEVERITY } from '../../systems/audit.js';
-import { COLORS } from '../../utils/embeds.js';
+import { COLORS, kariaEmbed } from '../../utils/embeds.js';
 
 const FIX_BUTTONS = {
   'uye-rolu': () => new ButtonBuilder().setCustomId('denetim:uye-rolu').setLabel('Eksik üye rollerini ver').setEmoji(e('araclar', '🛠️')).setStyle(ButtonStyle.Primary),
@@ -44,11 +44,10 @@ export default {
     embeds.push(current);
 
     const built = embeds.slice(0, 9).map((text, i) => {
-      const embed = new EmbedBuilder().setColor(color).setDescription(text.trim());
-      if (i === 0) embed.setTitle(`${e('kalkan', '🛡️')} Sunucu Denetimi • Puan: ${score}/100`).setAuthor({ name: guild.name, iconURL: guild.iconURL() ?? undefined });
+      const embed = kariaEmbed(interaction.client, `Sunucu Denetimi${embeds.length > 1 ? ` · ${i + 1}/${embeds.length}` : ''}`, { icon: guild.iconURL() ?? undefined, footer: counts }).setColor(color).setDescription(text.trim());
+      if (i === 0) embed.setTitle(`${e('kalkan', '🛡️')} Puan: ${score}/100`).setThumbnail(guild.iconURL({ size: 256 }));
       return embed;
     });
-    built.at(-1).setFooter({ text: counts }).setTimestamp();
 
     // Discord: mesaj başına embed'lerin toplamı en fazla 6000 karakter → her embed ayrı mesaj
     const fixes = [...new Set(findings.map((f) => f.fix).filter(Boolean))].map((k) => FIX_BUTTONS[k]());

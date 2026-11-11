@@ -519,3 +519,171 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
 .suggest-item strong{font-weight:600}
 .suggest-item small{color:var(--muted);font-size:.74rem}
 .suggest-item:hover,.suggest-item.active{background:rgba(79,207,180,.16)}
+
+/* Oyun sesleri düğmesi */
+.side-brand{display:flex;align-items:center}
+.sfx-toggle{margin-left:auto;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--line,rgba(255,255,255,.1));border-radius:8px;background:transparent;font-size:15px;line-height:1;cursor:pointer}
+.sfx-toggle:hover{background:rgba(63,224,197,.12)}
+.site-back{padding:8px 10px;border-radius:10px;color:var(--muted);font-size:13px;font-weight:600;text-decoration:none}
+.site-back:hover{color:var(--accent);background:var(--panel2)}
+
+/* Yazı kutularında tarayıcının kaydırma çubuğu görünmez */
+textarea{scrollbar-width:none}
+textarea::-webkit-scrollbar{display:none}
+#home .stack .report textarea{min-height:84px;height:auto;flex:1}
+
+/* Üye seçici */
+.picker{position:relative}
+.picker-toggle{display:flex;align-items:center;gap:10px;width:100%;min-height:42px;padding:7px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--muted);text-align:left;cursor:pointer}
+.picker.chosen .picker-toggle{color:var(--fg)}
+.picker-toggle:hover,.picker-toggle[aria-expanded="true"]{border-color:var(--accent2)}
+.picker-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picker-face{display:flex;flex:none}
+.picker-face[hidden]{display:none}
+.chev-down{flex:none;width:7px;height:7px;margin:-3px 3px 0;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg)}
+.picker-toggle[aria-expanded="true"] .chev-down{margin-top:3px;transform:rotate(225deg)}
+.picker-pop{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);box-shadow:0 14px 34px rgba(0,0,0,.55)}
+.picker-search{width:100%;margin-bottom:6px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.picker-list{max-height:232px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3a4046 transparent}
+.picker-row{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;cursor:pointer}
+.picker-row span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picker-row.active{background:rgba(79,207,180,.16);color:var(--accent)}
+.picker-avatar{flex:none;width:28px;height:28px;border-radius:50%;object-fit:cover;background:var(--panel)}
+.picker-empty{margin:0;padding:10px 8px;color:var(--muted);font-size:14px}
+
+/* Duyurular: her biri kutuyu doldurur, diğerleri sağa kaydırılır; yazı Discord görünümündedir */
+.ann-box{position:relative}
+.ann-holder{flex:1;display:flex;flex-direction:column;min-height:0}
+.ann-nav{position:absolute;top:10px;right:14px;display:flex;align-items:center;gap:6px}
+.ann-nav[hidden]{display:none}
+.ann-count{min-width:38px;text-align:center;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.ann-arrow{display:grid;place-items:center;width:26px;height:26px;padding:0 0 3px;border:0;border-radius:8px;background:var(--panel2);font-size:18px;line-height:1;cursor:pointer}
+.ann-arrow:disabled{opacity:.35;cursor:default}
+.ann-list{position:relative;flex:1;min-height:190px}
+.ann-track{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none}
+.ann-track::-webkit-scrollbar{display:none}
+.ann-track .ann{flex:0 0 100%;min-width:0;padding:2px 4px 6px 0;overflow-y:auto;scrollbar-width:none;scroll-snap-align:start;scroll-snap-stop:always}
+.ann-track .ann::-webkit-scrollbar{display:none}
+.ann-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ann-head strong{font-size:14px}
+.ann-badge{padding:1px 8px;border-radius:6px;background:rgba(79,207,180,.18);color:var(--accent);font-size:11px;font-weight:700}
+.ann-pin{margin-left:auto;padding:4px 10px;border:0;border-radius:8px;background:var(--panel2);font-size:12px;font-weight:600;cursor:pointer}
+.ann-pin:hover{color:var(--accent)}
+.ann-body{font-family:"gg sans","Noto Sans","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;line-height:1.375;color:#dbdee1}
+.ann-body .md-h{margin:8px 0 4px;color:#f2f3f5;font-weight:700;line-height:1.375}
+.ann-body .md-h:first-child{margin-top:0}
+.ann-body .md-h1{font-size:1.5rem}
+.ann-body .md-h2{font-size:1.25rem}
+.ann-body .md-h3{font-size:1rem}
+.ann-body .md-sub{color:#949ba4;font-size:.8125rem}
+.ann-body .md-q{padding-left:12px;border-left:4px solid #4e5058;color:inherit}
+.ann-body .md-gap{height:1.375em}
+.ann-body code,.ann-body pre{font-family:Consolas,"Andale Mono WT","Courier New",monospace}
+.ann-body code{padding:.1em .25em;border-radius:3px;background:#2b2d31;color:inherit;font-size:.875em}
+.ann-body pre{margin:4px 0;padding:8px;border:1px solid #1e1f22;border-radius:4px;background:#2b2d31;font-size:.875em;white-space:pre-wrap}
+.ann-body .mention{padding:0 2px;border-radius:3px;background:rgba(88,101,242,.3);color:#c9cdfb;font-weight:500}
+.ann-body a{color:#00a8fc;text-decoration:none}
+.ann-body a:hover{text-decoration:underline}
+.ann-body .emo{width:1.375em;height:1.375em;margin:0 .05em;vertical-align:bottom;object-fit:contain}
+.md-spoiler{border-radius:3px;background:#1e1f22;color:transparent;cursor:pointer}
+.md-spoiler.open{background:rgba(255,255,255,.1);color:inherit}
+
+/* Oyunlar ekrana sığar, sayfa kaymaz */
+@media (min-width:901px){
+  html:has(.content.game),body:has(.content.game){overflow:hidden}
+  .app:has(.content.game){height:100vh;min-height:0}
+  .content.game{height:calc(100vh - 32px);min-height:0;display:flex;flex-direction:column}
+  .content.game .page-title{margin:0 auto 10px;flex:none}
+  .content.game main{flex:1;min-height:0}
+  .content.game .panel:not([hidden]),.content.game .betbar{min-height:0;overflow-y:auto;scrollbar-width:none}
+  .content.game .panel:not([hidden])::-webkit-scrollbar,.content.game .betbar::-webkit-scrollbar{display:none}
+  .content.game .table{flex:1;min-height:0}
+  .content.game .felt-art{flex:1 1 0;min-height:0;height:auto}
+  .content.game .hand,.content.game .table .actions{flex:none}
+}
+
+/* Prime paneli */
+.prime-form{margin-bottom:14px}
+.prime-row{display:flex;align-items:center;gap:10px}
+.prime-row .picker{flex:1;min-width:0}
+.prime-days{width:110px;flex:none}
+.prime-form .hint{margin-top:10px}
+.prime-item{display:flex;align-items:center;gap:12px}
+.prime-item>div:nth-child(2){flex:1;min-width:0}
+.prime-item small{display:block;color:var(--muted);font-size:12px}
+
+/* Destek masası */
+.content.fill [data-panel="tickets"]:not([hidden]){display:flex;flex-direction:column;min-height:0}
+.desk{flex:1;display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px;min-height:0;height:calc(100vh - 150px)}
+.desk-side,.desk-main{display:flex;flex-direction:column;min-height:0;min-width:0}
+.desk-filter{width:100%;margin:0 0 10px}
+.desk-filter button{flex:1;justify-content:center;padding:7px 4px}
+.desk-list{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3a4046 transparent}
+.ticket-row{display:flex;flex-direction:column;gap:3px;flex:none;width:100%;padding:11px 13px;border:1px solid transparent;border-radius:14px;background:var(--panel2);text-align:left;cursor:pointer}
+.ticket-row:hover{border-color:var(--line)}
+.ticket-row.active{border-color:var(--accent);background:rgba(79,207,180,.1)}
+.ticket-top{display:flex;align-items:center;gap:8px}
+.ticket-top small{margin-left:auto;color:var(--muted);font-size:12px}
+.ticket-src{padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700}
+.ticket-src.discord{background:rgba(88,101,242,.25);color:#c9cdfb}
+.ticket-src.mail{background:rgba(79,207,180,.18);color:var(--accent)}
+.ticket-title{overflow:hidden;font-size:14px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+.ticket-who{overflow:hidden;color:var(--muted);font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.desk-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:16px;background:var(--panel2);color:var(--muted);text-align:center;padding:20px}
+.desk-empty[hidden]{display:none}
+.desk-empty img{width:44px;height:44px}
+.desk-empty strong{color:var(--fg);font-size:16px}
+.desk-empty p{margin:0;font-size:14px}
+.desk .thread{flex:1;display:flex;flex-direction:column;min-height:0;margin:0;padding:0;border:0}
+.desk .thread[hidden]{display:none}
+.desk-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.desk-head>div:first-child{min-width:0}
+.desk-head strong{display:block;overflow:hidden;font-size:16px;text-overflow:ellipsis;white-space:nowrap}
+.desk-head small{color:var(--muted);font-size:12px}
+.desk .log{flex:1;max-height:none;min-height:0;display:flex;flex-direction:column;margin-bottom:10px;padding:14px;scrollbar-width:thin;scrollbar-color:#3a4046 transparent}
+.desk .msg{align-self:flex-start;max-width:78%;margin:4px 0;padding:8px 12px;border-radius:14px;background:var(--panel)}
+.desk .msg.bot{align-self:flex-end;background:rgba(79,207,180,.14)}
+.desk .msg.bot p{color:var(--fg)}
+.desk .msg p{white-space:pre-wrap}
+.desk-reply .field{flex:1}
+.desk-reply button{min-height:40px;padding:0 18px}
+@media (max-width:900px){.desk{grid-template-columns:minmax(0,1fr);height:auto}.desk-list{max-height:240px}.desk .log{min-height:280px;max-height:50vh}}
+
+.social-accounts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px}
+.social-account small,.social-post small{display:block}
+.social-limit{color:#e9c46a!important;margin-top:3px}
+.social-form{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.social-form textarea{resize:vertical;font:inherit}
+.social-form>button{border-radius:10px;padding:11px;cursor:pointer}
+.social-form>button:disabled{opacity:.6;cursor:default}
+.social-file{display:block;padding:18px;border:1px dashed var(--line);border-radius:12px;background:var(--bg);color:var(--muted);text-align:center;cursor:pointer;overflow-wrap:anywhere}
+.social-file:hover,.social-file:focus-within{border-color:var(--accent);color:var(--fg)}
+.social-file input{position:absolute;opacity:0;width:1px;height:1px}
+.social-targets{display:flex;flex-wrap:wrap;gap:8px 16px}
+.social-target{display:flex;align-items:center;gap:7px;cursor:pointer}
+.social-progress{width:100%;height:8px;accent-color:var(--accent)}
+.social-post{align-items:flex-start}
+.social-post>div:first-child{flex:1;min-width:0}
+.social-results{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+.social-result{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:13px}
+.social-result b{min-width:76px}
+.social-result small{flex-basis:100%;overflow-wrap:anywhere}
+.social-result button{background:rgba(255,255,255,.07);border:0;border-radius:8px;padding:3px 9px;cursor:pointer}
+.social-result.done span{color:var(--win)}
+.social-result.failed span{color:var(--lose)}
+.social-result.running span{color:var(--accent)}
+@media (max-width:720px){.social-post{flex-direction:column}}
+
+#mail-filter{margin-bottom:12px}
+.mail-item{display:block;padding:0;overflow:hidden}
+.mail-item.unread strong{color:var(--accent)}
+.mail-head{display:block;width:100%;background:none;border:0;padding:13px 15px;text-align:left;cursor:pointer;color:inherit}
+.mail-head strong,.mail-head small,.mail-head span{display:block;overflow-wrap:anywhere}
+.mail-head span{color:var(--muted);font-size:13px;margin-top:3px}
+.mail-open{padding:0 15px 13px}
+.mail-frame{display:block;width:100%;height:min(72vh,680px);border:0;border-radius:10px;background:#fff;margin-bottom:10px}
+.mail-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;margin:0 0 10px;user-select:text}
+.brole-rows{display:grid;gap:8px}
+.brole-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) auto;gap:8px;align-items:stretch;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.brole-row button{grid-column:3;grid-row:1 / span 2;background:rgba(255,255,255,.07);border:0;border-radius:9px;padding:8px 11px;cursor:pointer;color:var(--lose)}
+@media (max-width:900px){.cmd-layout{grid-template-columns:minmax(0,1fr)}}

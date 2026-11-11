@@ -1,6 +1,8 @@
 // Etkinliğin üye ana sayfası: herkes kendi verisini görür. Sıralamalar yalnızca herkese açık bilgileri içerir.
+import { MessageType } from 'discord.js';
 import { getSetting } from '../core/settings.js';
 import { UserError } from '../utils/errors.js';
+import { sendLog } from '../utils/logger.js';
 import { getBalance, richBoard, claimDaily, nextDaily, ensureEnabled } from '../systems/economy.js';
 import { getProfile, levelBoard } from '../systems/levels.js';
 import { userStats, leaderboard, formatVoice } from '../systems/stats.js';
@@ -16,15 +18,40 @@ async function announcements(guild) {
   const cached = announceCache.get(guild.id);
   if (cached && Date.now() - cached.at < ANNOUNCE_TTL) return cached.items;
   const channel = findGuideChannel(guild, 'duyurular');
-  const batch = channel?.isTextBased() ? await channel.messages.fetch({ limit: 8 }).catch(() => null) : null;
-  const items = batch
-    ? [...batch.values()]
-        .map((m) => ({ text: cleanText(guild, m.content || m.embeds[0]?.description || m.embeds[0]?.title || '', { markdown: true }).slice(0, 420), at: m.createdTimestamp }))
-        .filter((m) => m.text)
-        .slice(0, 5)
-    : [];
+  if (!channel?.isTextBased()) return [];
+  const [pins, batch] = await Promise.all([channel.messages.fetchPins().catch(() => null), channel.messages.fetch({ limit: 12 }).catch(() => null)]);
+  const pinned = (pins?.items ?? []).map((p) => p.message);
+  const pinnedIds = new Set(pinned.map((m) => m.id));
+  const recent = [...(batch?.values() ?? [])].filter((m) => !pinnedIds.has(m.id));
+  const items = [...pinned, ...recent]
+    .filter((m) => !m.system)
+    .map((m) => ({
+      id: m.id,
+      pinned: pinnedIds.has(m.id),
+      author: m.member?.displayName ?? m.author.username,
+      at: m.createdTimestamp,
+      text: cleanText(guild, m.content || [m.embeds[0]?.title && `### ${m.embeds[0].title}`, m.embeds[0]?.description].filter(Boolean).join('\n'), { markdown: true, keepEmoji: true }).slice(0, 2500),
+    }))
+    .filter((m) => m.text)
+    .slice(0, 12);
   announceCache.set(guild.id, { at: Date.now(), items });
   return items;
+}
+
+/** Sabitleme Discord'un kendi sabitlemesidir: panelden ya da Discord'dan yapılan iki tarafta da görünür. */
+export async function setAnnouncementPin(guild, member, id, pinned) {
+  const channel = findGuideChannel(guild, 'duyurular');
+  const message = channel?.isTextBased() ? await channel.messages.fetch(String(id)).catch(() => null) : null;
+  if (!message) throw new UserError('Duyuru bulunamadı.');
+  await (pinned ? message.pin() : message.unpin()).catch(() => { throw new UserError('Duyuru sabitlenemedi.'); });
+  if (pinned) {
+    // Discord'un "mesaj sabitlendi" satırı duyuru kanalını kirletmesin
+    const latest = await channel.messages.fetch({ limit: 5, cache: false }).catch(() => null);
+    await latest?.find((m) => m.type === MessageType.ChannelPinnedMessage && m.reference?.messageId === message.id)?.delete().catch(() => {});
+  }
+  announceCache.delete(guild.id);
+  await sendLog(guild, 'log_staff', { content: `Yönetim Paneli • <@${member.id}> bir duyurunun sabitini ${pinned ? 'ekledi' : 'kaldırdı'}: ${message.url}` });
+  return { announcements: await announcements(guild) };
 }
 
 export async function homeView(guild, member) {

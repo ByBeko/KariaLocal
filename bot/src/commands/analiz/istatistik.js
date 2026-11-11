@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { userStats, sparkline, formatVoice, PERIOD_CHOICES, periodName } from '../../systems/stats.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed, label } from '../../utils/embeds.js';
 import { relativeTime } from '../../utils/time.js';
 import { e } from '../../utils/emojis.js';
 
@@ -22,20 +22,21 @@ export default {
     const channels = s.topChannels.map((c) => `<#${c.channelId}> · ${c.messages}`).join('\n') || 'Henüz mesaj yok';
     const voiceChannels = s.topVoiceChannels.map((c) => `<#${c.channelId}> · ${formatVoice(c.seconds)}`).join('\n') || 'Henüz ses yok';
 
-    const embed = brandEmbed()
-      .setAuthor({ name: `${member?.displayName ?? user.username} • ${periodName(days)}`, iconURL: user.displayAvatarURL() })
+    const embed = kariaEmbed(interaction.client, 'İstatistikler', { icon: user.displayAvatarURL() })
+      .setTitle(member?.displayName ?? user.username)
+      .setDescription([
+        `${e('takvim', '📅')} **${periodName(days)}**`,
+        ...(member?.joinedTimestamp ? [`${e('giris', '📥')} **Katıldı** ${relativeTime(member.joinedTimestamp)}`] : []),
+      ].join(' · '))
       .addFields(
-        { name: `${e('mesaj', '💬')} Mesaj`, value: `**${s.messages}**\nSıra: ${rank(s.messageRank)}`, inline: true },
-        { name: `${e('mikrofon', '🎙️')} Ses`, value: `**${formatVoice(s.voiceSeconds)}**\nSıra: ${rank(s.voiceRank)}`, inline: true },
-        { name: `${e('takvim', '📅')} Aktif gün`, value: `**${s.activeDays}**`, inline: true },
-        { name: 'En çok yazdığı kanallar', value: channels, inline: true },
-        { name: 'En çok durduğu ses kanalları', value: voiceChannels, inline: true },
-        { name: 'Son 14 gün (mesaj)', value: `\`${sparkline(s.daily.map((d) => d.value))}\`` },
+        { name: label('mesaj', '💬', 'Mesaj'), value: `**${s.messages}** mesaj\nSıra ${rank(s.messageRank)}`, inline: true },
+        { name: label('mikrofon', '🎙️', 'Ses'), value: `**${formatVoice(s.voiceSeconds)}**\nSıra ${rank(s.voiceRank)}`, inline: true },
+        { name: label('takvim2', '📆', 'Aktiflik'), value: `**${s.activeDays}** aktif gün`, inline: true },
+        { name: label('pano', '📝', 'Yazdığı kanallar'), value: channels, inline: true },
+        { name: label('kulaklik', '🔊', 'Ses kanalları'), value: voiceChannels, inline: true },
+        { name: label('istatistik', '📈', 'Son 14 gün'), value: `\`${sparkline(s.daily.map((d) => d.value))}\`` },
       )
       .setThumbnail(user.displayAvatarURL({ size: 256 }));
-
-    if (member?.joinedTimestamp) embed.setFooter({ text: 'Sunucuya katılım' }).setTimestamp(member.joinedTimestamp);
-    if (member?.joinedTimestamp) embed.setDescription(`Katıldı: ${relativeTime(member.joinedTimestamp)}`);
     await interaction.reply({ embeds: [embed] });
   },
 };

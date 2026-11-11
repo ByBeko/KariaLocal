@@ -1,0 +1,77 @@
+{
+  "_aciklama": "Karia ejderha türleri. Yeni tür eklemek için bir blok kopyala, id'yi değiştir, sonra tools/paket_uret.py ile paketi yeniden üret. Renkler #RRGGBB; boyut 1.0 = ~3 blok boy.",
+  "turler": [
+    {
+      "id": "kor_kanat", "ad": "Kor Kanat", "renk": "#e8553a",
+      "aciklama": "Çöllerde ve kurak yaylalarda yaşayan ateş soluyan ejderha.",
+      "element": "ATES", "saldirgan": true, "agirlik": 20,
+      "boyut": 1.6, "can": 120, "hasar": 10, "yurume": 0.30, "ucus": 1.05,
+      "yem": "SALMON",
+      "biyomlar": ["desert", "badlands", "savanna", "eroded"],
+      "renkler": { "ana": "#b3261e", "karin": "#f2a33a", "koyu": "#3b0f0c", "zar": "#d9572b", "goz": "#ffe14d", "boynuz": "#e8d8b0" }
+    },
+    {
+      "id": "ayaz_pence", "ad": "Ayaz Pençe", "renk": "#8fd0ff",
+      "aciklama": "Karlı dağlarda yaşar; nefesi düşmanlarını dondurur.",
+      "element": "BUZ", "saldirgan": true, "agirlik": 18,
+      "boyut": 1.6, "can": 120, "hasar": 9, "yurume": 0.30, "ucus": 1.0,
+      "yem": "COD",
+      "biyomlar": ["snowy", "frozen", "ice_spikes", "grove", "jagged_peaks"],
+      "renkler": { "ana": "#7fb8e6", "karin": "#eaf6ff", "koyu": "#2e5c8a", "zar": "#bfe3ff", "goz": "#9ef6ff", "boynuz": "#ffffff" }
+    },
+    {
+      "id": "firtina_sirti", "ad": "Fırtına Sırtı", "renk": "#b49cff",
+      "aciklama": "Rüzgârlı tepelerde dolaşan, şimşek çağıran hızlı ejderha.",
+      "element": "SIMSEK", "saldirgan": true, "agirlik": 12,
+      "boyut": 1.5, "can": 100, "hasar": 11, "yurume": 0.33, "ucus": 1.25,
+      "yem": "RABBIT",
+      "biyomlar": ["windswept", "stony_peaks", "meadow"],
+      "renkler": { "ana": "#4b3a8c", "karin": "#e3d25b", "koyu": "#1d1640", "zar": "#7a63c9", "goz": "#fff27a", "boynuz": "#f4e9a0" }
+    },
+    {
+      "id": "zehir_disi", "ad": "Zehir Dişi", "renk": "#9be05a",
+      "aciklama": "Bataklık ve ormanlarda saklanır; nefesi zehirler.",
+      "element": "ZEHIR", "saldirgan": true, "agirlik": 16,
+      "boyut": 1.4, "can": 90, "hasar": 8, "yurume": 0.32, "ucus": 1.0,
+      "yem": "SPIDER_EYE",
+      "biyomlar": ["swamp", "mangrove", "jungle"],
+      "renkler": { "ana": "#3e8e3a", "karin": "#c9e26b", "koyu": "#1c3b1a", "zar": "#6fb24a", "goz": "#e4ff3b", "boynuz": "#d6d0a0" }
+    },
+    {
+      "id": "golge_suzulen", "ad": "Gölge Süzülen", "renk": "#a77bff",
+      "aciklama": "Karanlık ormanların en hızlı avcısı; nefesi kör eder.",
+      "element": "GOLGE", "saldirgan": true, "agirlik": 8,
+      "boyut": 1.4, "can": 90, "hasar": 10, "yurume": 0.36, "ucus": 1.4,
+      "yem": "CHICKEN",
+      "biyomlar": ["dark_forest", "pale_garden", "deep_dark"],
+      "renkler": { "ana": "#1f1b2b", "karin": "#5b3f86", "koyu": "#0b0910", "zar": "#3a2d55", "goz": "#b46bff", "boynuz": "#6f6a80" }
+    },
+    {
+      "id": "kaya_govde", "ad": "Kaya Gövde", "renk": "#c2b29a",
+      "aciklama": "Dağ eteklerinde yaşayan iri ve dayanıklı ejderha; yavaş uçar, sert vurur.",
+      "element": "TOPRAK", "saldirgan": false, "agirlik": 12,
+      "boyut": 2.0, "can": 200, "hasar": 13, "yurume": 0.25, "ucus": 0.75,
+      "yem": "MUTTON",
+      "biyomlar": ["stony_shore", "dripstone", "windswept_gravelly", "taiga"],
+      "renkler": { "ana": "#6e655b", "karin": "#a89a86", "koyu": "#3a332c", "zar": "#8a7d6c", "goz": "#ff8a2a", "boynuz": "#d8cfc0" }
+    },
+    {
+      "id": "dalga_kanat", "ad": "Dalga Kanat", "renk": "#5fe0d0",
+      "aciklama": "Kıyılarda ve okyanuslarda yaşar; suda çok hızlı yüzer.",
+      "element": "SU", "saldirgan": false, "agirlik": 14,
+      "boyut": 1.5, "can": 110, "hasar": 9, "yurume": 0.30, "ucus": 1.0,
+      "yem": "TROPICAL_FISH",
+      "biyomlar": ["ocean", "beach", "river"],
+      "renkler": { "ana": "#1f7f86", "karin": "#7ee0d2", "koyu": "#0e3e44", "zar": "#3fb3b0", "goz": "#d8fff8", "boynuz": "#e0f4f0" }
+    },
+    {
+      "id": "altin_pul", "ad": "Altın Pul", "renk": "#ffd24a",
+      "aciklama": "Çok nadir görülür; nefesi binicisini iyileştirir, düşmanları parlatır.",
+      "element": "ALTIN", "saldirgan": false, "agirlik": 3,
+      "boyut": 1.3, "can": 80, "hasar": 7, "yurume": 0.33, "ucus": 1.15,
+      "yem": "GOLDEN_CARROT",
+      "biyomlar": ["plains", "sunflower", "cherry_grove", "flower_forest"],
+      "renkler": { "ana": "#d4a017", "karin": "#fff1a8", "koyu": "#7a5a06", "zar": "#f0c64a", "goz": "#ffffff", "boynuz": "#fff8dc" }
+    }
+  ]
+}

@@ -7,7 +7,7 @@ import {
 import { setTimeout as sleep } from 'node:timers/promises';
 import AdmZip from 'adm-zip';
 import { getSetting, setSetting } from '../../core/settings.js';
-import { replyError } from '../../utils/embeds.js';
+import { replyError, kariaEmbed } from '../../utils/embeds.js';
 import { UserError } from '../../utils/errors.js';
 
 const MAX_HOURLY = 50; // Discord'un gizli emoji sınırına takılmamak için saatlik kota
@@ -122,16 +122,14 @@ async function upload(interaction, attachment, quota) {
 
   const button = new ButtonBuilder().setCustomId('emoji-durdur').setLabel('Durdur').setEmoji(e('durdur', '⏹️')).setStyle(ButtonStyle.Danger);
   const progress = (i) =>
-    new EmbedBuilder()
-      .setColor(0x5865f2)
+    kariaEmbed(interaction.client, 'Emoji Yükleme', { footer: 'Sadece komutu kullanan durdurabilir' })
       .setTitle(`${e('kumsaati', '⏳')} Emojiler yükleniyor...`)
       .setDescription(
         `**İlerleme:** ${i} / ${entries.length}\n` +
           `${e('onayli', '✅')} **Eklenen:** ${added.length}  ${e('unlem', '⚠️')} **Atlanan:** ${failed.length}\n` +
           `${e('istatistik', '📊')} **Saatlik kota:** ${quota.count} / ${MAX_HOURLY}\n\n` +
           (added.length ? `**Son eklenenler:**\n${added.slice(-15).join(' ')}` : ''),
-      )
-      .setFooter({ text: 'Sadece komutu kullanan kişi durdurabilir.' });
+      );
 
   const message = await interaction.editReply({ embeds: [progress(0)], components: [new ActionRowBuilder().addComponents(button)] });
 
@@ -198,7 +196,7 @@ async function upload(interaction, attachment, quota) {
   collector.stop();
   button.setDisabled(true);
 
-  const summary = new EmbedBuilder()
+  const summary = kariaEmbed(interaction.client, 'Emoji Yükleme', { icon: user.displayAvatarURL(), footer: `${user.tag} tarafından` })
     .setColor(isStopped ? 0xed4245 : 0x57f287)
     .setTitle(isStopped ? `${e('durdur', '⏹️')} Emoji yükleme durdu` : `${e('konfeti', '🎉')} Emoji yükleme tamamlandı!`)
     .setDescription(
@@ -207,9 +205,7 @@ async function upload(interaction, attachment, quota) {
         `${e('kumsaati', '⏱️')} **Kota sıfırlanma:** <t:${unix(quota.resetAt)}:R>\n\n` +
         `**Yüklenen emojiler:**\n${added.slice(0, 30).join(' ') || 'Hiç emoji eklenmedi.'}` +
         (added.length > 30 ? ` ...ve ${added.length - 30} tane daha` : ''),
-    )
-    .setFooter({ text: `${user.tag} tarafından`, iconURL: user.displayAvatarURL() })
-    .setTimestamp();
+    );
   if (failed.length) {
     summary.addFields({ name: 'Atlananlar', value: failed.slice(0, 15).join('\n').slice(0, 1024) });
   }

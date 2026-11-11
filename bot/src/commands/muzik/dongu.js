@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, InteractionContextType } from 'discord.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed } from '../../utils/embeds.js';
 import { requireVoice, LOOP_NAMES } from '../../systems/music.js';
 import { e } from '../../utils/emojis.js';
 
@@ -19,6 +19,6 @@ export default {
     const { queue } = requireVoice(interaction.member);
     const mode = queue.cycleLoop(interaction.options.getString('mod') ?? undefined);
     await queue.refreshPanel();
-    await interaction.reply({ embeds: [brandEmbed().setDescription(`${icon(mode)} Döngü: **${LOOP_NAMES[mode]}**`)] });
+    await interaction.reply({ embeds: [kariaEmbed(null, 'Müzik').setDescription(`${icon(mode)} Döngü: **${LOOP_NAMES[mode]}**`)] });
   },
 };

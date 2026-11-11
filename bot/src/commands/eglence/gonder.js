@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { e } from '../../utils/emojis.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed, label } from '../../utils/embeds.js';
 import { takeMoney, addMoney, fmt, ensureEnabled } from '../../systems/economy.js';
 import { UserError } from '../../utils/errors.js';
 
@@ -23,7 +23,14 @@ export default {
     addMoney(guild.id, user.id, amount);
     await interaction.reply({
       content: `${user}`,
-      embeds: [brandEmbed().setDescription(`${e('ok', '💸')} ${interaction.user} → ${user}: ${fmt(amount)}\nKalan bakiyen: ${fmt(left)}`)],
+      embeds: [
+        kariaEmbed(interaction.client, 'Coin Transferi', { icon: interaction.user.displayAvatarURL() })
+          .setDescription(`${interaction.user} ${e('ok', '➡️')} ${user}`)
+          .addFields(
+            { name: label('dolar2', '💸', 'Gönderilen'), value: fmt(amount), inline: true },
+            { name: label('coin', '🪙', 'Kalan bakiyen'), value: fmt(left), inline: true },
+          ),
+      ],
       allowedMentions: { users: [user.id] },
     });
   },

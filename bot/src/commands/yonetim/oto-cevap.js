@@ -1,7 +1,7 @@
 import { e } from '../../utils/emojis.js';
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
-import { brandEmbed, replySuccess } from '../../utils/embeds.js';
+import { kariaEmbed, replySuccess } from '../../utils/embeds.js';
 import { UserError } from '../../utils/errors.js';
 import { getAutoResponses, setAutoResponse, deleteAutoResponse } from '../../systems/autoresponse.js';
 
@@ -39,8 +39,8 @@ export default {
       );
       return interaction.reply({
         embeds: [
-          brandEmbed()
-            .setTitle(`${e('mesaj', '💬')} Oto cevaplar`)
+          kariaEmbed(interaction.client, 'Oto Cevaplar')
+            .setTitle(`${lines.length} oto cevap`)
             .setDescription(lines.join('\n').slice(0, 4000) || `Henüz oto cevap yok. Örnek: \`/oto-cevap ekle tetik:sa cevap:Aleyküm selam {user}! ${e('mesaj', '👋')}\``),
         ],
         allowedMentions: { parse: [] },

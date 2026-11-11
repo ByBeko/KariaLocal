@@ -1,30 +1,66 @@
-import { SlashCommandBuilder, version as djsVersion } from 'discord.js';
+import os from 'node:os';
+import path from 'node:path';
+import { SlashCommandBuilder, AttachmentBuilder, ChannelType, version as djsVersion } from 'discord.js';
 import { e } from '../../utils/emojis.js';
-import { brandEmbed } from '../../utils/embeds.js';
-import { formatDuration } from '../../utils/time.js';
+import { kariaEmbed, bar, label, linkRow, pingQuality } from '../../utils/embeds.js';
 import { aiModelName } from '../../systems/ai.js';
 import config from '../../config.js';
 
+const COVER = path.join(import.meta.dirname, '../../activity/public/cover.png');
+const gb = (bytes) => (bytes / 1024 ** 3).toFixed(1);
+
+/** Botun kısa süredeki işlemci kullanımı (tüm çekirdeklere oranla) */
+async function cpuPercent() {
+  const start = process.cpuUsage();
+  const t = performance.now();
+  await new Promise((r) => setTimeout(r, 200));
+  const used = process.cpuUsage(start);
+  return ((used.user + used.system) / 1000 / (performance.now() - t) / os.cpus().length) * 100;
+}
+
 export default {
-  aliases: ['botinfo', 'bb'],
-  data: new SlashCommandBuilder().setName('bot-bilgi').setDescription('Karia botu hakkında bilgi.'),
+  aliases: ['botinfo', 'bb', 'botbilgi'],
+  data: new SlashCommandBuilder().setName('bot-bilgi').setDescription('Karia Local botu hakkında bilgi.'),
 
   async execute(interaction) {
-    const { client } = interaction;
-    const mem = process.memoryUsage().rss / 1024 / 1024;
-    const embed = brandEmbed()
-      .setAuthor({ name: `${client.user.username} • Bot bilgisi`, iconURL: client.user.displayAvatarURL() })
+    const { client, guild } = interaction;
+    const sentAt = interaction.createdTimestamp ?? Date.now();
+    const cpu = await cpuPercent();
+    const reply = Math.max(0, Date.now() - sentAt - 200);
+    const ws = Math.round(client.ws.ping);
+
+    const rss = process.memoryUsage().rss;
+    const total = os.totalmem();
+    const used = total - os.freemem();
+    const commands = [...client.commands.values()];
+    const aliases = commands.reduce((sum, c) => sum + (c.aliases?.length ?? 0), 0);
+    const humans = guild.members.cache.filter((m) => !m.user.bot).size;
+    const textChannels = guild.channels.cache.filter((c) => c.type !== ChannelType.GuildCategory).size;
+    const load = os.loadavg()[0];
+
+    const embed = kariaEmbed(client, 'Bot Bilgileri')
+      .setTitle(client.user.username)
       .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
-      .setDescription(`Karia sunucusuna özel yapılmış bot. Komutlar \`/\` ya da \`${config.prefix}\` ön ekiyle çalışır. Tüm liste: \`/yardim\``)
+      .setDescription([
+        'Müzik, seviye, ekonomi, koruma ve yapay zekâ tek botta.',
+        `${e('nokta_yesil', '🟢')} **Çevrimiçi** · ${e('kumsaati', '⏱️')} <t:${Math.floor((Date.now() - client.uptime) / 1000)}:R> açıldı`,
+        `${e('kod', '💻')} **Geliştirici** <@${config.owner.id}>`,
+      ].join('\n'))
       .addFields(
-        { name: `${e('tac', '👑')} Sahibi`, value: `<@${config.owner.id}>`, inline: true },
-        { name: `${e('kumsaati', '⏱️')} Açık kalma`, value: formatDuration(client.uptime), inline: true },
-        { name: `${e('simsek', '🏓')} Gecikme`, value: `${client.ws.ping} ms`, inline: true },
-        { name: `${e('kod', '🧠')} Bellek`, value: `${mem.toFixed(0)} MB`, inline: true },
-        { name: `${e('pano', '📜')} Komut`, value: `${client.commands.size}`, inline: true },
-        { name: `${e('robot', '🤖')} Yapay zeka`, value: aiModelName, inline: true },
-        { name: `${e('araclar', '🧰')} Altyapı`, value: `Node.js ${process.version}\ndiscord.js v${djsVersion}`, inline: true },
-      );
-    await interaction.reply({ embeds: [embed], allowedMentions: { parse: [] } });
+        { name: label('arkadaslar', '👥', 'Erişim'), value: `**${humans}** üye\n**${textChannels}** kanal\n**${guild.roles.cache.size - 1}** rol`, inline: true },
+        { name: label('pano', '📜', 'Komutlar'), value: `**${commands.length}** slash\n**${aliases}** \`${config.prefix}\` kısayolu\n**${config.prefixes.length}** ön ek`, inline: true },
+        { name: label('simsek', '📶', 'Gecikme'), value: `WS **${ws} ms**\nYanıt **${reply} ms**\n${pingQuality(ws)}`, inline: true },
+        { name: label('istatistik', '💾', 'Bellek'), value: `Bot **${Math.round(rss / 1024 ** 2)} MB**\n${bar(used / total)}\n${gb(used)}/${gb(total)} GB`, inline: true },
+        { name: label('ayarlar', '⚙️', 'İşlemci'), value: `Bot **%${cpu.toFixed(1)}**\n${bar(cpu / 100)}\n${load ? `Yük ${load.toFixed(2)} · ` : ''}${os.cpus().length} çekirdek`, inline: true },
+        { name: label('araclar', '🧰', 'Altyapı'), value: `discord.js **${djsVersion}**\nNode **${process.versions.node}**\n${aiModelName}`, inline: true },
+      )
+      .setImage('attachment://karia.png');
+
+    await interaction.reply({
+      embeds: [embed],
+      files: [new AttachmentBuilder(COVER, { name: 'karia.png' })],
+      components: [linkRow()],
+      allowedMentions: { parse: [] },
+    });
   },
 };

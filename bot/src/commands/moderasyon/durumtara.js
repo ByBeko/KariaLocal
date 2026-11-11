@@ -2,7 +2,7 @@ import { e } from '../../utils/emojis.js';
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType, ActivityType, MessageFlags } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
 import { getSetting } from '../../core/settings.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed } from '../../utils/embeds.js';
 import { UserError } from '../../utils/errors.js';
 import { PROFANITY_ROOTS as ROOTS, PROFANITY_WORDS as BASE_PROFANITY } from '../../utils/profanity.js';
 
@@ -61,10 +61,9 @@ export default {
       if (reasons.length) hits.push(`${member} • ${reasons.join(', ')}\n└ \`${status.replaceAll('`', 'ˋ').slice(0, 120)}\``);
     }
 
-    const embed = brandEmbed()
-      .setTitle(`${e('hedef', '🔍')} Özel durum taraması • ${hits.length} sonuç`)
-      .setDescription(hits.join('\n').slice(0, 4000) || `Uygun özel durum bulunamadı. ${e('parilti', '✨')}`)
-      .setFooter({ text: `${scanned} üyenin özel durumu tarandı. Çevrimdışı görünen üyelerin durumu Discord tarafından paylaşılmaz.` });
+    const embed = kariaEmbed(interaction.client, 'Özel Durum Taraması', { footer: `${scanned} üye tarandı · çevrimdışılar görünmez` })
+      .setTitle(`${hits.length} sonuç`)
+      .setDescription(hits.join('\n').slice(0, 4000) || `Uygun özel durum bulunamadı. ${e('parilti', '✨')}`);
     await interaction.editReply({ embeds: [embed], allowedMentions: { parse: [] } });
   },
 };

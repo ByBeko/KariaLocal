@@ -2,7 +2,7 @@ import { e } from '../../utils/emojis.js';
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
 import { serverStats, sparkline, bar, formatVoice, PERIOD_CHOICES, periodName } from '../../systems/stats.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed } from '../../utils/embeds.js';
 
 function change(now, before) {
   if (before === null) return '';
@@ -39,9 +39,10 @@ export default {
     const voiceUsers = s.topVoiceUsers.map((u, i) => `\`${i + 1}.\` <@${u.userId}> · ${formatVoice(u.value)}`).join('\n') || '—';
     const channels = s.topChannels.slice(0, 5).map((c) => `<#${c.channelId}> · ${c.messages}`).join('\n') || '—';
 
-    const embed = brandEmbed()
-      .setAuthor({ name: `${guild.name} • Aktivite Raporu`, iconURL: guild.iconURL() ?? undefined })
-      .setTitle(periodName(days))
+    const embed = kariaEmbed(interaction.client, 'Aktivite Raporu', { icon: guild.iconURL() ?? undefined, footer: s.dataSince ? `Veri başlangıcı: ${s.dataSince}` : 'Henüz veri yok · /gecmis-tara' })
+      .setTitle(guild.name)
+      .setDescription(`${e('takvim', '📅')} **${periodName(days)}** · Türkiye saati`)
+      .setThumbnail(guild.iconURL({ size: 256 }))
       .addFields(
         { name: `${e('mesaj', '💬')} Mesaj`, value: `**${s.messages}**${change(s.messages, s.previousMessages)}`, inline: true },
         { name: `${e('mikrofon', '🎙️')} Ses`, value: `**${formatVoice(s.voiceSeconds)}**`, inline: true },
@@ -60,8 +61,7 @@ export default {
           name: `${e('yukari', '📈')} Günlük mesaj (son ${s.daily.length} gün)`,
           value: `\`${sparkline(s.daily.map((d) => d.value))}\`  en yüksek: ${Math.max(...s.daily.map((d) => d.value))}`,
         },
-      )
-      .setFooter({ text: s.dataSince ? `Veri başlangıcı: ${s.dataSince} • Türkiye saati` : 'Henüz veri yok • /gecmis-tara ile geçmiş mesajlar sayılabilir' });
+      );
 
     await interaction.reply({ embeds: [embed], allowedMentions: { parse: [] } });
   },

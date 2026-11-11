@@ -1,0 +1,7 @@
+{
+ "parent": "karia:ejder/govde",
+ "textures": {
+  "skin": "karia:ejder/firtina_sirti",
+  "particle": "karia:ejder/firtina_sirti"
+ }
+}

@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, InteractionContextType } from 'discord.js';
 import { e } from '../../utils/emojis.js';
-import { brandEmbed, replySuccess } from '../../utils/embeds.js';
+import { kariaEmbed, replySuccess } from '../../utils/embeds.js';
 import { getQueue, requireVoice, formatTime, LOOP_NAMES } from '../../systems/music.js';
 import { UserError } from '../../utils/errors.js';
 import { isStaff } from '../../utils/permissions.js';
@@ -41,13 +41,17 @@ export default {
         .slice(start, start + PER_PAGE)
         .map((t, i) => `\`${start + i + 1}.\` [${t.title.slice(0, 60)}](${t.url}) \`${formatTime(t.duration)}\` • <@${t.requesterId}>`);
       const total = queue.tracks.reduce((a, t) => a + t.duration, 0) + Math.max(0, queue.current.duration - queue.position);
-      const embed = brandEmbed()
-        .setTitle(`${e('muzik', '🎶')} Müzik sırası • ${queue.tracks.length} şarkı`)
+      const embed = kariaEmbed(interaction.client, 'Müzik Sırası', { footer: `Sayfa ${page}/${pages}` })
+        .setTitle(`${queue.tracks.length} şarkı sırada`)
         .setDescription(
-          `**Çalıyor:** [${queue.current.title.slice(0, 70)}](${queue.current.url}) \`${formatTime(queue.position)} / ${formatTime(queue.current.duration)}\`\n\n` +
+          `${e('oynat', '▶️')} **Çalıyor:** [${queue.current.title.slice(0, 70)}](${queue.current.url}) \`${formatTime(queue.position)} / ${formatTime(queue.current.duration)}\`\n\n` +
             (lines.join('\n') || '*Sırada şarkı yok. `/cal` ile ekle.*'),
         )
-        .setFooter({ text: `Sayfa ${page}/${pages} • Toplam ${formatTime(total)} • Döngü: ${LOOP_NAMES[queue.loop]} • Ses %${queue.volume}` });
+        .addFields(
+          { name: `${e('kumsaati', '⏱️')} Toplam`, value: `**${formatTime(total)}**`, inline: true },
+          { name: `${e('yenile', '🔁')} Döngü`, value: `**${LOOP_NAMES[queue.loop]}**`, inline: true },
+          { name: `${e('kulaklik', '🔊')} Ses`, value: `**%${queue.volume}**`, inline: true },
+        );
       return interaction.reply({ embeds: [embed], allowedMentions: { parse: [] } });
     }
 

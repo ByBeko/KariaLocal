@@ -87,7 +87,7 @@ const TOPICS = [
     id: 'guncelleme',
     re: /\bguncelleme(ler)? (nerede|nerde|ne zaman)\b/,
     icon: () => e('roket', '🤖'),
-    resolve: (guild) => reply(guild, 'karia-bot', (c) => `Karia Local güncellemeleri her hafta ${c} forumunda paylaşılır.`),
+    resolve: (guild) => reply(guild, 'karia-local', (c) => `Karia Local güncellemeleri her hafta ${c} forumunda paylaşılır.`),
   },
   {
     id: 'sss',

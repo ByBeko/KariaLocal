@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { e } from '../../utils/emojis.js';
+import { kariaEmbed, label as field, COLORS } from '../../utils/embeds.js';
 import { parseBet, takeMoney, addMoney, fmt, ensureEnabled, lockGame } from '../../systems/economy.js';
 
 const SPIN_MS = 1500;
@@ -29,13 +30,24 @@ export default {
       const won = result === pick;
       if (won) addMoney(guild.id, user.id, bet * 2);
 
-      const head = `**${member.displayName}**, ${fmt(bet)} bastı ve **${label(pick)}** seçti.`;
-      await interaction.reply({ content: `${head}\n${e('yenile', '🔄')} Para dönüyor...`, allowedMentions: { parse: [] } });
+      const view = (title, outcome, done = false) => {
+        const embed = kariaEmbed(interaction.client, 'Yazı Tura', { icon: user.displayAvatarURL() })
+          .setTitle(title)
+          .addFields(
+            { name: field('dolar2', '💰', 'Bahis'), value: fmt(bet), inline: true },
+            { name: field('hedef', '🎯', 'Seçim'), value: `**${label(pick)}**`, inline: true },
+            { name: field('coin', '🪙', 'Sonuç'), value: outcome, inline: true },
+          );
+        if (done) embed.setColor(won ? COLORS.success : COLORS.error);
+        return { embeds: [embed], allowedMentions: { parse: [] } };
+      };
+      await interaction.reply(view(`${e('yenile', '🔄')} Para dönüyor...`, '...'));
       await new Promise((r) => setTimeout(r, SPIN_MS));
-      await interaction.editReply({
-        content: `${head}\n${e('coin', '🪙')} **${label(result)}** geldi, ${won ? `${fmt(bet * 2)} kazandın!` : 'kaybettin.'}`,
-        allowedMentions: { parse: [] },
-      });
+      await interaction.editReply(view(
+        won ? `${member.displayName} kazandı!` : `${member.displayName} kaybetti`,
+        `**${label(result)}**\n${won ? `+${fmt(bet * 2)}` : `-${fmt(bet)}`}`,
+        true,
+      ));
     } finally {
       unlock();
     }

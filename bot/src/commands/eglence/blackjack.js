@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags } from 'discord.js';
 import { e } from '../../utils/emojis.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed } from '../../utils/embeds.js';
 import { parseBet, takeMoney, addMoney, getBalance, ensureEnabled, lockGame } from '../../systems/economy.js';
 import { newDeck, handTotal, isBlackjack, blackjackPayout, dealerPlay as settleDealer } from '../../systems/casino.js';
 
@@ -27,16 +27,16 @@ export default {
       const dealer = [deck.pop(), deck.pop()];
 
       const view = (state, reveal) => {
-        const embed = brandEmbed()
-          .setAuthor({ name: `${interaction.member.displayName}, ${bet.toLocaleString('tr-TR')} coin bastı`, iconURL: user.displayAvatarURL() })
+        const embed = kariaEmbed(interaction.client, 'Blackjack', { icon: user.displayAvatarURL() })
+          .setTitle(state?.text ?? `${interaction.member.displayName} oynuyor`)
+          .setDescription(`${e('dolar2', '💰')} **Bahis** ${bet.toLocaleString('tr-TR')} coin`)
           .addFields(
             {
-              name: `Krupiye [${reveal ? total(dealer) : `${total([dealer[0]])}+?`}]`,
+              name: `${e('kart', '🃏')} Krupiye • ${reveal ? total(dealer) : `${total([dealer[0]])}+?`}`,
               value: reveal ? show(dealer) : `${show([dealer[0]])}  \`??\``,
             },
-            { name: `Sen [${total(player)}]`, value: show(player) },
-          )
-          .setFooter({ text: state?.text ?? 'Oyun sürüyor' });
+            { name: `${e('kullanici', '👤')} Sen • ${total(player)}`, value: show(player) },
+          );
         if (state) embed.setColor(state.color);
         return embed;
       };

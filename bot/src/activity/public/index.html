@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Karia</title>
 <link rel="icon" href="logo.png">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 <div id="boot" class="boot"><img src="logo.png" alt="Karia"><p id="boot-text">Karia açılıyor...</p></div>
 
 <div id="app" class="app" hidden>
   <aside class="side">
-    <div class="side-brand"><span class="logo"><img src="logo.png" alt=""></span><strong>Karia</strong></div>
+    <div class="side-brand"><span class="logo"><img src="logo.png" alt=""></span><strong>Karia</strong><button type="button" id="sfx-toggle" class="sfx-toggle"></button></div>
     <div class="balance" title="Botla aynı bakiye">
       <img src="emojis/coin.png" alt="">
       <div><small>Bakiye</small><strong id="balance">0</strong></div>
@@ -30,12 +30,16 @@
           <button class="tab" data-tab="reports" role="tab"><img src="emojis/bayrak.png" alt="">Raporlar<b id="badge-reports" class="badge" hidden></b></button>
           <button class="tab" data-tab="suggestions" role="tab"><img src="emojis/ampul.png" alt="">Öneriler</button>
           <button class="tab" data-tab="cases" role="tab"><img src="emojis/tokmak.png" alt="">Cezalar</button>
+          <button class="tab" data-tab="prime" role="tab"><img src="emojis/tac.png" alt="">Prime</button>
+          <button class="tab" data-tab="social" role="tab"><img src="emojis/megafon.png" alt="">Sosyal Paylaşım</button>
+          <button class="tab" data-tab="mail" role="tab"><img src="emojis/mesaj.png" alt="">Mailler<b id="badge-mail" class="badge" hidden></b></button>
           <button class="tab" data-tab="modules" role="tab"><img src="emojis/araclar.png" alt="">Modüller</button>
           <button class="tab" data-tab="settings" role="tab"><img src="emojis/ayarlar.png" alt="">Ayarlar</button>
           <button class="tab" data-tab="commands" role="tab"><img src="emojis/kod.png" alt="">Komutlar</button>
         </div>
       </div>
     </nav>
+    <a id="site-back" class="site-back" href="https://karia.live" hidden>‹ karia.live</a>
     <div class="side-user"><span class="avatar" id="avatar-letter"></span><div><strong id="username"></strong><em id="role-badge" class="role"></em></div></div>
   </aside>
 
@@ -187,8 +191,20 @@
     <section class="panel plain" data-panel="overview" hidden><div id="overview"></div></section>
 
     <section class="panel" data-panel="tickets" hidden>
-      <div id="ticket-list" class="items"></div>
-      <div id="ticket-view" class="thread" hidden></div>
+      <div class="desk">
+        <aside class="desk-side">
+          <div class="period desk-filter" role="tablist">
+            <button type="button" data-ticket-filter="all" class="active">Tümü</button>
+            <button type="button" data-ticket-filter="discord">Discord</button>
+            <button type="button" data-ticket-filter="mail">E-posta</button>
+          </div>
+          <div id="ticket-list" class="desk-list"></div>
+        </aside>
+        <div class="desk-main">
+          <div id="ticket-empty" class="desk-empty"><img src="emojis/cankurtaran.png" alt=""><strong>Bir talep seç</strong><p>Discord ve destek@karia.live adresinden gelen talepler burada toplanır.</p></div>
+          <div id="ticket-view" class="thread" hidden></div>
+        </div>
+      </div>
     </section>
 
     <section class="panel" data-panel="reports" hidden>
@@ -201,6 +217,32 @@
 
     <section class="panel" data-panel="cases" hidden>
       <div id="case-list" class="items"></div>
+    </section>
+
+    <section class="panel" data-panel="prime" hidden>
+      <div id="prime-form" class="prime-form"></div>
+      <div id="prime-list" class="items"></div>
+    </section>
+
+    <section class="panel" data-panel="mail" hidden>
+      <select id="mail-filter" class="field" aria-label="Adres"></select>
+      <div id="mail-list" class="items"></div>
+    </section>
+
+    <section class="panel" data-panel="social" hidden>
+      <div id="social-accounts" class="social-accounts"></div>
+      <form id="social-form" class="social-form">
+        <label class="social-file">
+          <input id="social-file" type="file" accept=".mp4,.mov,video/mp4,video/quicktime">
+          <span id="social-file-name">Video seç (MP4 veya MOV, en çok 1 GB)</span>
+        </label>
+        <input id="social-title" class="field" maxlength="100" placeholder="Başlık" autocomplete="off">
+        <textarea id="social-description" class="field" maxlength="2000" rows="4" placeholder="Açıklama ve etiketler"></textarea>
+        <div id="social-targets" class="social-targets"></div>
+        <progress id="social-progress" class="social-progress" max="100" value="0" hidden></progress>
+        <button id="social-send" class="primary" type="submit">Hepsinde Paylaş</button>
+      </form>
+      <div id="social-list" class="items"></div>
     </section>
 
     <section class="panel" data-panel="modules" hidden>
@@ -234,6 +276,15 @@
             <div id="say-preview" class="say-preview" hidden></div>
             <div class="actions left"><button id="say-send" class="primary">Gönder</button></div>
           </div>
+          <div id="brole-card" class="say-card" hidden>
+            <h4>Buton Rol</h4>
+            <select id="brole-channel" class="field" aria-label="Kanal"></select>
+            <input id="brole-title" class="field" placeholder="Başlık" maxlength="80" autocomplete="off">
+            <textarea id="brole-text" class="field" rows="3" maxlength="1500" placeholder="Üyelere ne yazsın? (isteğe bağlı)"></textarea>
+            <div id="brole-rows" class="brole-rows"></div>
+            <p class="hint left">Üye butona basınca rolü alır, tekrar basınca bırakır. Yetkili izni olan roller listede çıkmaz.</p>
+            <div class="actions left"><button id="brole-add" type="button">Rol Ekle</button><button id="brole-send" type="button" class="primary">Gönder</button></div>
+          </div>
           <div id="cmd-card" class="cmd-card">
             <div id="cmd-form" class="cmd-form"><p class="hint left">Soldan bir komut seç. Bota mesaj yazdırmak için Yönetim grubuna bak.</p></div>
             <div class="actions left"><button id="cmd-run" class="primary" disabled>Çalıştır</button></div>
@@ -247,6 +298,6 @@
   </main>
   </div>
 </div>
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=2"></script>
 </body>
 </html>

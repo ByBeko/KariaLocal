@@ -1,4 +1,4 @@
-// Karia yapay zeka asistanı — Ollama üzerinde Qwen2.5.
+// Karia yapay zeka asistanı — Google Gemini (OpenAI uyumlu API).
 // Sunucu bilgisi (kanallar, roller, kurallar, SSS, komutlar) sistem mesajında verilir;
 // sayısal veriler için model araç (tool) çağırır: istatistik, sıralama, MC durumu, (yetkiliye) denetim.
 
@@ -17,22 +17,32 @@ import { linkChannels } from './guide.js';
 import { quickAnswer } from './quickAnswers.js';
 import { FEATURES, STAFF_FEATURES } from '../aiKnowledge.js';
 
-const { url: OLLAMA_URL, model: MODEL, userLimit } = config.ai;
+const { userLimit } = config.ai;
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
 const MAX_TOOL_ROUNDS = 4;
-const NUM_CTX = 8192; // sunucu bilgisi ~2.5k token + araç sonuçları; ön yükleme ile aynı olmalı (yoksa model yeniden yüklenir)
-const KEEP_ALIVE = '2h'; // model ekran kartında bu süre boyunca hazır bekler (ilk yükleme ~1 dk sürer)
+const API_TIMEOUT = 90_000;
+const HEDGE_MS = 4_000; // normal cevap 1-2 sn; bundan uzun sürerse istek takılmış sayılır
+const MAX_CONCURRENT = 4;
+const MAX_RETRY_WAIT = 20_000; // dakika sınırına takılınca en çok bu kadar beklenir
 
-/** Bot açılırken modeli ekran kartına önceden yükle; Ollama kapalıysa sessizce geç */
+/** Bot açılırken Gemini bağlantısını dener; anahtar yoksa ya da ulaşılamazsa sessizce geçer */
 export async function warmUpAI() {
+  if (!GEMINI_API_KEY) {
+    console.warn('⚠ GEMINI_API_KEY bulunamadı; yapay zeka sohbeti kapalı kalacak.');
+    return;
+  }
   try {
-    const res = await fetch(`${OLLAMA_URL}/api/generate`, {
+    const res = await fetch(GEMINI_URL, {
       method: 'POST',
-      body: JSON.stringify({ model: MODEL, keep_alive: KEEP_ALIVE, options: { num_ctx: NUM_CTX } }),
-      signal: AbortSignal.timeout(180_000),
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${GEMINI_API_KEY}` },
+      body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: 'Merhaba.' }], max_tokens: 16 }),
+      signal: AbortSignal.timeout(20_000),
     });
-    console.log(res.ok ? `✔ Yapay zeka hazır (${MODEL})` : `⚠ Yapay zeka modeli yüklenemedi (${MODEL}): ${res.status}`);
-  } catch {
-    console.warn('⚠ Ollama çalışmıyor; yapay zeka sohbeti kapalı kalacak.');
+    console.log(res.ok ? `✔ Yapay zeka hazır (Gemini ${MODEL})` : `⚠ Gemini bağlantısı başarısız (${res.status}): ${(await res.text()).slice(0, 300)}`);
+  } catch (error) {
+    console.warn(`⚠ Gemini'ye ulaşılamadı: ${error.message}`);
   }
 }
 
@@ -238,45 +248,114 @@ async function runTool(name, args, { guild, member }) {
   }
 }
 
-// ───────────────────────── Ollama ─────────────────────────
+// ───────────────────────── Gemini ─────────────────────────
 
-async function chat(messages, tools, extraOptions = {}) {
-  let res;
-  try {
-    res = await fetch(`${OLLAMA_URL}/api/chat`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        model: MODEL,
-        messages,
-        tools,
-        stream: false,
-        think: false, // Qwen3.5 düşünme modunu kapat: Discord için hızlı ve kısa cevap
-        keep_alive: KEEP_ALIVE,
-        options: { temperature: 0.3, num_ctx: NUM_CTX, ...extraOptions },
-      }),
-      signal: AbortSignal.timeout(240_000),
-    });
-  } catch (error) {
-    if (error.name === 'TimeoutError') throw new UserError('Yapay zeka çok uzun sürdü, daha kısa bir soru dene.');
-    throw new UserError('Yapay zeka şu an kapalı (Ollama çalışmıyor). Yetkililere haber ver.');
-  }
-  if (!res.ok) {
-    const body = await res.text();
-    if (res.status === 404) throw new UserError(`Yapay zeka modeli yüklü değil. Bot sahibi şunu çalıştırmalı: \`ollama pull ${MODEL}\``);
-    throw new Error(`Ollama ${res.status}: ${body.slice(0, 300)}`);
-  }
-  return (await res.json()).message;
+/**
+ * Gemini ara sıra 5-15 saniye takılıyor: cevap HEDGE_MS içinde gelmezse aynı isteği bir kez daha atar,
+ * önce gelen cevabı alır, diğerini iptal eder.
+ */
+function hedgedFetch(body) {
+  return new Promise((resolve, reject) => {
+    const controllers = [];
+    let failed = 0;
+    let finished = false;
+    let timer = null;
+    const launch = () => {
+      const controller = new AbortController();
+      controllers.push(controller);
+      fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${GEMINI_API_KEY}` },
+        body,
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(API_TIMEOUT)]),
+      }).then(
+        (res) => {
+          if (finished) return;
+          finished = true;
+          clearTimeout(timer);
+          for (const other of controllers) if (other !== controller) other.abort();
+          resolve(res);
+        },
+        (error) => {
+          failed++;
+          if (finished || failed < controllers.length) return;
+          finished = true;
+          clearTimeout(timer);
+          reject(error);
+        },
+      );
+    };
+    launch();
+    timer = setTimeout(() => {
+      if (!finished) launch();
+    }, HEDGE_MS);
+  });
 }
 
-// Yerel GPU tek seferde tek soruya bakar: istekler sıraya girer
-let queue = Promise.resolve();
+async function chat(messages, tools, extraOptions = {}) {
+  if (!GEMINI_API_KEY) throw new UserError('Yapay zeka şu an kapalı (Gemini anahtarı tanımlı değil). Yetkililere haber ver.');
+  const body = JSON.stringify({
+    model: MODEL,
+    messages,
+    ...(tools?.length ? { tools } : {}),
+    stream: false,
+    temperature: 0.3,
+    max_tokens: 1200,
+    ...extraOptions,
+  });
+
+  let res;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      res = await hedgedFetch(body);
+    } catch (error) {
+      if (error.name === 'TimeoutError' || error.name === 'AbortError') throw new UserError('Yapay zeka çok uzun sürdü, daha kısa bir soru dene.');
+      console.error('[Gemini bağlantı]', error.message);
+      throw new UserError('Yapay zekaya şu an ulaşılamıyor. Biraz sonra tekrar dene.');
+    }
+    // Geçici yoğunluk (429) ya da sunucu hatasında bir kez daha dene; 429'da Gemini'nin söylediği kadar bekle
+    if ((res.status === 429 || res.status >= 500) && attempt === 0) {
+      const hint = res.status === 429 ? Number((await res.clone().text()).match(/"retryDelay":\s*"(\d+)/)?.[1]) : 0;
+      await new Promise((resolve) => setTimeout(resolve, Math.min(hint ? hint * 1000 + 500 : 3000, MAX_RETRY_WAIT)));
+      continue;
+    }
+    break;
+  }
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error(`[Gemini ${res.status}]`, text.slice(0, 500));
+    if (res.status === 429) throw new UserError('Yapay zeka şu an çok yoğun, biraz sonra tekrar dene.');
+    if (res.status === 401 || res.status === 403) throw new UserError('Yapay zeka erişimi reddedildi (API anahtarı). Yetkililere haber ver.');
+    if (res.status === 404) throw new UserError(`Yapay zeka modeli bulunamadı (${MODEL}). Yetkililere haber ver.`);
+    throw new Error(`Gemini ${res.status}: ${text.slice(0, 300)}`);
+  }
+  const reply = (await res.json()).choices?.[0]?.message;
+  if (!reply) throw new UserError('Yapay zeka boş cevap döndürdü, tekrar dene.');
+  return reply;
+}
+
+// Aynı anda en fazla MAX_CONCURRENT soru işlenir, fazlası sıra bekler (API'nin dakika sınırı için)
+let active = 0;
 let waiting = 0;
+const pending = [];
 function enqueue(task) {
   waiting++;
-  const run = queue.then(task, task).finally(() => waiting--);
-  queue = run.catch(() => {});
-  return run;
+  return new Promise((resolve, reject) => {
+    const run = () => {
+      active++;
+      Promise.resolve()
+        .then(task)
+        .then(resolve, reject)
+        .finally(() => {
+          active--;
+          waiting--;
+          pending.shift()?.();
+        });
+    };
+    if (active < MAX_CONCURRENT) run();
+    else pending.push(run);
+  });
 }
 export const queueLength = () => waiting;
 
@@ -289,7 +368,7 @@ export function generateText(system, prompt, { maxTokens = 1400 } = {}) {
         { role: 'user', content: prompt },
       ],
       undefined,
-      { num_predict: maxTokens },
+      { max_tokens: maxTokens },
     );
     return (reply.content ?? '').trim();
   });
@@ -383,7 +462,7 @@ async function safetyCheck(text) {
       { role: 'user', content: text.slice(0, 1500) },
     ],
     undefined,
-    { temperature: 0, num_predict: 4 }, // num_ctx değiştirilmez: farklı olursa model ekran kartına yeniden yüklenir
+    { temperature: 0, max_tokens: 64 }, // düşünen modellerde token payı kalsın diye 4 değil 64
   ).catch(() => null);
   const verdict = (reply?.content ?? '').toUpperCase();
   if (verdict.includes('KRIZ')) return 'selfharm';
@@ -461,12 +540,14 @@ export async function askAI(guild, member, question, { historyKey = null } = {})
   const messages = [{ role: 'system', content: system }, ...(historyKey ? getHistory(historyKey) : []), { role: 'user', content: question }];
 
   return enqueue(async () => {
-    const verdict = await safetyCheck(question);
-    if (verdict === 'illegal') return REFUSAL();
-    if (verdict === 'selfharm') return CRISIS();
+    // Güvenlik kontrolü ile ilk cevap aynı anda istenir; cevap, kontrol bitmeden kullanıcıya gitmez
+    const [safety, first] = await Promise.allSettled([safetyCheck(question), chat(messages, tools)]);
+    if (safety.value === 'illegal') return REFUSAL();
+    if (safety.value === 'selfharm') return CRISIS();
+    if (first.status === 'rejected') throw first.reason;
 
+    let reply = first.value;
     for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-      const reply = await chat(messages, round < MAX_TOOL_ROUNDS ? tools : undefined);
       messages.push(reply);
       if (!reply.tool_calls?.length) {
         const answer = (reply.content ?? '').trim() || 'Buna bir yanıt üretemedim, farklı sormayı dener misin?';
@@ -485,8 +566,10 @@ export async function askAI(guild, member, question, { historyKey = null } = {})
           }
         }
         const result = await runTool(name, args, { guild, member }).catch((e) => ({ hata: e.message }));
-        messages.push({ role: 'tool', tool_name: name, content: JSON.stringify(result) });
+        messages.push({ role: 'tool', tool_call_id: call.id, name, content: JSON.stringify(result) });
       }
+      if (round === MAX_TOOL_ROUNDS) break;
+      reply = await chat(messages, round + 1 < MAX_TOOL_ROUNDS ? tools : undefined);
     }
     return 'Yanıt üretilemedi.';
   });

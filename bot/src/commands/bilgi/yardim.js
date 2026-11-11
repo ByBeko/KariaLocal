@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, MessageFlags, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
+import { SlashCommandBuilder, MessageFlags, InteractionContextType, ApplicationIntegrationType, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { homeView, commandView, staffView, staffButtonRow } from '../../systems/help.js';
 import { checkAccess, isStaff } from '../../utils/permissions.js';
 import { replyError } from '../../utils/embeds.js';
@@ -34,7 +34,12 @@ export default {
     }
 
     // Herkese açık yardım menüsü
-    await interaction.reply(homeView(member, client, interaction.user.id));
+    const view = homeView(member, client, interaction.user.id);
+    const siteRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('karia.live').setURL('https://karia.live'),
+      new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Oyunlar ve Müzik').setURL('https://activity.karia.live'),
+    );
+    await interaction.reply(view.components.length < 5 ? { ...view, components: [...view.components, siteRow] } : view);
     // Yetkiliye, sadece kendisinin göreceği panel butonu ayrıca gelir
     if (isStaff(member)) {
       await interaction
