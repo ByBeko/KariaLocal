@@ -1,15 +1,17 @@
-import { SlashCommandBuilder, InteractionContextType } from 'discord.js';
+import { SlashCommandBuilder, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { e } from '../../utils/emojis.js';
 import { kariaEmbed } from '../../utils/embeds.js';
 import { playQuery, formatTime } from '../../systems/music.js';
 
 export default {
   aliases: ['play', 'p', 'çal', 'oynat'],
+  global: true, // profildeki "Komutlar" kutusunda görünmesi için
   data: new SlashCommandBuilder()
     .setName('cal')
     .setDescription("YouTube'dan şarkı çalar ya da sıraya ekler (isim, link ya da oynatma listesi).")
     .addStringOption((o) => o.setName('sarki').setDescription('Şarkı adı ya da YouTube/SoundCloud linki').setRequired(true).setMaxLength(500))
-    .setContexts(InteractionContextType.Guild),
+    .setContexts(InteractionContextType.Guild)
+    .setIntegrationTypes(ApplicationIntegrationType.GuildInstall),
 
   async execute(interaction) {
     await interaction.deferReply();

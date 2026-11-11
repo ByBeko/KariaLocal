@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, AttachmentBuilder } from 'discord.js';
+import { SlashCommandBuilder, AttachmentBuilder, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { e } from '../../utils/emojis.js';
 import { rankCard } from '../../systems/cards.js';
 import { getProfile, getRewards, progressBar, rankEmoji, totalXpFor } from '../../systems/levels.js';
@@ -6,6 +6,7 @@ import { kariaEmbed, label } from '../../utils/embeds.js';
 
 export default {
   aliases: ['rank', 'level', 'lvl'],
+  global: true, // profildeki "Komutlar" kutusunda görünmesi için
   defaultSub: 'kart',
   data: new SlashCommandBuilder()
     .setName('seviye')
@@ -16,7 +17,9 @@ export default {
         .setDescription('Seviyeni ve XP ilerlemeni gösterir')
         .addUserOption((o) => o.setName('kullanici').setDescription('Başkasınınkine bak')),
     )
-    .addSubcommand((s) => s.setName('oduller').setDescription('Hangi seviyede hangi rol kazanılır')),
+    .addSubcommand((s) => s.setName('oduller').setDescription('Hangi seviyede hangi rol kazanılır'))
+    .setContexts(InteractionContextType.Guild)
+    .setIntegrationTypes(ApplicationIntegrationType.GuildInstall),
 
   async execute(interaction) {
     const { guild } = interaction;

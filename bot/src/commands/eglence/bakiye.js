@@ -1,13 +1,16 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { getBalance, fmt, ensureEnabled } from '../../systems/economy.js';
 import { kariaEmbed, label } from '../../utils/embeds.js';
 
 export default {
   aliases: ['para', 'cuzdan', 'bal', 'cüzdan'],
+  global: true, // profildeki "Komutlar" kutusunda görünmesi için
   data: new SlashCommandBuilder()
     .setName('bakiye')
     .setDescription('Karia coin bakiyeni gösterir.')
-    .addUserOption((o) => o.setName('kullanici').setDescription('Başkasının bakiyesi')),
+    .addUserOption((o) => o.setName('kullanici').setDescription('Başkasının bakiyesi'))
+    .setContexts(InteractionContextType.Guild)
+    .setIntegrationTypes(ApplicationIntegrationType.GuildInstall),
 
   async execute(interaction) {
     ensureEnabled(interaction.guild.id);

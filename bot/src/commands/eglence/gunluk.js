@@ -1,10 +1,11 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { claimDaily, nextDaily, fmt, ensureEnabled } from '../../systems/economy.js';
 import { kariaEmbed, label } from '../../utils/embeds.js';
 
 export default {
   aliases: ['daily', 'gunlukodul', 'günlük'],
-  data: new SlashCommandBuilder().setName('gunluk').setDescription('Günlük 100 coin ödülünü al.'),
+  global: true, // profildeki "Komutlar" kutusunda görünmesi için
+  data: new SlashCommandBuilder().setName('gunluk').setDescription('Günlük 100 coin ödülünü al.').setContexts(InteractionContextType.Guild).setIntegrationTypes(ApplicationIntegrationType.GuildInstall),
 
   async execute(interaction) {
     ensureEnabled(interaction.guild.id);
