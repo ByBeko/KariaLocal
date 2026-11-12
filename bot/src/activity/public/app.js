@@ -1442,7 +1442,8 @@ function drawTikTokDuration() {
 function drawTikTokOptions() {
   const info = tiktokCreatorInfo;
   if (!info) return;
-  $('tt-account').textContent = `Paylaşılacak hesap: ${info.nickname}${info.username ? ` (@${info.username})` : ''}`;
+  $('tt-account').textContent = `Paylaşılacak hesap: ${info.nickname}${info.username ? ` (@${info.username})` : ''}`
+    + (info.audited ? '' : '. TikTok denetimi bitene kadar yalnızca "Yalnızca ben" paylaşılabilir ve TikTok hesabının gizli olması gerekir.');
   const select = $('tt-privacy');
   const current = select.value;
   select.replaceChildren(el('option', { value: '', disabled: true, selected: !current, textContent: 'Seç' }),

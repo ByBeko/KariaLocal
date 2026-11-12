@@ -99,7 +99,11 @@ function errorText(data, status) {
 async function request(url, options = {}) {
   const res = await fetch(url, { signal: AbortSignal.timeout(90_000), ...options });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(errorText(data, res.status), res.status);
+  if (!res.ok) {
+    const error = new ApiError(errorText(data, res.status), res.status);
+    error.data = data; // Platformun hata kodu (ör. TikTok error.code) kaybolmasın
+    throw error;
+  }
   return data;
 }
 
@@ -247,9 +251,25 @@ const youtube = {
 };
 
 // ── TikTok ──
+// TikTok'un İngilizce ve genel hata metinleri yerine yapılacak işi söyleyen açıklamalar
+const TIKTOK_ERRORS = {
+  unaudited_client_can_only_post_to_private_accounts: 'TikTok denetimi bitene kadar paylaşım için hesabın gizli olması gerekiyor: TikTok > Profil > Ayarlar > Gizlilik > Gizli hesap.',
+  privacy_level_option_mismatch: 'Seçilen gizlilik bu TikTok hesabında kullanılamıyor, yeniden seç.',
+  spam_risk_too_many_posts: 'TikTok bu hesap için günlük paylaşım sınırına ulaşıldığını söylüyor, daha sonra yeniden dene.',
+  spam_risk_user_banned_from_posting: 'TikTok bu hesabın paylaşım yapmasını şu an engelliyor.',
+  reached_active_user_cap: 'TikTok uygulamanın günlük kullanıcı sınırına ulaşıldı, yarın yeniden dene.',
+  url_ownership_unverified: 'TikTok video adresinin sahipliğini doğrulayamadı.',
+};
+
 async function tiktokCall(endpoint, token, body) {
-  const data = await request(`${TT_API}${endpoint}`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json; charset=UTF-8' }, body: JSON.stringify(body ?? {}) });
-  if (data.error?.code && data.error.code !== 'ok') throw new ApiError(data.error.message || data.error.code, 400);
+  const data = await request(`${TT_API}${endpoint}`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json; charset=UTF-8' }, body: JSON.stringify(body ?? {}) }).catch((error) => {
+    // HTTP hata durumunda da TikTok gövdesinde kod döner; kod biliniyorsa açıklamaya çevrilir
+    const code = error.data?.error?.code;
+    if (code && code !== 'ok') throw new ApiError(TIKTOK_ERRORS[code] ?? `${error.message} (${code})`, error.status ?? 400);
+    throw error;
+  });
+  const code = data.error?.code;
+  if (code && code !== 'ok') throw new ApiError(TIKTOK_ERRORS[code] ?? `${data.error.message || code} (${code})`, 400);
   return data.data;
 }
 
@@ -278,26 +298,21 @@ const tiktok = {
     if (!pick?.privacy) throw new Error('TikTok gizlilik seçimi yapılmamış.');
     // Seçenekler paylaşım anında yeniden kontrol edilir: TikTok hesabın izinleri bu arada değişmiş olabilir
     if (!creator.privacy_level_options?.includes(pick.privacy)) throw new Error('Seçilen gizlilik bu TikTok hesabında artık kullanılamıyor, yeniden seç.');
+    if (!process.env.TIKTOK_AUDITED && pick.privacy !== 'SELF_ONLY') throw new Error('TikTok denetimi bitene kadar yalnızca "Yalnızca ben" seçilebilir.');
     const chunkSize = job.size <= TIKTOK_CHUNK ? job.size : TIKTOK_CHUNK;
     const chunks = Math.floor(job.size / chunkSize);
-    let init;
-    try {
-      init = await tiktokCall('/post/publish/video/init/', access, {
-        post_info: {
-          title: job.caption,
-          privacy_level: pick.privacy,
-          disable_comment: creator.comment_disabled || !pick.comment,
-          disable_duet: creator.duet_disabled || !pick.duet,
-          disable_stitch: creator.stitch_disabled || !pick.stitch,
-          brand_organic_toggle: Boolean(pick.yourBrand),
-          brand_content_toggle: Boolean(pick.branded),
-        },
-        source_info: { source: 'FILE_UPLOAD', video_size: job.size, chunk_size: chunkSize, total_chunk_count: chunks },
-      });
-    } catch (error) {
-      if (/unaudited/i.test(error.message)) throw new Error('TikTok denetimi tamamlanmadığı için yalnızca gizli hesaba paylaşım yapılabiliyor.');
-      throw error;
-    }
+    const init = await tiktokCall('/post/publish/video/init/', access, {
+      post_info: {
+        title: job.caption,
+        privacy_level: pick.privacy,
+        disable_comment: creator.comment_disabled || !pick.comment,
+        disable_duet: creator.duet_disabled || !pick.duet,
+        disable_stitch: creator.stitch_disabled || !pick.stitch,
+        brand_organic_toggle: Boolean(pick.yourBrand),
+        brand_content_toggle: Boolean(pick.branded),
+      },
+      source_info: { source: 'FILE_UPLOAD', video_size: job.size, chunk_size: chunkSize, total_chunk_count: chunks },
+    });
     for (let index = 0; index < chunks; index += 1) {
       const from = index * chunkSize;
       const length = index === chunks - 1 ? job.size - from : chunkSize;
@@ -456,7 +471,9 @@ export async function tiktokCreator() {
     nickname: creator.creator_nickname ?? account.name,
     username: creator.creator_username ?? null,
     avatar: creator.creator_avatar_url ?? null,
-    privacyOptions: (creator.privacy_level_options ?? []).filter((p) => TIKTOK_PRIVACY.includes(p)),
+    // Denetimden geçmemiş uygulama yalnızca "Yalnızca ben" paylaşabilir; diğerleri TikTok'ta hata verir
+    privacyOptions: (creator.privacy_level_options ?? []).filter((p) => TIKTOK_PRIVACY.includes(p) && (process.env.TIKTOK_AUDITED || p === 'SELF_ONLY')),
+    audited: Boolean(process.env.TIKTOK_AUDITED),
     commentDisabled: Boolean(creator.comment_disabled),
     duetDisabled: Boolean(creator.duet_disabled),
     stitchDisabled: Boolean(creator.stitch_disabled),
