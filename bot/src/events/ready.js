@@ -16,6 +16,8 @@ import { loadAppEmojis, e } from '../utils/emojis.js';
 import { setEmbedClient } from '../utils/embeds.js';
 import { setupLogs, LOG_CHANNELS } from '../commands/yonetim/kurulum.js';
 import { getSetting } from '../core/settings.js';
+import { isAllowedGuild } from '../core/allowedGuilds.js';
+import { guildCommandData, setupGuestGuild } from '../core/guildSetup.js';
 
 // Bot profilindeki "Hakkında" yazısı ve etiketler. Emojiler Karia'nın turkuaz uygulama emojileridir,
 // bu yüzden açılışta emojiler yüklendikten sonra kurulur. Discord sınırı 400 karakter.
@@ -46,12 +48,14 @@ export default {
     const guildId = process.env.GUILD_ID;
     const guild = guildId && (await client.guilds.fetch(guildId).catch(() => null));
     if (guild) {
-      // Bot kapalıyken başka bir sunucuya eklendiyse oradan çık
+      // Bot kapalıyken izinsiz bir sunucuya eklendiyse oradan çık; izinli sunucular kurulur
       for (const other of client.guilds.cache.values()) {
-        if (other.id !== guildId) await other.leave().catch((e) => console.error('[Sunucudan çıkış]', e.message));
+        if (other.id === guildId) continue;
+        if (!isAllowedGuild(other.id)) await other.leave().catch((e) => console.error('[Sunucudan çıkış]', e.message));
+        else await setupGuestGuild(client, other).catch((e) => console.error(`[Sunucu kurulumu ${other.name}]`, e.message));
       }
       // Sunucuya özel komutlar anında güncellenir; aynı komut iki listede olursa / menüsünde çift görünür
-      const guildCommands = await guild.commands.set(client.commands.filter((c) => !c.global).map((c) => c.data.toJSON()));
+      const guildCommands = await guild.commands.set(guildCommandData(client, guild.id));
       // Tek tek eklenir: toplu güncelleme, Etkinlik açılınca oluşan giriş komutunu silmeye çalışıp hata verir
       const globalCommands = await Promise.all(client.commands.filter((c) => c.global).map((c) => client.application.commands.create(c.data.toJSON())));
       setCommandIds([...guildCommands.values(), ...globalCommands]);

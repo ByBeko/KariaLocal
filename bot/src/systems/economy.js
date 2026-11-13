@@ -24,22 +24,25 @@ const q = {
   board: db.prepare('SELECT user_id, wallet FROM economy WHERE guild_id=? AND wallet>0 ORDER BY wallet DESC LIMIT ?'),
 };
 
-const ensure = (guildId, userId) => q.ensure.run(guildId, userId, STARTING_BALANCE);
+/** Bakiye tüm sunucularda ortaktır: Karia'nın (GUILD_ID) kaydı kullanılır */
+const wallet = (guildId) => process.env.GUILD_ID || guildId;
 
-export const getBalance = (guildId, userId) => Number(q.get.get(guildId, userId)?.wallet ?? STARTING_BALANCE);
-export const richBoard = (guildId, limit = 15) => q.board.all(guildId, limit).map((r) => ({ userId: r.user_id, value: Number(r.wallet) }));
+const ensure = (guildId, userId) => q.ensure.run(wallet(guildId), userId, STARTING_BALANCE);
+
+export const getBalance = (guildId, userId) => Number(q.get.get(wallet(guildId), userId)?.wallet ?? STARTING_BALANCE);
+export const richBoard = (guildId, limit = 15) => q.board.all(wallet(guildId), limit).map((r) => ({ userId: r.user_id, value: Number(r.wallet) }));
 export const fmt = (n) => `**${Number(n).toLocaleString('tr-TR')}** ${currency()}`;
 
 export function addMoney(guildId, userId, amount) {
   ensure(guildId, userId);
-  q.add.run(Math.trunc(amount), guildId, userId);
+  q.add.run(Math.trunc(amount), wallet(guildId), userId);
   return getBalance(guildId, userId);
 }
 
 /** Parayı düşer; yetmezse UserError */
 export function takeMoney(guildId, userId, amount) {
   ensure(guildId, userId);
-  if (!Number(q.take.run(amount, guildId, userId, amount).changes)) {
+  if (!Number(q.take.run(amount, wallet(guildId), userId, amount).changes)) {
     throw new UserError(`Bakiyen yetmiyor. Bakiyen: ${fmt(getBalance(guildId, userId))}`);
   }
   return getBalance(guildId, userId);
@@ -47,7 +50,7 @@ export function takeMoney(guildId, userId, amount) {
 
 export function setMoney(guildId, userId, amount) {
   ensure(guildId, userId);
-  q.set.run(Math.max(0, Math.trunc(amount)), guildId, userId);
+  q.set.run(Math.max(0, Math.trunc(amount)), wallet(guildId), userId);
 }
 
 export function ensureEnabled(guildId) {
@@ -56,14 +59,14 @@ export function ensureEnabled(guildId) {
 
 /** Günlük ödülün bir sonraki alınabileceği zaman (ms); 0 ise hemen alınabilir */
 export function nextDaily(guildId, userId) {
-  const at = Number(q.get.get(guildId, userId)?.daily_at ?? 0) + DAILY_COOLDOWN;
+  const at = Number(q.get.get(wallet(guildId), userId)?.daily_at ?? 0) + DAILY_COOLDOWN;
   return at > Date.now() ? at : 0;
 }
 
 export function claimDaily(guildId, userId) {
   ensure(guildId, userId);
   const now = Date.now();
-  if (!Number(q.daily.run(now, guildId, userId, now - DAILY_COOLDOWN).changes)) {
+  if (!Number(q.daily.run(now, wallet(guildId), userId, now - DAILY_COOLDOWN).changes)) {
     throw new UserError(`Günlük ödülünü zaten aldın. **${formatDuration(nextDaily(guildId, userId) - now)}** sonra tekrar gel.`);
   }
   return { amount: DAILY_REWARD, balance: addMoney(guildId, userId, DAILY_REWARD) };
@@ -87,24 +90,14 @@ export function parseBet(input, guildId, userId) {
   return amount;
 }
 
-export const GAME_COOLDOWN = 5_000; // bir oyun bittikten sonra yenisi için beklenen süre
-
 /**
- * Kullanıcı başına tek oyun (blackjack sürerken başka bahis açılmasın) ve oyunlar arası 5 saniye bekleme.
- * Dönen fonksiyon oyun bitince çağrılır; bekleme o andan başlar. unlock(false) beklemeyi başlatmaz (oyun açılamadıysa).
+ * Kullanıcı başına tek oyun: blackjack sürerken başka bahis açılmasın. Oyunlar arasında bekleme yoktur.
+ * Dönen fonksiyon oyun bitince çağrılır.
  */
 const playing = new Set();
-const lastPlay = new Map();
 export function lockGame(guildId, userId) {
-  const key = `${guildId}:${userId}`;
+  const key = `${wallet(guildId)}:${userId}`;
   if (playing.has(key)) throw new UserError('Zaten devam eden bir oyunun var, önce onu bitir.');
-  const wait = (lastPlay.get(key) ?? 0) + GAME_COOLDOWN - Date.now();
-  if (wait > 0) throw new UserError(`Yeni oyun için **${Math.ceil(wait / 1000)} sn** bekle.`);
   playing.add(key);
-  return (mark = true) => {
-    playing.delete(key);
-    if (!mark) return;
-    if (lastPlay.size > 5000) lastPlay.clear();
-    lastPlay.set(key, Date.now());
-  };
+  return () => playing.delete(key);
 }
