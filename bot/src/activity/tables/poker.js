@@ -316,6 +316,7 @@ export class PokerTable extends Room {
     }
     this.hand = null;
     this.phase = 'waiting';
+    this.refillBots?.(); // solo masada fişi biten botun yerine yenisi oturur
     this.maybeStart();
   }
 

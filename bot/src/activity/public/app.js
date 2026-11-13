@@ -82,7 +82,7 @@ const GAME_INFO = {
   zar: [['kupa', 'En yüksek zar', 'Potun hepsi'], ['yenile', 'Beraberlik', 'Yeniden atış'], ['arkadaslar', 'Masa', '2-6 oyuncu']],
   satranc: [['kupa', 'Kazanırsan', 'Potun hepsi (2×)'], ['yenile', 'Berabere', 'Giriş geri'], ['arkadaslar', 'Masa', '2 oyuncu']],
   okey: [['kupa', 'Elini bitiren', 'Potun hepsi (4×)'], ['kart', 'Açma', '101 ya da 5 çift'], ['arkadaslar', 'Masa', '4 oyuncu']],
-  labirent: [['kupa', 'Karşıya ilk varan', 'Potun hepsi (2×)'], ['kalkan', 'Hamle', 'Yürü / kaya / kazma'], ['arkadaslar', 'Masa', '2 oyuncu']],
+  labirent: [['kupa', 'Karşıya ilk varan', 'Potun hepsi (2×)'], ['kalkan', 'Hamle', 'Yürü ya da engel koy'], ['arkadaslar', 'Masa', '2 oyuncu']],
 };
 
 function drawGameInfo(name) {

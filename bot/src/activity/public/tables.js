@@ -134,7 +134,7 @@ export function initTables(ctx) {
     zar: { title: 'Zar Düellosu', sub: 'En yüksek atan potun hepsini alır • Online ya da + Bot ile botlara karşı', stake: 'Giriş' },
     satranc: { title: 'Satranç', sub: 'İki kişilik, kazanan iki girişi alır • Berabere biterse giriş geri döner', stake: 'Giriş' },
     okey: { title: 'Okey 101', sub: '4 kişilik • 101 ya da 5 çiftle aç, elini ilk bitiren potu alır • Eksik koltuklara + Bot', stake: 'Giriş' },
-    labirent: { title: 'Karia Labirent', sub: 'Karşı kenara ilk varan kazanır • Yürü, kaya koy ya da kazmayla kır', stake: 'Giriş' },
+    labirent: { title: 'Karia Labirent', sub: 'Karşı kenara ilk varan kazanır • Yürü ya da karelerin arasına engel koy (10 engel)', stake: 'Giriş' },
   };
   let lobbyTimer = 0;
   let current = null; // açık oyun kökü: { game, root }
@@ -425,7 +425,7 @@ export function initTables(ctx) {
     const center = el('div', { className: 'zcenter' },
       el('div', { className: 'felt-mark' }, el('img', { src: 'logo.png', alt: '' }), el('span', { textContent: 'KARIA' })),
       el('div', { className: 'ppot' }, el('img', { src: 'emojis/coin.png', alt: '' }), el('span', { textContent: `Pot ${fmt(room.pot)}` })),
-      el('div', { className: 'pstatus' }, room.phase === 'waiting' ? (room.endsAt ? countdown('Zarlar {s} sn sonra atılıyor', room.endsAt) : el('span', { textContent: 'Hazır olanlar en az 2 kişi olunca başlar' })) : el('span', { textContent: room.winner ? `${room.winner.names.join(', ')} kazandı! +${fmt(room.winner.amount)}` : 'Zarlar atılıyor...' })));
+      el('div', { className: 'pstatus' }, room.phase === 'waiting' ? (room.endsAt ? countdown('Zarlar {s} sn sonra atılıyor', room.endsAt) : el('span', { textContent: room.id.startsWith('solo-') ? 'Hazırım’a basınca botlarla zarlar atılır' : 'Hazır olanlar en az 2 kişi olunca başlar' })) : el('span', { textContent: room.winner ? `${room.winner.names.join(', ')} kazandı! +${fmt(room.winner.amount)}` : 'Zarlar atılıyor...' })));
     table.append(center);
     dieBoxes = new Map();
     room.seats.forEach((s, i) => {
@@ -940,7 +940,7 @@ export function initTables(ctx) {
     zar: ['Solo Zar Düellosu', '2 bota karşı zar at, en yüksek atan 300 coinlik potu alır. Giriş 100 coin.'],
     satranc: ['Solo Satranç', 'Bota karşı satranç. Giriş 100 coin: kazanırsan 200 alırsın, berabere biterse girişin döner. Masada Hazırım’a bas.'],
     okey: ['Solo Okey 101', '3 bota karşı Okey 101. Giriş 100 coin, elini ilk bitiren 400 coinlik potu alır. Masada Hazırım’a bas.'],
-    labirent: ['Solo Karia Labirent', 'Bota karşı yol kapatma yarışı. Giriş 100 coin, kazanan 200 alır. Masada Hazırım’a bas.'],
+    labirent: ['Solo Karia Labirent', 'Bota karşı koridor yarışı: karşı kenara ilk varan kazanır, sıranda yürür ya da rakibin önüne engel koyarsın. Giriş 100 coin, kazanan 200 alır. Masada Hazırım’a bas.'],
   };
 
   async function soloIntro(game, root) {

@@ -448,28 +448,43 @@
 .chess-moves span{padding:2px 7px;border-radius:7px;background:rgba(0,0,0,.3);color:#cfe7e1;font-size:12px;font-variant-numeric:tabular-nums}
 .chess-moves span.new{background:var(--gold);color:#3a2200}
 /* Karia Labirent */
-.lab{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:5px;width:min(100%,62vh,500px);aspect-ratio:1;padding:12px;border-radius:18px;background:var(--rim);box-shadow:0 0 0 3px #4fcfb4,0 16px 40px rgba(0,0,0,.6)}
-.cell{position:relative;border:0;border-radius:9px;background:#0f4c44;cursor:default;display:grid;place-items:center;padding:0}
+.lab{--g:clamp(6px,1.6vh,11px);display:grid;box-sizing:border-box;width:min(100%,62vh,500px);aspect-ratio:1;padding:12px;border-radius:18px;background:#062e29;box-shadow:0 0 0 3px #4fcfb4,0 16px 40px rgba(0,0,0,.6)}
+.cell{position:relative;min-width:0;min-height:0;border:0;border-radius:6px;background:#0f4c44;cursor:default;display:grid;place-items:center;padding:0}
 .cell.goal0{background:linear-gradient(180deg,#14685d,#0f4c44);box-shadow:inset 0 0 0 2px rgba(79,207,180,.55)}
 .cell.goal1{background:linear-gradient(180deg,#5b4a1a,#3c3212);box-shadow:inset 0 0 0 2px rgba(255,212,121,.55)}
-.cell.rock{background:radial-gradient(circle at 35% 30%,#8a9aa0,#3d4a4f 70%);box-shadow:inset 0 -4px 0 rgba(0,0,0,.35)}
 .cell.can{cursor:pointer;box-shadow:inset 0 0 0 3px #7ff0da}
-.cell.can::after{content:"";width:22%;height:22%;border-radius:50%;background:#7ff0da}
-.cell.canrock{cursor:pointer}
-.cell.canrock:hover{background:#3d4a4f}
-.cell.canpick{cursor:pointer;box-shadow:inset 0 0 0 3px #ef7a7f}
+.cell.can::after{content:"";width:24%;height:24%;border-radius:50%;background:#7ff0da}
+.cell.can:hover{background:#1b6d61}
+.groove{min-width:0;min-height:0;border-radius:3px}
+.groove.aim{cursor:pointer}
+.groove.wall{background:linear-gradient(180deg,#ffd479,#c98a1c);box-shadow:0 0 6px rgba(255,212,121,.55)}
+.groove.x.wall{border-radius:0}
+.groove.wall.new{background:linear-gradient(180deg,#fff0c2,#ffb733);box-shadow:0 0 10px #ffd479}
+.groove.pv{background:rgba(127,240,218,.85)}
+.groove.pv-bad{background:rgba(239,122,127,.7)}
 .pawn{display:block;width:62%;height:62%;border-radius:50%;box-shadow:0 4px 8px rgba(0,0,0,.5),inset 0 -4px 0 rgba(0,0,0,.25)}
 .pawn.p0{background:radial-gradient(circle at 35% 30%,#bff7ec,#2f9e87)}
 .pawn.p1{background:radial-gradient(circle at 35% 30%,#ffe9a8,#d18a12)}
 .pawn.mine{outline:3px solid #fff;outline-offset:2px}
-.lab-help .pawn{width:16px;height:16px;flex:none}
-.lab-modes{display:flex;gap:4px;padding:4px;border-radius:12px;background:rgba(0,0,0,.35)}
-.lab-modes button{flex:1;border:0;border-radius:9px;padding:8px 6px;background:transparent;color:#cfe7e1;font-weight:800;font-size:12px;cursor:pointer}
-.lab-modes button.active{background:#4fcfb4;color:#04211e}
-.lab-help{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#cfe7e1}
-.lab-help p{margin:0;opacity:.8}
-.lab-pl{display:flex;align-items:center;gap:8px}
-.lab-pl em{margin-left:auto;font-style:normal;color:var(--gold)}
+.lab .pawn{width:68%;height:68%}
+.lab-help{display:flex;flex-direction:column;gap:8px;font-size:12px;color:#cfe7e1}
+.lab-help p{margin:0;opacity:.75;line-height:1.45}
+.lab-help .pawn{width:18px;height:18px;flex:none}
+.lab-pl{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid transparent}
+.lab-pl.turn{border-color:var(--gold)}
+.lab-pl>div{flex:1;min-width:0;display:flex;flex-direction:column}
+.lab-pl small{opacity:.7}
+.lab-walls{display:flex;align-items:center;gap:6px}
+.lab-walls>span{display:flex;gap:2px}
+.lab-walls small{font-size:11px;color:#cfe7e1;font-variant-numeric:tabular-nums}
+.lab-walls i{width:4px;height:12px;border-radius:2px;background:rgba(255,255,255,.12)}
+.lab-file,.lab-rank{position:absolute;font-style:normal;font-size:9px;font-weight:800;color:rgba(207,231,225,.55);pointer-events:none}
+.lab-file{bottom:1px;left:3px}
+.lab-rank{top:1px;right:3px}
+.groove.h.wall{border-radius:0}
+.groove.v.wall{border-radius:0}
+.groove.wh0{border-radius:6px 0 0 6px}.groove.wh2{border-radius:0 6px 6px 0}.groove.wv0{border-radius:6px 6px 0 0}.groove.wv2{border-radius:0 0 6px 6px}
+.lab-walls i.on{background:var(--gold)}
 /* Okey 101 */
 .tile{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:38px;height:52px;border-radius:7px;background:linear-gradient(180deg,#fffaf0,#efe6d2);box-shadow:0 3px 0 #b9ab8c,0 4px 8px rgba(0,0,0,.35);font:900 20px/1 system-ui,sans-serif;cursor:pointer;user-select:none;flex:none;transition:transform .1s}
 .tile b{font-weight:900}
@@ -521,5 +536,77 @@
 .tt-layout{grid-template-rows:minmax(0,1fr)}
 .chess-wrap,.lab-wrap{height:100%;min-height:0;overflow:hidden}
 .chess,.lab{width:auto!important;height:100%;max-height:520px;max-width:100%}
-.pc{font-size:min(4.6vh,40px)}
+/* Satranç: 8 eşit satır ve sütun; taş boyutu tahtaya göre (taşlı satır uzamasın) */
+@media (min-width:901px){
+  .chess-wrap,.lab-wrap{container-type:size}
+  .chess,.lab{width:min(100cqw,100cqh,520px)!important;height:auto!important}
+}
+.chess{box-sizing:border-box;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));container-type:size}
+.sq{min-width:0;min-height:0;overflow:hidden}
+.pc{font-size:calc(100cqh / 8 * .78)}
 @media (max-width:900px){.chess,.lab{height:auto;width:min(100%,92vw)!important}.chess-wrap,.lab-wrap{height:auto}}
+/* Okey 101 masası: rakipler masanın etrafında, köşelerde atılan taşlar, ortada keçe, altta iki sıralı ıstaka */
+#okey-root{gap:8px}
+.okt{display:grid;grid-template-columns:64px minmax(0,1fr) 64px;grid-template-rows:auto minmax(170px,1fr) auto;gap:8px;flex:1 0 auto}
+.okc{display:grid;place-items:center;border-radius:12px}
+.okc.drop{background:rgba(239,122,127,.12);box-shadow:inset 0 0 0 2px rgba(239,122,127,.45)}
+.okc.can .tile{animation:okPulse 1.2s ease-in-out infinite}
+@keyframes okPulse{50%{box-shadow:0 0 0 4px #7ff0da,0 3px 0 #b9ab8c,0 0 16px rgba(127,240,218,.7)}}
+.okp{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:rgba(0,0,0,.32);border:1px solid rgba(79,207,180,.15);min-width:0}
+.okp.empty{visibility:hidden}
+.okp.top,.okp.me{justify-self:center;max-width:260px}
+.okp.left,.okp.right{flex-direction:column;justify-content:center;padding:10px 4px;text-align:center}
+.okp.left .okp-text,.okp.right .okp-text{writing-mode:vertical-rl;max-height:150px}
+.okp.left .okp-text{transform:rotate(180deg)}
+.okp .seat-avatar{width:34px;height:34px;flex:none}
+.okp-text{display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.okp strong{font-size:12px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.okp small{font-size:11px;color:#cfe7e1;white-space:nowrap}
+.okp.turn{border-color:var(--gold);box-shadow:0 0 12px rgba(255,212,121,.25)}
+.okp.winner{background:rgba(255,212,121,.16);border-color:var(--gold)}
+.okt-me{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0}
+.ok-score{display:flex;align-items:baseline;gap:4px;padding:5px 12px;border-radius:12px;background:#0c2f5a;box-shadow:inset 0 0 0 2px #3f7fd1;color:#fff}
+.ok-score b{font-size:18px}
+.ok-score small{font-size:10px;opacity:.75}
+.ok-score.ready{background:#1d5a2c;box-shadow:inset 0 0 0 2px #6fe08a}
+.okf{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;min-height:0;padding:10px;border-radius:16px;background:radial-gradient(ellipse at 50% 40%,#13695d,#0a3d36 80%);box-shadow:inset 0 0 0 2px rgba(79,207,180,.25)}
+.okf-mid{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.ok-pile{display:flex;flex-direction:column;align-items:center;gap:3px}
+.ok-pile small{color:#cfe7e1;font-size:10px}
+.ok-info{display:flex;flex-direction:column;max-width:170px}
+.ok-info strong{color:var(--gold);font-size:13px}
+.ok-info small{color:#cfe7e1;font-size:11px}
+.ok-deck{touch-action:none}
+.okf .ok-melds{flex:none;min-height:0;max-height:none;background:rgba(0,0,0,.18);align-content:flex-start;justify-content:center}
+.ok-meld{gap:3px;padding:5px 8px;cursor:default}
+.ok-meld.can{cursor:pointer}
+.ok-meld i{writing-mode:horizontal-tb;transform:none;margin:0 6px 0 0;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile.wild{background:linear-gradient(180deg,#fff3c4,#f5d77a)}
+.tile.sm{width:30px;height:40px;font-size:15px}
+.tile::after{content:"";position:absolute;bottom:6px;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.25}
+.tile.wild::after,.tile.empty::after,.tile.sm::after{display:none}
+.tile b{margin-top:-8px}
+.tile.sm b,.tile.empty b{margin-top:0}
+/* Istaka: iki sıra × 15 yuva; yuvalar sürükleme hedefidir */
+.ok-rack{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:4px 3px;padding:10px 12px 12px;border-radius:12px;background:linear-gradient(180deg,#d39a3c,#a8701f 48%,#c48a33 52%,#9a6418);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -3px 0 rgba(0,0,0,.25),0 8px 18px rgba(0,0,0,.5);min-height:0}
+.ok-slot{position:relative;aspect-ratio:38/52;min-width:0;border-radius:6px;background:rgba(80,45,5,.18)}
+.ok-slot.drop-hot{background:rgba(255,255,255,.35);box-shadow:inset 0 0 0 2px #fff}
+.ok-slot .tile{position:absolute;inset:0;width:auto;height:auto;font-size:clamp(14px,2.3vw,22px);touch-action:none}
+.ok-slot .tile.inmeld{box-shadow:0 3px 0 #b9ab8c,0 0 0 2px rgba(47,158,135,.9)}
+.ok-slot .tile.sel{transform:translateY(-6px)}
+.tile.dragging{opacity:.3}
+.drag-ghost{position:fixed;z-index:9999;pointer-events:none;width:40px!important;height:54px!important;transform:translate(-50%,-60%) rotate(-4deg);box-shadow:0 10px 24px rgba(0,0,0,.5)!important}
+.okc.drop-hot,.ok-meld.drop-hot{box-shadow:inset 0 0 0 3px #fff;background:rgba(255,255,255,.18)}
+.pcontrols:empty{display:none}
+@media (max-width:900px){
+  .okt{grid-template-columns:44px minmax(0,1fr) 44px;gap:5px}
+  .okp{padding:5px 6px;gap:5px}
+  .okp .seat-avatar{width:28px;height:28px}
+  .okp.left,.okp.right{padding:6px 2px}
+  .okp.left .okp-text,.okp.right .okp-text{max-height:110px}
+  .okc .tile{width:30px;height:42px;font-size:15px}
+  .ok-rack{padding:7px 5px 8px;gap:3px 2px}
+  .ok-slot .tile{border-radius:4px;font-size:clamp(11px,3.6vw,16px)}
+  .tile::after{bottom:3px;width:4px;height:4px}
+  .tile b{margin-top:-4px}
+}

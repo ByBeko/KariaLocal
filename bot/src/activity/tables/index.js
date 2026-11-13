@@ -140,6 +140,10 @@ function soloRoom(game, user) {
     room.join(user, {});
     seatedAt.set(user.id, id);
     for (let i = 0; i < SOLO_BOTS[game]; i++) room.addBot();
+    room.refillBots = () => {
+      if (!room.seatedIds().includes(user.id)) return;
+      while (room.botIds().length < SOLO_BOTS[game] && room.seats.some((s) => !s)) room.addBot();
+    };
   }
   return room;
 }

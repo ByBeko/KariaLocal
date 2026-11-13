@@ -382,6 +382,18 @@ export class OkeyTable extends TurnTable {
     if (this.order[this.current] === p) this.botLater(() => this.botMove(p), 800);
   }
 
+  /** Istakayı dizmek için öneri: en çok sayı getiren perler ve çiftler (el değişmedikçe yeniden hesaplanmaz) */
+  suggest(p) {
+    const hand = this.hand(p);
+    const key = hand.map((t) => t.id).sort((a, b) => a - b).join(',');
+    if (p.suggestKey !== key) {
+      const best = findMelds(hand, this.rules);
+      p.suggestKey = key;
+      p.suggestion = { melds: best.melds.map((g) => this.rules.meld(g).order.map((t) => t.id)), points: best.points, pairs: this.findPairs(hand).map((g) => g.map((t) => t.id)) };
+    }
+    return p.suggestion;
+  }
+
   view(userId) {
     const base = this.baseView(userId);
     const me = this.order?.find((p) => p.id === userId);
@@ -404,6 +416,7 @@ export class OkeyTable extends TurnTable {
       melds: live ? this.melds.map((m) => ({ owner: m.owner, kind: m.kind, tiles: m.tiles.map(tile) })) : [],
       myTurn, drawn: myTurn ? this.turnState.drawn : false, took: myTurn && this.turnState.took ? this.turnState.took.id : null,
       opened: me && live ? this.opened.get(me) : null,
+      suggest: me && this.phase === 'playing' ? this.suggest(me) : null,
     };
   }
 }
