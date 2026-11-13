@@ -5,7 +5,9 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { UserError } from '../utils/errors.js';
 import { getBalance, MIN_BET, MAX_BET } from '../systems/economy.js';
-import { coinflip, slot, roulette, blackjackStart, blackjackMove, activeBlackjack } from './games.js';
+import { slot, slotWins, blackjackStart, blackjackMove, activeBlackjack } from './games.js';
+import { startTables, tablesRoute } from './tables/index.js';
+import { playlistRoute } from './playlists.js';
 import { getQueue, playQuery, requireVoice, voteSkip, stopMusic, goBack } from '../systems/music.js';
 import { adminRoute, isPanelAdmin } from './admin.js';
 import { recordVote } from '../systems/monthlyGifts.js';
@@ -145,7 +147,7 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
     return { access_token: (await res.json()).access_token };
   }
 
-  async function route(req, pathname, body) {
+  async function route(req, pathname, body, query) {
     if (req.method === 'GET' && pathname === '/config') return { clientId: client.application.id, minBet: MIN_BET, maxBet: MAX_BET };
     if (req.method === 'POST' && pathname === '/token') return exchangeCode(body.code);
 
@@ -157,7 +159,8 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
 
     const now = Date.now();
     // Sadece bahis ve komutlar sınırlanır; arka plandaki bakiye yenilemesi oyuncuya uyarı göstermesin
-    if (req.method === 'POST') {
+    // Odadan ayrılma bildirimi sınırlanmaz: hemen ardından gelen asıl isteği bozmasın
+    if (req.method === 'POST' && !pathname.endsWith('/away')) {
       if (now - (lastCall.get(id) ?? 0) < MIN_INTERVAL) return { __status: 429, error: 'Biraz yavaşla.' };
       if (lastCall.size > 5000) lastCall.clear();
       lastCall.set(id, now);
@@ -178,18 +181,19 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
       return setAnnouncementPin(guild(), member, announcementPin[1], body.pinned === true);
     }
     if (pathname.startsWith('/admin/')) return adminRoute(client, guild(), member, req.method, pathname, body);
+    if (pathname === '/tables' || pathname.startsWith('/tables/')) return tablesRoute(req.method, pathname, body, query, { id, name: member.displayName });
+    if (pathname === '/playlists' || pathname.startsWith('/playlists/')) return playlistRoute(req.method, pathname, body, member, guildId);
+    if (req.method === 'GET' && pathname === '/slot/feed') return { wins: slotWins() };
     if (req.method === 'GET' && pathname === '/music') return musicView(guild());
     if (req.method !== 'POST') return { __status: 405, error: 'Geçersiz istek.' };
 
     switch (pathname) {
-      case '/coinflip': return coinflip(guildId, id, body);
-      case '/slot': return slot(guildId, id, body);
+      case '/slot': return slot(guildId, id, body, member.displayName);
       case '/blackjack/start': return blackjackStart(guildId, id, body);
       case '/blackjack/hit': return blackjackMove(guildId, id, 'hit');
       case '/blackjack/stand': return blackjackMove(guildId, id, 'stand');
       case '/blackjack/double': return blackjackMove(guildId, id, 'double');
       case '/blackjack/split': return blackjackMove(guildId, id, 'split');
-      case '/roulette': return roulette(guildId, id, body);
       case '/music/play': {
         const query = String(body.query ?? '').trim().slice(0, 500);
         if (!query) throw new UserError('Şarkı adı ya da link yaz.');
@@ -316,7 +320,7 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
           return send(400, { error: 'Geçersiz istek.' });
         }
       }
-      const { __status, ...payload } = await route(req, pathname.slice(4), body);
+      const { __status, ...payload } = await route(req, pathname.slice(4), body, requestUrl.searchParams);
       send(__status ?? 200, payload);
     } catch (error) {
       if (error instanceof UserError) return send(400, { error: plain(error.message) });
@@ -326,6 +330,7 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
   });
 
   startSocial();
+  startTables(guildId);
   server.on('error', (error) => console.error('[Etkinlik sunucusu]', error.message));
   // Sadece bu bilgisayardan erişilir; dışarıya tünel üzerinden açılır
   server.listen(port, '127.0.0.1', () => console.log(`✔ Etkinlik sunucusu hazır (127.0.0.1:${port})`));

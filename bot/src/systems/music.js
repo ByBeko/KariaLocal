@@ -29,7 +29,9 @@ const MAX_PLAYLIST = 100;
 const MAX_HISTORY = 20;
 const IDLE_LEAVE = 3 * 60_000; // sıra bitince bu kadar bekleyip çık
 const ALONE_LEAVE = 60_000; // kanalda kimse kalmayınca
-const PREFETCH_AT = 25; // şarkının bitmesine bu kadar saniye kala sıradakini hazırla
+const PREFETCH_DELAY = 4; // çalan şarkı başladıktan bu kadar saniye sonra sıradaki hazırlanır: geçince beklemeden başlar
+const YT_BLOCK_MS = 20 * 60_000; // YouTube "bot musun" derse bu süre doğrudan SoundCloud denenir
+let ytBlockedUntil = 0;
 export const DEFAULT_VOLUME = 70;
 
 const ALLOWED_HOSTS = /^(?:www\.|m\.|music\.)?(?:youtube\.com|youtu\.be|soundcloud\.com|on\.soundcloud\.com)$/i;
@@ -193,6 +195,7 @@ export function openStream(track) {
     ffmpeg.once('close', async () => {
       await ytClosed;
       if (killed) return;
+      if (!produced && /Sign in to confirm/i.test(stderr)) ytBlockedUntil = Date.now() + YT_BLOCK_MS;
       if (!produced && (alternatives || /Sign in to confirm/i.test(stderr))) {
         alternatives ??= await soundcloudAlternatives(track);
         if (killed) return;
@@ -210,7 +213,17 @@ export function openStream(track) {
       out.end();
     });
   };
-  start();
+  // YouTube az önce bu sunucuyu engellediyse boşuna denenmez, aynı şarkı hemen SoundCloud'da aranır
+  (async () => {
+    if (Date.now() < ytBlockedUntil && /youtu\.?be/i.test(url)) {
+      alternatives = await soundcloudAlternatives(track);
+      if (killed) return;
+      const next = alternatives.shift();
+      if (next) url = next;
+      else alternatives = null;
+    }
+    start();
+  })();
 
   return {
     stream: out,
@@ -275,7 +288,7 @@ class GuildQueue {
     });
     this.player.on('error', (e) => console.error('[Müzik oynatıcı]', e.message));
 
-    this.prefetchTimer = setInterval(() => this.maybePrefetch(), 5_000);
+    this.prefetchTimer = setInterval(() => this.maybePrefetch(), 2_000);
     queues.set(guild.id, this);
   }
 
@@ -373,7 +386,7 @@ class GuildQueue {
     if (this.prepared || !this.current || this.current.live || !this.current.duration) return;
     const next = this.loop === 'track' ? null : this.tracks[0];
     if (!next || next.live) return;
-    if (this.current.duration - this.position <= PREFETCH_AT) this.prepared = { track: next, source: openStream(next) };
+    if (this.position >= PREFETCH_DELAY) this.prepared = { track: next, source: openStream(next) };
   }
 
   /** Sıra değişince (karıştır, sil) önceden hazırlanan şarkı geçersiz olabilir */
@@ -521,12 +534,21 @@ const humans = (guild, channelId) => guild.channels.cache.get(channelId)?.member
 
 /** Şarkı ekler, gerekirse kanala katılır */
 export async function playQuery(member, textChannel, query) {
-  const { queue: existing, channel } = requireVoice(member, { needQueue: false });
-  const me = member.guild.members.me;
-  const perms = channel.permissionsFor(me);
-  if (!perms.has([PermissionFlagsBits.Connect, PermissionFlagsBits.Speak])) throw new UserError(`${channel} kanalına bağlanma ya da konuşma iznim yok.`);
-
+  checkVoice(member);
   const { tracks, playlist } = await resolveQuery(query, member.id);
+  return playTracks(member, textChannel, tracks, playlist);
+}
+
+function checkVoice(member) {
+  const { channel } = requireVoice(member, { needQueue: false });
+  const perms = channel.permissionsFor(member.guild.members.me);
+  if (!perms.has([PermissionFlagsBits.Connect, PermissionFlagsBits.Speak])) throw new UserError(`${channel} kanalına bağlanma ya da konuşma iznim yok.`);
+}
+
+/** Bilgileri hazır şarkıları (örn. çalma listesinden) aramadan sıraya ekler */
+export async function playTracks(member, textChannel, tracks, playlist = true) {
+  checkVoice(member);
+  const { queue: existing, channel } = requireVoice(member, { needQueue: false });
   let queue = existing;
   if (!queue) {
     queue = new GuildQueue(member.guild, channel, textChannel);

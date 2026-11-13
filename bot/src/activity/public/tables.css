@@ -1,0 +1,525 @@
+/* ───────── Karia masaları: turkuaz çuha, koyu kenar, altın fiş ───────── */
+:root{--felt-a:#13685d;--felt-b:#0a443d;--felt-c:#052723;--rim:#0b2f2b;--gold:#ffd479}
+.table{background:radial-gradient(ellipse at 50% 35%,var(--felt-a) 0,var(--felt-b) 58%,var(--felt-c) 100%)}
+.felt-band{stroke:#2f9e87}
+.felt-sub{fill:#bff7ec}
+.casino .table .actions{background:linear-gradient(180deg,#4fcfb4 0 4px,#0b3b35 4px,#062521)}
+.casino .table .actions button{border-color:#4fcfb4;background:radial-gradient(circle at 35% 30%,#1d6d62,#08302b);box-shadow:0 4px 0 #031a17}
+.card.still{animation:none}
+.card.slot{background:transparent;border:2px dashed rgba(191,247,236,.22);box-shadow:none;animation:none}
+#game-switch{flex-wrap:wrap}
+@media (min-width:901px){
+  .content.game #game-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+  .content.game #game-switch button{justify-content:center}
+}
+.betbar.no-bet .bet-input,.betbar.no-bet .chips,.betbar.no-bet .bet-tools{display:none}
+
+/* Blackjack: tek kişilik / masada */
+.panel[data-panel="blackjack"]{position:relative;display:flex;flex-direction:column}
+.mode-switch{position:relative;z-index:3;display:flex;gap:3px;width:fit-content;margin:10px auto;padding:4px;border-radius:14px;background:rgba(0,0,0,.45);box-shadow:inset 0 0 0 1px rgba(79,207,180,.25)}
+.mode-switch button{display:flex;align-items:center;gap:6px;border:0;border-radius:10px;padding:7px 16px;background:transparent;color:#cfe7e1;font-size:13px;font-weight:800;cursor:pointer}
+.mode-switch button img{width:18px;height:18px}
+.mode-switch button.active{background:#4fcfb4;color:#04211e}
+.panel>.mode-switch{flex:none}
+.room-root>.mode-switch{margin-top:0}
+#bjm-root{flex:1}
+
+/* Ortak oda düzeni */
+.karia-room,.room-root{background:radial-gradient(ellipse at 50% 30%,#0d4e46,#05211e 75%)}
+.room-root{display:flex;flex-direction:column;gap:12px;padding:14px;min-height:560px;flex:1}
+.content.game .karia-room{display:flex;flex-direction:column}
+.room-empty{margin:auto;color:#cfe7e1}
+.room-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.room-head strong{font-size:17px;color:#fff}
+.room-stake{margin-left:auto;padding:4px 10px;border-radius:9px;background:rgba(0,0,0,.35);color:var(--gold);font-weight:700;font-size:13px}
+.room-root button.ghost{border:1px solid rgba(191,247,236,.25);background:rgba(0,0,0,.25);color:#e8fbf7;border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer}
+.room-root button.ghost:hover{background:rgba(0,0,0,.45)}
+.room-root button.danger{color:#ffb3b7;border-color:rgba(239,122,127,.4)}
+.room-root button.primary{border:0;border-radius:12px;padding:10px 18px;cursor:pointer}
+.room-root button.big{padding:13px 30px;font-size:17px;border-radius:30px;background:linear-gradient(180deg,#ffd479,#e89a1c);color:#3a2200;box-shadow:0 4px 0 #8c5a0c}
+.room-root .hint{color:#cfe7e1}
+.room-log{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:rgba(207,231,225,.6);min-height:18px}
+.room-log span:last-child{color:#cfe7e1}
+
+/* Lobi */
+.lobby{display:flex;flex-direction:column;gap:16px}
+.lobby-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.lobby-head h3{margin:0;font-size:22px;color:#fff}
+.lobby-head p{margin:4px 0 0;color:#cfe7e1;font-size:13px;max-width:460px}
+.lobby-new{display:flex;gap:8px;align-items:center}
+.stake-select{background:rgba(0,0,0,.35);border:1px solid rgba(191,247,236,.25);border-radius:10px;padding:9px 10px;color:#fff}
+.stake-select option{background:#0b2f2b}
+.lobby-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.lobby-card{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid rgba(79,207,180,.25);border-radius:16px;background:rgba(0,0,0,.28);cursor:pointer;text-align:left;transition:transform .12s,border-color .12s}
+.lobby-card:hover{transform:translateY(-2px);border-color:#4fcfb4}
+.lobby-felt{flex:none;width:64px;height:44px;border-radius:22px;display:grid;place-items:center;background:radial-gradient(ellipse,var(--felt-a),var(--felt-c));border:3px solid var(--rim);box-shadow:0 0 0 2px #4fcfb4}
+.lobby-felt img{width:22px;height:22px;opacity:.7;border-radius:6px}
+.lobby-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lobby-info strong{color:#fff}
+.lobby-info small{color:#cfe7e1;font-size:12px}
+.lobby-seats{display:flex;gap:4px}
+.lobby-seats i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.15)}
+.lobby-seats i.on{background:#4fcfb4;box-shadow:0 0 6px #4fcfb4}
+.lobby-go{padding:6px 12px;border-radius:10px;background:#4fcfb4;color:#04211e;font-weight:800;font-size:13px}
+
+/* Poker ve zar masası: oval çuha, koltuklar çevresinde */
+.ptable,.ztable{position:relative;width:100%;max-width:920px;margin:0 auto;min-height:470px;flex:1}
+.pfelt,.zcenter{position:absolute;inset:66px 76px;border-radius:999px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(ellipse at 50% 40%,var(--felt-a) 0,var(--felt-b) 60%,var(--felt-c) 100%);border:14px solid var(--rim);box-shadow:0 0 0 3px #4fcfb4,0 0 30px rgba(79,207,180,.25),inset 0 0 50px rgba(0,0,0,.55),0 22px 40px rgba(0,0,0,.6)}
+.felt-mark{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;pointer-events:none;opacity:.13}
+.felt-mark img{width:70px;height:70px;border-radius:18px;filter:grayscale(1) brightness(2)}
+.felt-mark span{font:italic 700 26px Georgia,'Times New Roman',serif;letter-spacing:6px;color:#fff}
+.pboard{position:relative;display:flex;gap:6px}
+.room-root .pboard .card{width:54px;height:76px;font-size:15px}
+.ppot{position:relative;display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:14px;background:rgba(0,0,0,.4);color:var(--gold);font-weight:800}
+.ppot img{width:18px;height:18px}
+.pstatus{position:relative;color:#e8fbf7;font-size:13px;font-weight:600;text-align:center;min-height:18px;padding:0 20px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.pseat{position:absolute;z-index:2;display:flex;flex-direction:column;align-items:center;gap:3px;width:118px}
+.pseat.s0{left:50%;bottom:0;transform:translateX(-50%)}
+.pseat.s3{left:50%;top:0;transform:translateX(-50%);flex-direction:column-reverse}
+.pseat.s1{left:0;bottom:12%}.pseat.s2{left:0;top:12%}
+.pseat.s4{right:0;top:12%}.pseat.s5{right:0;bottom:12%}
+.pseat.empty{width:62px;height:62px;border-radius:50%;border:2px dashed rgba(191,247,236,.25);justify-content:center}
+.pseat.empty.s1,.pseat.empty.s2{left:26px}.pseat.empty.s4,.pseat.empty.s5{right:26px}
+.pseat .sit{border:0;border-radius:50%;width:56px;height:56px;background:rgba(79,207,180,.18);color:#bff7ec;font-weight:800;cursor:pointer}
+.pseat .sit:hover{background:#4fcfb4;color:#04211e}
+.seat-avatar{width:54px;height:54px;padding:3px;border-radius:50%;background:rgba(255,255,255,.14);flex:none}
+.seat-avatar img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#0b2f2b}
+.seat-avatar.timer{background:conic-gradient(var(--gold) calc(var(--p,1) * 360deg),rgba(255,255,255,.12) 0)}
+.seat-avatar.ready{background:#4fcfb4;box-shadow:0 0 12px #4fcfb4}
+.seat-plate{display:flex;flex-direction:column;align-items:center;min-width:92px;max-width:118px;padding:3px 10px;border-radius:10px;background:rgba(3,20,18,.85);border:1px solid rgba(79,207,180,.3);line-height:1.2}
+.seat-plate strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#fff}
+.seat-plate span{font-size:12px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+.seat-plate span:empty{display:none}
+.seat-tag{padding:1px 8px;border-radius:8px;background:rgba(0,0,0,.55);font-size:11px;font-style:normal;font-weight:700;color:#cfe7e1;white-space:nowrap}
+.seat-tag.win{background:var(--gold);color:#3a2200}
+.seat-cards{display:flex;gap:2px;min-height:0}
+.room-root .seat-cards .card{width:36px;height:52px;font-size:12px;border-radius:6px}
+.room-root .seat-cards .card>img{width:46%}
+.seat-cards .corner{font-size:10px;left:3px;top:2px}
+.seat-cards .corner img{width:8px;height:8px}
+.seat-cards .corner.b{display:none}
+.room-root .pseat.me .seat-cards .card{width:46px;height:66px;font-size:14px}
+.pseat.me .seat-avatar{box-shadow:0 0 0 2px #4fcfb4}
+.pseat.turn .seat-plate{border-color:var(--gold);box-shadow:0 0 14px rgba(255,212,121,.45)}
+.pseat.folded{opacity:.5}
+.pseat.winner .seat-avatar{box-shadow:0 0 0 3px var(--gold),0 0 24px var(--gold)}
+.seat-bet{position:absolute;display:flex;align-items:center;gap:4px;padding:2px 8px 2px 3px;border-radius:12px;background:rgba(0,0,0,.6);color:var(--gold);font-size:12px;font-weight:800;white-space:nowrap}
+.seat-bet img{width:16px;height:16px}
+.pseat.s0 .seat-bet{bottom:calc(100% + 6px)}
+.pseat.s3 .seat-bet{top:calc(100% + 6px)}
+.pseat.s1 .seat-bet,.pseat.s2 .seat-bet{left:calc(100% + 4px);top:30%}
+.pseat.s4 .seat-bet,.pseat.s5 .seat-bet{right:calc(100% + 4px);top:30%}
+.dealer-btn{position:absolute;top:18px;right:4px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#0b2f2b;font-size:12px;box-shadow:0 2px 4px rgba(0,0,0,.5)}
+.pseat.s3 .dealer-btn{top:auto;bottom:18px}
+
+/* Hamle çubuğu */
+.pcontrols{position:relative;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;padding:14px 12px 12px;border-radius:16px;background:rgba(0,0,0,.3);min-height:64px}
+.pcontrols .hint{margin:0}
+.turn-bar{position:absolute;left:0;right:0;top:0;height:4px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,var(--gold) calc(var(--p,1) * 100%),rgba(255,255,255,.08) 0)}
+.pk{height:46px;min-width:92px;padding:0 16px;border:0;border-radius:23px;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.4)}
+.pk:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.4)}
+.pk.fold{background:#3b1519;color:#ffb3b7}
+.pk.check,.pk.call{background:#4fcfb4;color:#04211e}
+.pk.raise{background:linear-gradient(180deg,#ffd479,#e89a1c);color:#3a2200}
+.pk.allin{background:#0b2f2b;color:var(--gold);border:2px solid var(--gold)}
+.raise-box{display:flex;flex-direction:column;gap:4px;min-width:200px}
+.raise-presets{display:flex;align-items:center;gap:4px}
+.raise-presets b{margin-left:auto;color:var(--gold);font-variant-numeric:tabular-nums}
+.raise-box .mini{border:0;border-radius:8px;padding:3px 8px;background:rgba(255,255,255,.1);color:#e8fbf7;font-size:11px;font-weight:700;cursor:pointer}
+.raise-box input[type=range]{width:100%;accent-color:#ffd479}
+.buyin{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:14px;background:rgba(0,0,0,.4);border:1px solid #4fcfb4;color:#e8fbf7;font-size:13px}
+.buyin input{width:120px;background:rgba(0,0,0,.4);border:1px solid rgba(191,247,236,.3);border-radius:10px;padding:8px 10px;font-weight:700;color:#fff}
+
+/* Blackjack masası */
+.bjtable{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:440px;padding:10px 0;border-radius:0 0 50% 50%/0 0 26% 26%;background:radial-gradient(ellipse at 50% 20%,var(--felt-a) 0,var(--felt-b) 60%,var(--felt-c) 100%);border:12px solid var(--rim);border-top:0;box-shadow:0 0 0 3px #4fcfb4,inset 0 0 50px rgba(0,0,0,.5)}
+.bj-dealer{display:flex;flex-direction:column;align-items:center}
+.bj-dealer h3{margin:0 0 6px;color:#fff;font-size:13px}
+.bj-arc{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:80px;justify-content:center}
+.bj-arc .felt-mark{position:static;opacity:.16;flex-direction:row;gap:10px}
+.bj-arc .felt-mark img{width:40px;height:40px}
+.bj-arc .felt-mark span{font-size:22px;letter-spacing:4px}
+.bj-arc small{color:#bff7ec;letter-spacing:3px;font-weight:700;font-size:11px;opacity:.7}
+.bj-seats{display:flex;justify-content:center;align-items:flex-start;gap:8px;flex-wrap:nowrap;margin-top:auto;padding-bottom:18px;width:100%}
+.bseat{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;width:min(16%,118px)}
+.bseat.b2{order:1;transform:translateY(-40px)}.bseat.b1{order:2;transform:translateY(-12px)}.bseat.b0{order:3}
+.bseat.b5{order:4}.bseat.b4{order:5;transform:translateY(-12px)}.bseat.b3{order:6;transform:translateY(-40px)}
+.bseat.empty{height:62px;justify-content:center}
+.bseat .sit{border:2px dashed rgba(191,247,236,.3);border-radius:50%;width:56px;height:56px;background:rgba(79,207,180,.12);color:#bff7ec;font-weight:800;cursor:pointer}
+.bseat .sit:hover{background:#4fcfb4;color:#04211e}
+.bseat .seat-bet{position:static}
+.bseat.turn .seat-plate{border-color:var(--gold)}
+.bseat.me .seat-avatar{box-shadow:0 0 0 2px #4fcfb4}
+.bseat.o-win .seat-avatar,.bseat.o-blackjack .seat-avatar{box-shadow:0 0 0 3px var(--gold),0 0 20px var(--gold)}
+.bseat.o-lose,.bseat.o-bust{opacity:.6}
+.bseat .seat-cards{min-height:52px}
+
+/* Zar */
+.zcenter{gap:8px}
+.seat-dice{display:flex;gap:4px;min-height:32px}
+.seat-dice.out{opacity:.3}
+.die{width:30px;height:30px;padding:4px;border-radius:7px;background:#f4f7f7;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);box-shadow:0 3px 6px rgba(0,0,0,.45),inset 0 -2px 0 #c9d6d4}
+.die i{width:6px;height:6px;margin:auto;border-radius:50%}
+.die i.on{background:#0b2f2b}
+.die.rolling{animation:tumble .18s linear infinite}
+@keyframes tumble{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(.88)}100%{transform:rotate(360deg) scale(1)}}
+.ztable .pseat.winner .seat-plate{border-color:var(--gold);box-shadow:0 0 14px rgba(255,212,121,.5)}
+
+/* Rulet: Karia çuhası, oyuncular ve geçmiş */
+.roulette-room{background:radial-gradient(ellipse at 50% 30%,var(--felt-a),var(--felt-c) 75%)}
+.roulette-history{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;min-height:24px}
+.rh{min-width:26px;padding:2px 6px;border-radius:7px;font-size:12px;font-weight:800;text-align:center;color:#fff}
+.rh.red{background:#b3262f}.rh.black{background:#121619}.rh.green{background:#1f9a6a}
+.rh:first-child{box-shadow:0 0 0 2px var(--gold)}
+.roulette-status{color:#e8fbf7;font-weight:600;font-size:13px;text-align:center;min-height:19px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.rc.placed::after{background:#4fcfb4!important;color:#04211e!important}
+.rc.others::before{content:'';position:absolute;left:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#bff7ec;box-shadow:0 0 6px #bff7ec}
+.rc.hit{outline:3px solid var(--gold);outline-offset:-2px;filter:brightness(1.35)}
+.roulette-tools button:disabled{opacity:.4;cursor:default}
+.roulette-players{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.rp{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:16px;background:rgba(0,0,0,.35);font-size:12px;color:#e8fbf7}
+.rp img{width:22px;height:22px;border-radius:50%}
+.rp em{font-style:normal;font-weight:800;color:var(--gold)}
+.rp.won em{color:var(--win)}.rp.lost em{color:var(--lose)}.rp.me{box-shadow:0 0 0 1px #4fcfb4}
+
+/* Süper Tayyare */
+.tay-room{display:flex;flex-direction:column;background:#020d0c}
+.tay-sky{position:relative;flex:1;min-height:340px;overflow:hidden;background:radial-gradient(circle at 20% 110%,rgba(79,207,180,.28),transparent 45%),radial-gradient(circle at 85% 10%,rgba(63,224,197,.16),transparent 40%),linear-gradient(180deg,#05302b,#020d0c)}
+.tay-sky canvas{position:absolute;inset:0;width:100%;height:100%}
+.tay-history{position:absolute;z-index:2;left:12px;right:12px;top:10px;display:flex;gap:5px;overflow:hidden}
+.tay-history span{flex:none;padding:2px 9px;border-radius:9px;background:rgba(0,0,0,.45);color:#cfe7e1;font-size:12px;font-weight:800}
+.tay-history span.good{color:#7ff0da}.tay-history span.hot{color:var(--gold)}
+.tay-brand{position:absolute;right:16px;bottom:12px;display:flex;align-items:center;gap:8px;font:italic 700 18px Georgia,'Times New Roman',serif;letter-spacing:3px;color:rgba(191,247,236,.22)}
+.tay-brand img{width:26px;height:26px;border-radius:7px;opacity:.35}
+.tay-mult{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font:800 clamp(44px,8vw,78px)/1 system-ui,sans-serif;color:#e8fbf7;text-shadow:0 0 28px rgba(79,207,180,.8);font-variant-numeric:tabular-nums;pointer-events:none}
+.tay-mult.crashed{color:#ff8a90;text-shadow:0 0 28px rgba(239,122,127,.8)}
+.tay-status{position:absolute;left:50%;top:60%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:#e8fbf7;pointer-events:none;text-align:center}
+.tay-status strong{font-size:18px;letter-spacing:1px}
+.tay-mult.crashed+.tay-status strong{color:#ff8a90}
+.tay-status span{font:800 30px system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.tay-status i{display:block;width:200px;height:6px;border-radius:3px;background:linear-gradient(90deg,#4fcfb4 calc(var(--p,0) * 100%),rgba(255,255,255,.12) 0)}
+.tay-mult:empty{display:none}
+.tay-mult:empty+.tay-status{top:38%}
+.tay-bottom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:12px;background:#041a17}
+.tay-controls{display:flex;flex-direction:column;gap:8px}
+.tay-auto{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:12px;background:rgba(255,255,255,.06);color:#cfe7e1;font-size:13px}
+.tay-auto input{flex:1;min-width:0;background:transparent;border:0;color:#fff;font-weight:800;text-align:right}
+.tay-auto b{color:#7ff0da}
+.tay-btn{height:68px;border:0;border-radius:18px;font-size:20px;font-weight:900;letter-spacing:.5px;cursor:pointer;background:linear-gradient(180deg,#4fcfb4,#1f8f7b);color:#04211e;box-shadow:0 5px 0 #0d4a40}
+.tay-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #0d4a40}
+.tay-btn.cash{background:linear-gradient(180deg,#ffd479,#e89a1c);color:#3a2200;box-shadow:0 5px 0 #8c5a0c}
+.tay-btn.cancel{background:#3b1519;color:#ffb3b7;box-shadow:0 5px 0 #1d0a0c}
+.tay-btn:disabled{opacity:.75;background:#0b2f2b;color:#cfe7e1;box-shadow:none}
+.tay-bets{max-height:190px;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;gap:4px}
+.tay-bets h4{margin:0 0 4px!important;font-size:12px!important}
+.tay-bet{display:grid;grid-template-columns:22px minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:4px 8px;border-radius:9px;background:rgba(255,255,255,.04);font-size:12px}
+.tay-bet img{width:22px;height:22px;border-radius:50%}
+.tay-bet span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tay-bet b{color:var(--gold)}
+.tay-bet em{font-style:normal;font-weight:800}
+.tay-bet.won{background:rgba(88,214,141,.12)}.tay-bet.won em{color:var(--win)}
+.tay-bet.lost em{color:var(--lose)}
+.tay-bet.me{box-shadow:inset 0 0 0 1px #4fcfb4}
+
+@media (max-width:720px){
+  #game-switch{width:100%;justify-content:center}
+  #game-switch button{padding:7px 9px;font-size:12px}
+  .room-root{padding:10px;min-height:520px}
+  .ptable,.ztable{min-height:430px}
+  .pfelt,.zcenter{inset:70px 40px;border-width:9px}
+  .pseat{width:86px}
+  .seat-avatar{width:42px;height:42px}
+  .seat-plate{min-width:76px;padding:2px 6px}
+  .seat-plate strong,.seat-plate span{font-size:11px}
+  .room-root .seat-cards .card{width:28px;height:40px;font-size:10px}
+  .room-root .pseat.me .seat-cards .card{width:38px;height:54px;font-size:12px}
+  .room-root .pboard .card{width:38px;height:54px;font-size:12px}
+  .pboard{gap:3px}
+  .pseat.s1,.pseat.s5{bottom:16%}.pseat.s2,.pseat.s4{top:16%}
+  .pseat.s1 .seat-bet,.pseat.s2 .seat-bet{left:auto;right:-6px;top:-10px}
+  .pseat.s4 .seat-bet,.pseat.s5 .seat-bet{right:auto;left:-6px;top:-10px}
+  .felt-mark img{width:44px;height:44px}.felt-mark span{font-size:18px}
+  .pk{min-width:74px;height:42px;font-size:14px;padding:0 12px}
+  .raise-box{min-width:100%;order:5}
+  .bjtable{border-width:7px}
+  .bj-seats{gap:2px}
+  .room-root .bseat .seat-cards .card{width:26px;height:38px}
+  .bseat.b2,.bseat.b3{transform:translateY(-26px)}.bseat.b1,.bseat.b4{transform:translateY(-8px)}
+  .tay-bottom{grid-template-columns:minmax(0,1fr)}
+  .tay-sky{min-height:300px}
+  .die{width:24px;height:24px;padding:3px}.die i{width:5px;height:5px}
+}
+@media (max-width:900px){.betbar.no-bet{display:none!important}}
+/* Çip: köşede kırmızı − ile azaltma */
+.chip-wrap{position:relative;display:block}
+.chip-wrap .chip{width:100%}
+.chip-minus{position:absolute;top:-7px;right:-7px;z-index:1;width:22px;height:22px;padding:0;border:2px solid var(--panel);border-radius:50%;background:#e5484d;color:#fff;font-size:15px;font-weight:900;line-height:16px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.45)}
+.chip-minus:hover{background:#ff6369;transform:scale(1.1)}
+.chips{padding-top:6px}
+/* Müzik: sıradakiler / çalma listelerim */
+.music-tabs{display:flex;gap:4px;margin:16px 0 8px}
+.music-tabs button{border:0;border-radius:10px;padding:7px 14px;background:transparent;color:var(--muted);font-weight:700;font-size:13px;cursor:pointer}
+.music-tabs button.active{background:rgba(79,207,180,.13);color:var(--accent)}
+.plbox{display:flex;flex-direction:column;gap:10px;padding:10px}
+.plbox:has(> .queue-empty:only-child){justify-content:center}
+.plbox .queue-empty{margin:auto;color:var(--muted);text-align:center;font-size:13px;padding:20px}
+.pl-new{display:flex;gap:6px}
+.pl-new input{flex:1;min-width:0;background:var(--panel2);border:0;border-radius:10px;padding:9px 12px}
+.pl-new button{border:0;border-radius:10px;padding:8px 14px;cursor:pointer}
+.pl-list,.pl-songs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.pl-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;cursor:pointer}
+.pl-row:hover{background:var(--panel2)}
+.pl-row img{width:24px;height:24px}
+.pl-row span,.pl-songs span{min-width:0}
+.pl-row strong,.pl-songs strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-row small,.pl-songs small{color:var(--muted);font-size:12px}
+.pl-icon{width:34px;height:34px;border:0;border-radius:50%;background:var(--panel2);color:var(--accent);font-size:15px;cursor:pointer}
+.pl-icon:hover{background:var(--accent);color:#04211e}
+.pl-head{display:flex;align-items:center;gap:8px}
+.pl-head small{color:var(--muted);white-space:nowrap}
+.pl-back{border:0;border-radius:9px;width:32px;height:32px;background:var(--panel2);font-size:18px;cursor:pointer}
+.pl-title{flex:1;min-width:0;background:transparent;border:1px solid transparent;border-radius:9px;padding:5px 8px;font-size:17px;font-weight:700}
+.pl-title:hover,.pl-title:focus{border-color:var(--line);background:var(--panel2)}
+.pl-actions{display:flex;flex-wrap:wrap;gap:6px}
+.pl-actions button{border:0;border-radius:10px;padding:8px 12px;background:var(--panel2);font-weight:700;font-size:13px;cursor:pointer}
+.pl-actions .pl-danger{margin-left:auto;color:var(--lose)}
+.pl-songs li{display:grid;grid-template-columns:24px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:6px 10px;border-radius:10px}
+.pl-songs li:hover{background:var(--panel2)}
+.pl-songs b{color:var(--muted);text-align:center;font-weight:600}
+.pl-songs em{font-style:normal;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.pl-tools{display:flex;gap:2px;opacity:.35}
+.pl-songs li:hover .pl-tools{opacity:1}
+.pl-tools button{width:26px;height:26px;border:0;border-radius:7px;background:transparent;cursor:pointer;color:var(--fg)}
+.pl-tools button:hover{background:var(--line)}
+.pl-tools .x:hover{color:var(--lose)}
+.player-right{position:relative}
+.pl-menu{position:absolute;right:0;bottom:calc(100% + 10px);z-index:10;width:240px;display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:14px;background:var(--panel2);box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.pl-menu h5{margin:0 0 4px;color:var(--accent);font-size:12px}
+.pl-menu>button{border:0;border-radius:9px;padding:8px 10px;background:transparent;text-align:left;font-weight:600;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-menu>button:hover{background:var(--line)}
+.pl-menu .pl-new input{background:var(--bg)}
+@media (max-width:720px){.pl-tools{opacity:1}.pl-songs li{grid-template-columns:20px minmax(0,1fr) auto}.pl-songs em{display:none}}
+.pl-actions .primary{background:var(--accent);color:#07211c}
+/* Bot oyuncular */
+.seat-avatar.bot img{object-fit:contain;padding:6px;background:#0b2f2b}
+.room-root button.bot-add{color:#bff7ec;border-color:#4fcfb4}
+/* Son eller */
+.past{display:flex;flex-direction:column;gap:6px}
+.past.empty{display:none}
+.past h5{margin:0;color:#bff7ec;font-size:12px;letter-spacing:.5px}
+.past-list{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.past-item{flex:none;display:flex;flex-direction:column;gap:1px;max-width:240px;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid rgba(79,207,180,.18);font-size:12px}
+.past-item:first-child{border-color:var(--gold)}
+.past-item b{color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.past-item span{color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Slot salonu akışı */
+.slot-feed{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:640px;margin:12px auto 0;padding:0 12px 14px}
+.slot-feed h5{flex-basis:100%;margin:0;text-align:center;color:#7ff0da;font-size:12px;letter-spacing:1px}
+.slot-feed small{color:#cfe7e1}
+.sf{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:16px;background:rgba(0,0,0,.4);font-size:12px;color:#e8fbf7;animation:deal .3s ease both}
+.sf img{width:22px;height:22px;border-radius:50%}
+.sf em{font-style:normal;font-weight:800;color:var(--win)}
+.sf.big{box-shadow:0 0 0 1px var(--gold)}.sf.big em{color:var(--gold)}
+.sf.me{box-shadow:0 0 0 1px #4fcfb4}
+/* Müzik: şimdi çalıyor kartı + sıra */
+.music-room{padding:18px}
+.music-layout{display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:18px;flex:1;min-height:0}
+.now-card.player{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:stretch;gap:14px;margin:0;padding:20px;border-radius:22px;overflow:hidden;background:linear-gradient(180deg,#0d3d37,#071816)}
+.now-backdrop{position:absolute;inset:-30px;z-index:-1;background:center/cover no-repeat;filter:blur(38px) saturate(1.4);opacity:.5;transform:scale(1.2);transition:background-image .4s}
+.now-backdrop::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,16,15,.2),rgba(4,16,15,.85))}
+.now-cover{aspect-ratio:1;border-radius:18px;overflow:hidden;background:rgba(0,0,0,.35);display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.now-cover img{width:100%;height:100%;object-fit:cover}
+.now-cover img[src$="kulaklik.png"]{width:72%;height:72%;object-fit:contain;opacity:.95;filter:drop-shadow(0 6px 18px rgba(79,207,180,.45))}
+.now-text{min-width:0;text-align:center}
+.now-text strong{display:block;font-size:18px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.now-text small{display:block;color:#cfe7e1;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-label{display:inline-flex!important;align-items:center;gap:6px;margin-bottom:4px;color:var(--accent)!important;font-size:11px!important;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+.eq{display:inline-flex;align-items:flex-end;gap:2px;height:12px}
+.eq b{width:3px;height:30%;border-radius:2px;background:var(--accent)}
+.now-card.live .eq b{animation:eq .9s ease-in-out infinite}
+.now-card.live .eq b:nth-child(2){animation-delay:-.3s}.now-card.live .eq b:nth-child(3){animation-delay:-.6s}
+@keyframes eq{0%,100%{height:25%}50%{height:100%}}
+.now-card .player-time{margin:0;color:#cfe7e1}
+.now-card .player-bar{background:rgba(255,255,255,.15)}
+.now-card .player-buttons{gap:14px}
+.now-card.player button.play{width:58px;height:58px;background:var(--accent);box-shadow:0 6px 18px rgba(79,207,180,.35)}
+.now-card.player button.play img{width:24px;height:24px}
+.now-card .player-right{position:relative;justify-content:center}
+.music-side{display:flex;flex-direction:column;min-width:0;min-height:0}
+.music-side .music-tabs{margin:14px 0 8px}
+.music-side .queue{max-height:none;flex:1;min-height:260px}
+.music-side .hint{margin-top:10px}
+.queue li{transition:background .12s}
+.queue li b{font-variant-numeric:tabular-nums}
+@media (max-width:900px){
+  .music-layout{grid-template-columns:minmax(0,1fr)}
+  .now-card.player{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px 14px;padding:14px}
+  .now-cover{grid-row:1/3}
+  .now-text{text-align:left;align-self:end}
+  .now-card .player-time{align-self:start}
+  .now-card .player-buttons,.now-card .player-right{grid-column:1/-1}
+  .music-side .queue{min-height:200px}
+}
+
+/* Solo başlangıç kartı */
+.solo-intro{margin:auto;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:420px;padding:30px 24px;border-radius:22px;background:rgba(0,0,0,.3);border:1px solid rgba(79,207,180,.3);text-align:center}
+.solo-intro img{width:64px;height:64px}
+.solo-intro h3{margin:0;font-size:22px;color:#fff}
+.solo-intro p{margin:0 0 6px;color:#cfe7e1;font-size:14px}
+/* Bahis çipleri: Karia kumarhane fişleri, tutara göre renk */
+.chips .chip-wrap .chip{position:relative;border:0!important;border-radius:14px;color:#fff;font-weight:900;letter-spacing:.3px;text-shadow:0 1px 2px rgba(0,0,0,.45);box-shadow:inset 0 0 0 3px rgba(255,255,255,.18),inset 0 0 0 6px rgba(0,0,0,.12),0 3px 0 rgba(0,0,0,.45)}
+.chips .chip-wrap .chip::before{content:'';position:absolute;inset:6px;border-radius:9px;border:2px dashed rgba(255,255,255,.55);pointer-events:none}
+.chips .chip-wrap .chip[data-add="10"]{background:radial-gradient(circle at 30% 25%,#5fe0c4,#1f8f7b 70%)}
+.chips .chip-wrap .chip[data-add="100"]{background:radial-gradient(circle at 30% 25%,#ffe08a,#d18a12 70%);color:#3a2200;text-shadow:none}
+.chips .chip-wrap .chip[data-add="100"]::before{border-color:rgba(58,34,0,.4)}
+.chips .chip-wrap .chip[data-add="1000"]{background:radial-gradient(circle at 30% 25%,#ff8a96,#b3263a 70%)}
+.chips .chip-wrap .chip[data-add="5000"]{background:radial-gradient(circle at 30% 25%,#4a5fb0,#16204d 70%);color:#ffd479}
+.chips .chip-wrap .chip[data-add="5000"]::before{border-color:rgba(255,212,121,.6)}
+.chips .chip-wrap .chip:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.chips .chip-wrap .chip:active{transform:translateY(2px);box-shadow:inset 0 0 0 3px rgba(255,255,255,.18),0 1px 0 rgba(0,0,0,.45)}
+/* Ekrana sığdırma: oyunlar ve müzik sayfayı aşağı kaydırmaz, masa boyu ekrana göre esner */
+@media (min-width:901px){
+  html:has(.content.fit),body:has(.content.fit){overflow:hidden}
+  .app:has(.content.fit){height:100vh;min-height:0}
+  .content.fit{height:calc(100vh - 32px);min-height:0;display:flex;flex-direction:column}
+  .content.fit .page-title{margin:0 auto 10px;flex:none}
+  .content.fit main{flex:1;min-height:0;display:flex;flex-direction:column}
+  .content.fit .panel:not([hidden]){flex:1;min-height:0;overflow:hidden}
+  .content.fit .music-layout{height:100%}
+  .content.fit .now-card.player{min-height:0;overflow-y:auto;scrollbar-width:none}
+  .content.fit .now-cover{flex:0 1 auto;min-height:90px;max-height:38vh;aspect-ratio:1;align-self:center;height:100%}
+  .content.fit .music-side{min-height:0}
+  .content.fit .music-side .queue{min-height:0;overflow-y:auto}
+  .content.game .room-root{min-height:0;flex:1;gap:8px;padding:10px 14px}
+  .content.game .ptable,.content.game .ztable{min-height:300px;flex:1 1 0}
+  .content.game .room-log span:not(:last-child){display:none}
+  .content.game .past-item{padding:4px 9px}
+  .content.game .panel>.mode-switch{margin:8px auto 4px}
+  .content.game .bjtable{min-height:300px}
+  .content.game .lobby-list{overflow-y:auto;min-height:0}
+}
+@media (min-width:901px) and (max-height:800px){
+  .content.game .tay-sky{min-height:220px}
+  .wheel-box{width:150px!important;height:150px!important}.wheel{--wr:54px}.wn{font-size:8px}
+  .roulette-board{grid-template-rows:repeat(3,32px) 28px 28px}
+  .roulette{gap:8px}
+  .content.game .pfelt,.content.game .zcenter{inset:58px 76px}
+}
+/* Kapak: eski çaların 56px'lik kuralı yeni kartta geçersiz */
+.now-cover #music-cover{width:100%;height:100%;border-radius:0;object-fit:cover}
+.now-cover #music-cover[src$="kulaklik.png"]{width:72%;height:72%;object-fit:contain;opacity:.95;filter:drop-shadow(0 6px 18px rgba(79,207,180,.45))}
+@media (max-width:900px){.now-cover #music-cover[src$="kulaklik.png"]{width:80%;height:80%}}
+/* ───────── Sıra tabanlı oyunlar ───────── */
+.tt-layout{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:center}
+.tt-side{display:flex;flex-direction:column;gap:10px;min-width:0;align-self:stretch;justify-content:center}
+.tt-players{display:flex;flex-direction:column;gap:6px}
+.tt-seat{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:14px;background:rgba(0,0,0,.28);border:1px solid rgba(79,207,180,.15)}
+.tt-seat .seat-avatar{width:40px;height:40px}
+.tt-seat .seat-plate{flex:1;align-items:flex-start;background:none;border:0;padding:0;min-width:0}
+.tt-seat.turn{border-color:var(--gold)}
+.tt-seat.me{box-shadow:inset 0 0 0 1px #4fcfb4}
+.tt-seat.winner{background:rgba(255,212,121,.14);border-color:var(--gold)}
+.tt-seat.empty{justify-content:center;min-height:54px;border-style:dashed;color:rgba(207,231,225,.5)}
+.tt-seat .sit{border:0;border-radius:10px;padding:8px 18px;background:rgba(79,207,180,.18);color:#bff7ec;font-weight:800;cursor:pointer}
+.tt-seat .sit:hover{background:#4fcfb4;color:#04211e}
+.chip-w{background:#f4f7f7!important;color:#0b2f2b!important}
+.chip-b{background:#0b0f10!important;color:#f4f7f7!important;box-shadow:inset 0 0 0 1px #4fcfb4}
+.big-result{font-size:15px!important;font-weight:800;color:var(--gold)!important}
+/* Satranç */
+.chess-wrap,.lab-wrap{display:flex;align-items:center;justify-content:center;min-height:0;height:100%}
+.chess{display:grid;grid-template-columns:repeat(8,1fr);width:min(100%,62vh,520px);aspect-ratio:1;border:10px solid var(--rim);border-radius:10px;box-shadow:0 0 0 3px #4fcfb4,0 16px 40px rgba(0,0,0,.6);overflow:hidden}
+.sq{position:relative;border:0;padding:0;display:grid;place-items:center;cursor:pointer}
+.sq.l{background:#cfe9e2}
+.sq.d{background:#2f8a7a}
+.sq.last.l{background:#f3e3a1}
+.sq.last.d{background:#c9a94a}
+.sq.pick{box-shadow:inset 0 0 0 4px var(--gold)}
+.sq.dot::after{content:"";width:26%;height:26%;border-radius:50%;background:rgba(4,33,30,.45)}
+.sq.hit{box-shadow:inset 0 0 0 5px rgba(229,72,77,.75)}
+.sq.check{background:radial-gradient(circle,#ff6b6b,#b3263a 70%)!important}
+.pc{font-size:min(5.2vh,44px);line-height:1;user-select:none;pointer-events:none}
+.pc.w{color:#fff;text-shadow:0 0 1px #000,0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000,0 3px 4px rgba(0,0,0,.4)}
+.pc.b{color:#0b1412;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+.sq .rank,.sq .file{position:absolute;font-style:normal;font-size:10px;font-weight:800;opacity:.7;pointer-events:none}
+.sq .rank{left:3px;top:2px}
+.sq .file{right:3px;bottom:1px}
+.sq.l .rank,.sq.l .file{color:#2f8a7a}
+.sq.d .rank,.sq.d .file{color:#cfe9e2}
+.chess-moves{display:flex;flex-wrap:wrap;gap:4px;max-height:120px;overflow:auto;scrollbar-width:none}
+.chess-moves span{padding:2px 7px;border-radius:7px;background:rgba(0,0,0,.3);color:#cfe7e1;font-size:12px;font-variant-numeric:tabular-nums}
+.chess-moves span.new{background:var(--gold);color:#3a2200}
+/* Karia Labirent */
+.lab{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:5px;width:min(100%,62vh,500px);aspect-ratio:1;padding:12px;border-radius:18px;background:var(--rim);box-shadow:0 0 0 3px #4fcfb4,0 16px 40px rgba(0,0,0,.6)}
+.cell{position:relative;border:0;border-radius:9px;background:#0f4c44;cursor:default;display:grid;place-items:center;padding:0}
+.cell.goal0{background:linear-gradient(180deg,#14685d,#0f4c44);box-shadow:inset 0 0 0 2px rgba(79,207,180,.55)}
+.cell.goal1{background:linear-gradient(180deg,#5b4a1a,#3c3212);box-shadow:inset 0 0 0 2px rgba(255,212,121,.55)}
+.cell.rock{background:radial-gradient(circle at 35% 30%,#8a9aa0,#3d4a4f 70%);box-shadow:inset 0 -4px 0 rgba(0,0,0,.35)}
+.cell.can{cursor:pointer;box-shadow:inset 0 0 0 3px #7ff0da}
+.cell.can::after{content:"";width:22%;height:22%;border-radius:50%;background:#7ff0da}
+.cell.canrock{cursor:pointer}
+.cell.canrock:hover{background:#3d4a4f}
+.cell.canpick{cursor:pointer;box-shadow:inset 0 0 0 3px #ef7a7f}
+.pawn{display:block;width:62%;height:62%;border-radius:50%;box-shadow:0 4px 8px rgba(0,0,0,.5),inset 0 -4px 0 rgba(0,0,0,.25)}
+.pawn.p0{background:radial-gradient(circle at 35% 30%,#bff7ec,#2f9e87)}
+.pawn.p1{background:radial-gradient(circle at 35% 30%,#ffe9a8,#d18a12)}
+.pawn.mine{outline:3px solid #fff;outline-offset:2px}
+.lab-help .pawn{width:16px;height:16px;flex:none}
+.lab-modes{display:flex;gap:4px;padding:4px;border-radius:12px;background:rgba(0,0,0,.35)}
+.lab-modes button{flex:1;border:0;border-radius:9px;padding:8px 6px;background:transparent;color:#cfe7e1;font-weight:800;font-size:12px;cursor:pointer}
+.lab-modes button.active{background:#4fcfb4;color:#04211e}
+.lab-help{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#cfe7e1}
+.lab-help p{margin:0;opacity:.8}
+.lab-pl{display:flex;align-items:center;gap:8px}
+.lab-pl em{margin-left:auto;font-style:normal;color:var(--gold)}
+/* Okey 101 */
+.tile{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:38px;height:52px;border-radius:7px;background:linear-gradient(180deg,#fffaf0,#efe6d2);box-shadow:0 3px 0 #b9ab8c,0 4px 8px rgba(0,0,0,.35);font:900 20px/1 system-ui,sans-serif;cursor:pointer;user-select:none;flex:none;transition:transform .1s}
+.tile b{font-weight:900}
+.tile.kirmizi{color:#d62f3c}
+.tile.sari{color:#d99400}
+.tile.mavi{color:#2563eb}
+.tile.siyah{color:#111827}
+.tile.fake{color:#2f9e87}
+.tile.wild{box-shadow:0 0 0 2px var(--gold),0 3px 0 #b9ab8c,0 0 14px rgba(255,212,121,.6)}
+.tile i{position:absolute;bottom:2px;font-size:7px;font-style:normal;color:#8a6a10;letter-spacing:.5px}
+.tile.sel{transform:translateY(-10px);box-shadow:0 0 0 3px #4fcfb4,0 3px 0 #b9ab8c,0 10px 14px rgba(0,0,0,.4)}
+.tile.took{outline:2px dashed #ef7a7f;outline-offset:2px}
+.tile.sm{width:28px;height:38px;font-size:15px;box-shadow:0 2px 0 #b9ab8c}
+.tile.empty{background:rgba(255,255,255,.06);box-shadow:none;border:2px dashed rgba(191,247,236,.2);cursor:default}
+.tile.takeable{cursor:pointer;box-shadow:0 0 0 3px #7ff0da,0 3px 0 #b9ab8c}
+.ok-opps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ok-opp{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid rgba(79,207,180,.15);min-width:0}
+.ok-opp.turn{border-color:var(--gold)}
+.ok-opp .seat-avatar{width:36px;height:36px}
+.ok-opp>div:nth-child(2){flex:1;min-width:0}
+.ok-opp strong{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ok-opp small{color:#cfe7e1;font-size:11px}
+.ok-center{display:flex;align-items:center;justify-content:center;gap:16px}
+.ok-deck{display:flex;flex-direction:column;align-items:center;justify-content:center;width:48px;height:62px;border:0;border-radius:8px;background:repeating-linear-gradient(45deg,#16524a 0 6px,#0f3f39 6px 12px);box-shadow:0 0 0 2px #4fcfb4,0 4px 8px rgba(0,0,0,.4);color:#fff;cursor:default}
+.ok-deck.can{cursor:pointer;box-shadow:0 0 0 3px #7ff0da,0 4px 8px rgba(0,0,0,.4)}
+.ok-deck small{font-size:9px;opacity:.8}
+.ok-ind{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ok-ind small,.ok-info small{color:#cfe7e1;font-size:11px}
+.ok-info{display:flex;flex-direction:column}
+.ok-info strong{color:var(--gold)}
+.ok-melds{flex:1;min-height:60px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px;overflow-y:auto;padding:8px;border-radius:14px;background:rgba(0,0,0,.2);scrollbar-width:thin}
+.ok-meld{display:flex;align-items:center;gap:2px;padding:5px 7px;border:1px solid rgba(79,207,180,.2);border-radius:10px;background:rgba(0,0,0,.25);cursor:pointer}
+.ok-meld.can{border-color:#7ff0da;box-shadow:0 0 10px rgba(127,240,218,.35)}
+.ok-meld i{font-style:normal;font-size:10px;color:#cfe7e1;margin-right:4px;writing-mode:vertical-rl;transform:rotate(180deg)}
+.ok-groups{display:flex;flex-wrap:wrap;gap:8px}
+.ok-groups:empty{display:none}
+.ok-group{display:flex;gap:2px;padding:4px 6px;border:2px dashed var(--gold);border-radius:10px;background:rgba(255,212,121,.08);cursor:pointer}
+.ok-rack{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;padding:14px 10px 10px;border-radius:14px;background:linear-gradient(180deg,#6b4a22,#4b3014);box-shadow:inset 0 3px 0 rgba(255,255,255,.12),0 6px 16px rgba(0,0,0,.45)}
+.ok-controls .mini{padding:5px 9px!important;font-size:12px}
+@media (min-width:901px){.content.game #okey-root{gap:6px}}
+@media (max-width:900px){
+  .tt-layout{grid-template-columns:minmax(0,1fr)}
+  .chess,.lab{width:min(100%,92vw)}
+  .pc{font-size:8vw}
+  .ok-opps{grid-template-columns:minmax(0,1fr)}
+  .tile{width:30px;height:42px;font-size:16px}
+}
+/* Tahtalar bulunduğu alanın yüksekliğine sığar */
+.tt-layout{grid-template-rows:minmax(0,1fr)}
+.chess-wrap,.lab-wrap{height:100%;min-height:0;overflow:hidden}
+.chess,.lab{width:auto!important;height:100%;max-height:520px;max-width:100%}
+.pc{font-size:min(4.6vh,40px)}
+@media (max-width:900px){.chess,.lab{height:auto;width:min(100%,92vw)!important}.chess-wrap,.lab-wrap{height:auto}}

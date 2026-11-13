@@ -22,7 +22,7 @@ export default {
     const bet = parseBet(interaction.options.getString('miktar', true), guild.id, user.id);
     const raw = (interaction.options.getString('secim') ?? 'yazi').toLocaleLowerCase('tr').replace('ı', 'i');
     const pick = raw.startsWith('t') ? 'tura' : 'yazi';
-    const unlock = lockGame(guild.id, user.id); // oyun bitince 5 saniye beklenir
+    const unlock = lockGame(guild.id, user.id);
     try {
       takeMoney(guild.id, user.id, bet);
 

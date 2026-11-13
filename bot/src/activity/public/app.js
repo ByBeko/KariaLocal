@@ -1,5 +1,7 @@
 // Karia Etkinliği arayüzü. Tüm sonuçlar sunucudan gelir, burada yalnızca gösterilir.
 import { sfx } from './sfx.js';
+import { initTables } from './tables.js';
+import { initPlaylists } from './playlists.js';
 
 const ON_SITE = location.hostname === 'activity.karia.live'; // Tarayıcıda açıldı: oturum karia.live Discord girişinden gelir
 const API = location.hostname.endsWith('discordsays.com') ? '/.proxy/api' : '/api';
@@ -67,13 +69,20 @@ async function guarded(action) {
 }
 
 // ── Sekmeler ──
-const GAMES = ['blackjack', 'slot', 'coin', 'roulette'];
+const GAMES = ['blackjack', 'poker', 'tayyare', 'roulette', 'zar', 'slot', 'satranc', 'okey', 'labirent'];
+const NO_BET = ['poker', 'zar', 'satranc', 'okey', 'labirent']; // fiş ve giriş masada seçilir
+let tables = null;
 
 const GAME_INFO = {
   blackjack: [['kupa', 'Kazanç', '2×'], ['kart', 'Blackjack', '2,5×'], ['yenile', 'Beraberlik', 'İade']],
   slot: [['slot_yedi', 'Üçlü', '50×'], ['elmas', 'Üçlü', '20×'], ['zil', 'Üçlü', '10×'], ['kalp', 'Üçlü', '5×'], ['hediye', 'Üçlü', '4×'], ['kurabiye', 'Üçlü', '3×'], ['coin', 'Herhangi ikili', '1,5×']],
-  coin: [['coin', 'Doğru tahmin', '2×'], ['yenile', 'Şans', '%50']],
-  roulette: [['elmas', 'Tek sayı', '36×'], ['kalp', 'Kırmızı / Siyah / Tek / Çift', '2×'], ['zil', 'Düzine / Sütun', '3×']],
+  roulette: [['elmas', 'Tek sayı', '36×'], ['kalp', 'Kırmızı / Siyah / Tek / Çift', '2×'], ['zil', 'Düzine / Sütun', '3×'], ['arkadaslar', 'Masa', 'Herkes aynı çarkta']],
+  poker: [['tac', 'Floş Royal / Kent Renk', 'Pot'], ['kupa', 'Kare / Full / Renk', 'Pot'], ['arkadaslar', 'Masa', '2-6 oyuncu'], ['coin', 'Kalkınca', 'Fişin cüzdana döner']],
+  tayyare: [['roket', 'Düşmeden çek', 'Bahis × çarpan'], ['yildiz', 'En yüksek', '1000×'], ['ayarlar', 'Otomatik çek', 'Hedefte öder']],
+  zar: [['kupa', 'En yüksek zar', 'Potun hepsi'], ['yenile', 'Beraberlik', 'Yeniden atış'], ['arkadaslar', 'Masa', '2-6 oyuncu']],
+  satranc: [['kupa', 'Kazanırsan', 'Potun hepsi (2×)'], ['yenile', 'Berabere', 'Giriş geri'], ['arkadaslar', 'Masa', '2 oyuncu']],
+  okey: [['kupa', 'Elini bitiren', 'Potun hepsi (4×)'], ['kart', 'Açma', '101 ya da 5 çift'], ['arkadaslar', 'Masa', '4 oyuncu']],
+  labirent: [['kupa', 'Karşıya ilk varan', 'Potun hepsi (2×)'], ['kalkan', 'Hamle', 'Yürü / kaya / kazma'], ['arkadaslar', 'Masa', '2 oyuncu']],
 };
 
 function drawGameInfo(name) {
@@ -96,15 +105,18 @@ function openTab(name) {
   for (const p of document.querySelectorAll('.panel')) p.hidden = p.dataset.panel !== name;
   for (const b of document.querySelectorAll('[data-game]')) b.classList.toggle('active', b.dataset.game === name);
   $('betbar').hidden = !isGame;
+  $('betbar').classList.toggle('no-bet', NO_BET.includes(name));
   $('game-switch').hidden = !isGame;
   if (isGame) drawGameInfo(name);
   document.querySelector('.content').classList.toggle('fill', isGame || ['home', 'music', 'leaderboard', 'tickets'].includes(name));
   document.querySelector('.content').classList.toggle('game', isGame);
+  document.querySelector('.content').classList.toggle('fit', name === 'music'); // müzik de ekrana sığar, sayfa kaymaz
   const active = document.querySelector(`.tab[data-tab="${sideName}"]`);
   if ($('admin-links').contains(active)) setAdminOpen(true);
   $('page-title').textContent = [...active.childNodes].find((n) => n.nodeType === 3)?.textContent.trim() ?? '';
   $('page-title').hidden = name === 'home'; // ana sayfanın kendi karşılama alanı var
   say('');
+  tables?.open(name);
   if (name === 'music') refreshMusic();
   DASH[name]?.();
 }
@@ -139,6 +151,13 @@ for (const b of document.querySelectorAll('[data-bet]')) {
 for (const chip of document.querySelectorAll('[data-add]')) {
   chip.addEventListener('click', () => {
     $('bet').value = Math.min(betValue() + Number(chip.dataset.add), limits.maxBet);
+    sfx.chip();
+  });
+}
+// Çipin köşesindeki kırmızı − aynı tutarı bahisten düşer
+for (const minus of document.querySelectorAll('[data-sub]')) {
+  minus.addEventListener('click', () => {
+    $('bet').value = Math.max(limits.minBet, betValue() - Number(minus.dataset.sub));
     sfx.chip();
   });
 }
@@ -238,144 +257,6 @@ $('slot-spin').addEventListener('click', () => guarded(async () => {
   }
 }));
 
-// ── Yazı tura ──
-for (const b of document.querySelectorAll('[data-pick]')) {
-  b.addEventListener('click', () => guarded(async () => {
-    const coin = $('coin');
-    const result = await api('/coinflip', { bet: String(betValue()), pick: b.dataset.pick });
-    setBalance(result.won ? result.balance - result.net * 2 : result.balance); // bahis düşmüş hali, kazanç para durunca görünür
-    coin.classList.remove('flip');
-    void coin.offsetWidth;
-    coin.classList.add('flip');
-    sfx.coinFlip();
-    say('');
-    await sleep(900);
-    coin.firstElementChild.textContent = result.result === 'yazi' ? 'Y' : 'T';
-    setBalance(result.balance);
-    sfx.coinLand();
-    setTimeout(() => sfx.result(result.net), 180);
-    const name = result.result === 'yazi' ? 'Yazı' : 'Tura';
-    say(`${name} geldi. ${netText(result.net)}`, result.won ? 'win' : 'lose');
-  }));
-}
-
-// ── Rulet ──
-const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-const REDS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
-const rouletteBets = new Map();
-const rouletteOrder = []; // geri almak için son bahisler
-let lastRouletteBets = null;
-let wheelDeg = 0;
-let spinning = false;
-const numColor = (n) => (n === 0 ? 'green' : REDS.has(n) ? 'red' : 'black');
-
-function buildWheel() {
-  const slice = 360 / WHEEL.length;
-  const colors = { green: '#1f9a6a', red: '#c62f3a', black: '#15191d' };
-  const wheel = $('wheel');
-  wheel.style.background = `conic-gradient(${WHEEL.map((n, i) => `${colors[numColor(n)]} ${(i * slice).toFixed(3)}deg ${((i + 1) * slice).toFixed(3)}deg`).join(',')})`;
-  // Sayılar çarkla birlikte döner
-  wheel.replaceChildren(...WHEEL.map((n, i) => {
-    const mark = el('span', { className: 'wn', textContent: String(n) });
-    mark.style.transform = `rotate(${((i + 0.5) * slice).toFixed(3)}deg) translateY(calc(var(--wr) * -1))`;
-    return mark;
-  }));
-}
-
-function buildRouletteBoard() {
-  const cells = [];
-  const add = (key, text, cls, area) => {
-    const b = el('button', { className: `rc ${cls}`, type: 'button', textContent: text });
-    b.dataset.key = key;
-    b.style.gridArea = area;
-    cells.push(b);
-  };
-  add('n0', '0', 'green', '1 / 1 / 4 / 2');
-  for (let col = 0; col < 12; col++) for (let row = 0; row < 3; row++) { const n = col * 3 + (3 - row); add(`n${n}`, String(n), numColor(n), `${row + 1} / ${col + 2} / ${row + 2} / ${col + 3}`); }
-  [['c3', '2:1'], ['c2', '2:1'], ['c1', '2:1']].forEach(([key, text], row) => add(key, text, 'out', `${row + 1} / 14 / ${row + 2} / 15`));
-  [['d1', '1-12'], ['d2', '13-24'], ['d3', '25-36']].forEach(([key, text], i) => add(key, text, 'out', `4 / ${2 + i * 4} / 5 / ${6 + i * 4}`));
-  [['low', '1-18'], ['even', 'Çift'], ['red', 'Kırmızı'], ['black', 'Siyah'], ['odd', 'Tek'], ['high', '19-36']]
-    .forEach(([key, text], i) => add(key, text, key === 'red' ? 'red' : key === 'black' ? 'black' : 'out', `5 / ${2 + i * 2} / 6 / ${4 + i * 2}`));
-  $('roulette-board').replaceChildren(...cells);
-}
-
-function renderRouletteBets() {
-  let total = 0;
-  for (const b of $('roulette-board').children) {
-    const amount = rouletteBets.get(b.dataset.key);
-    if (amount) { b.dataset.bet = amount >= 1000 ? `${+(amount / 1000).toFixed(1)}K` : String(amount); total += amount; }
-    else delete b.dataset.bet;
-  }
-  $('roulette-total').textContent = total ? `Toplam: ${fmt(total)}` : 'Masa boş';
-}
-
-function placeRouletteBet(key) {
-  const amount = betValue();
-  if (amount < limits.minBet) throw new Error(`Her bahis en az ${limits.minBet} coin olmalı.`);
-  rouletteBets.set(key, (rouletteBets.get(key) ?? 0) + amount);
-  rouletteOrder.push(key);
-  renderRouletteBets();
-  sfx.chip();
-}
-
-$('roulette-board').addEventListener('click', (event) => {
-  const cell = event.target.closest('.rc');
-  if (!cell || spinning) return;
-  try { placeRouletteBet(cell.dataset.key); } catch (error) { say(error.message, 'lose'); }
-});
-$('roulette-board').addEventListener('contextmenu', (event) => {
-  const cell = event.target.closest('.rc');
-  if (!cell || spinning) return;
-  event.preventDefault();
-  rouletteBets.delete(cell.dataset.key);
-  renderRouletteBets();
-});
-$('roulette-undo').addEventListener('click', () => {
-  if (spinning) return;
-  const key = rouletteOrder.pop();
-  if (!key || !rouletteBets.has(key)) return;
-  const left = rouletteBets.get(key) - betValue();
-  if (left >= limits.minBet) rouletteBets.set(key, left); else rouletteBets.delete(key);
-  renderRouletteBets();
-});
-$('roulette-clear').addEventListener('click', () => { if (spinning) return; rouletteBets.clear(); rouletteOrder.length = 0; renderRouletteBets(); });
-$('roulette-repeat').addEventListener('click', () => {
-  if (spinning || !lastRouletteBets) return;
-  rouletteBets.clear();
-  for (const [key, amount] of lastRouletteBets) rouletteBets.set(key, amount);
-  renderRouletteBets();
-});
-$('roulette-spin').addEventListener('click', () => guarded(async () => {
-  if (spinning) return;
-  if (!rouletteBets.size) throw new Error('Önce masaya bahis koy.');
-  spinning = true;
-  try {
-    const bets = Object.fromEntries(rouletteBets);
-    const r = await api('/roulette', { bets });
-    lastRouletteBets = new Map(rouletteBets);
-    setBalance(r.balance - r.payout); // bahis düşmüş hali, kazanç top durunca görünür
-    say('');
-    $('roulette-result').textContent = '';
-    const slice = 360 / WHEEL.length;
-    const target = 360 - (WHEEL.indexOf(r.result) + 0.5) * slice;
-    wheelDeg = Math.ceil(wheelDeg / 360) * 360 + 360 * 5 + target;
-    const wheel = $('wheel');
-    wheel.style.transition = 'transform 4s cubic-bezier(.15,.6,.1,1)';
-    wheel.style.transform = `rotate(${wheelDeg}deg)`;
-    sfx.wheel(4);
-    await sleep(4200);
-    $('roulette-result').textContent = r.result;
-    $('roulette-result').className = `roulette-result ${r.color}`;
-    setBalance(r.balance);
-    sfx.result(r.net, Object.values(bets).reduce((sum, amount) => sum + Number(amount), 0));
-    say(`${r.result} ${{ green: 'yeşil', red: 'kırmızı', black: 'siyah' }[r.color]} geldi. ${netText(r.net)}`, r.net > 0 ? 'win' : r.net < 0 ? 'lose' : 'info');
-    rouletteBets.clear();
-    rouletteOrder.length = 0;
-    renderRouletteBets();
-  } finally {
-    spinning = false;
-  }
-}));
 // ── Müzik ──
 const LOOP_LABEL = { off: 'kapalı', track: 'şarkı', queue: 'sıra' };
 const mmss = (total) => {
@@ -399,16 +280,20 @@ function drawProgress() {
 
 function setCover(id) {
   const src = id ? `thumb/${id}.jpg` : 'emojis/kulaklik.png';
-  if ($('music-cover').getAttribute('src') !== src) $('music-cover').src = src;
+  if ($('music-cover').getAttribute('src') !== src) {
+    $('music-cover').src = src;
+    $('music-backdrop').style.backgroundImage = id ? `url("${src}")` : '';
+  }
 }
 $('music-cover').addEventListener('error', () => { $('music-cover').src = 'emojis/kulaklik.png'; });
 
 function drawMusic(m) {
   $('music-title').textContent = m.playing ? m.current.title : 'Bir şarkı aç';
   $('music-artist').textContent = m.playing ? (m.paused ? 'Duraklatıldı' : m.current.artist || 'Çalıyor') : 'Şu an çalmıyor';
+  document.querySelector('.now-card').classList.toggle('live', m.playing && !m.paused);
   setCover(m.playing ? m.current.thumb : null);
   $('music-pause-icon').src = m.playing && !m.paused ? 'emojis/duraklat.png' : 'emojis/oynat.png';
-  for (const id of ['music-pause', 'music-skip', 'music-stop', 'music-loop', 'music-volume']) $(id).disabled = !m.playing;
+  for (const id of ['music-pause', 'music-skip', 'music-stop', 'music-loop', 'music-volume', 'music-save']) $(id).disabled = !m.playing;
   $('music-prev').disabled = !m.canBack;
   $('music-shuffle').disabled = m.remaining < 2;
   const loop = m.loop ?? 'off';
@@ -1702,8 +1587,11 @@ setInterval(() => {
 
 const DASH = { mail: loadMails, social: refreshSocial, prime: loadPrime, home: loadHome,  leaderboard: loadBoard, overview: loadOverview, tickets: loadTickets, reports: loadReports, suggestions: loadSuggestions, cases: loadCases, modules: loadAdmin, settings: loadAdmin, commands: loadAdmin };
 
-buildWheel();
-buildRouletteBoard();
+tables = initTables({
+  api, $, el, fmt, say, setBalance, sfx, cardEl, avatarImg, betValue, guarded,
+  limits: () => limits, balance: () => balance, myId: () => myId,
+});
+initPlaylists({ api, $, el, fmt, say, guarded, mmss, refreshMusic });
 $('set-search').addEventListener('input', drawSettings);
 $('cmd-search').addEventListener('input', drawCommandList);
 $('cmd-select').addEventListener('change', drawCommandForm);

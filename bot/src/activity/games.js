@@ -1,31 +1,19 @@
-// Etkinlik oyunları: yazı tura, slot, blackjack ve rulet. Sonuçlar burada hesaplanır; tarayıcıya güvenilmez.
-// Her oyundan sonra 5 saniye beklenir (lockGame içinde).
-import { randomInt } from 'node:crypto';
+// Etkinliğin tek kişilik oyunları: slot ve blackjack. Sonuçlar burada hesaplanır; tarayıcıya güvenilmez.
+// Çok oyunculu masalar (poker, Süper Tayyare, rulet, çok oyunculu blackjack, zar) tables/ klasöründedir.
 import { UserError } from '../utils/errors.js';
-import { getBalance, addMoney, takeMoney, parseBet, ensureEnabled, lockGame, MIN_BET, MAX_BET } from '../systems/economy.js';
+import { getBalance, addMoney, takeMoney, parseBet, ensureEnabled, lockGame } from '../systems/economy.js';
 import { spinSlot, slotOutcome, newDeck, handTotal, isBlackjack, blackjackPayout } from '../systems/casino.js';
 
 const BLACKJACK_IDLE = 3 * 60_000;
 const games = new Map(); // kullanıcı -> blackjack eli
 
-// ───────────────────────── Yazı tura ve slot ─────────────────────────
+// ───────────────────────── Slot ─────────────────────────
 
-export function coinflip(guildId, userId, body) {
-  ensureEnabled(guildId);
-  const bet = parseBet(body.bet, guildId, userId);
-  const pick = body.pick === 'tura' ? 'tura' : 'yazi';
-  const unlock = lockGame(guildId, userId);
-  try {
-    takeMoney(guildId, userId, bet);
-    const result = Math.random() < 0.5 ? 'yazi' : 'tura';
-    const won = result === pick;
-    return { pick, result, won, net: won ? bet : -bet, balance: addMoney(guildId, userId, won ? bet * 2 : 0) };
-  } finally {
-    unlock();
-  }
-}
+// Slot salonu: sunucudaki herkesin son kazançları Etkinlikte canlı görünür
+const slotFeed = [];
+export const slotWins = () => slotFeed;
 
-export function slot(guildId, userId, body) {
+export function slot(guildId, userId, body, name = 'Bir oyuncu') {
   ensureEnabled(guildId);
   const bet = parseBet(body.bet, guildId, userId);
   const unlock = lockGame(guildId, userId);
@@ -34,6 +22,10 @@ export function slot(guildId, userId, body) {
     const reels = [spinSlot(), spinSlot(), spinSlot()];
     const { n, multiplier } = slotOutcome(reels);
     const payout = Math.floor(bet * multiplier);
+    if (payout > bet) {
+      slotFeed.unshift({ id: userId, name, multiplier, win: payout - bet, at: Date.now() });
+      slotFeed.length = Math.min(slotFeed.length, 15);
+    }
     return { reels: reels.map((s) => s.key), matches: n, multiplier, net: payout - bet, balance: addMoney(guildId, userId, payout) };
   } finally {
     unlock();
@@ -117,7 +109,7 @@ export function blackjackStart(guildId, userId, body) {
     const deck = newDeck();
     game = { deck, hands: [{ cards: [deck.pop(), deck.pop()], bet }], dealer: [deck.pop(), deck.pop()], current: 0, unlock };
   } catch (error) {
-    unlock(false);
+    unlock();
     throw error;
   }
   const player = game.hands[0].cards;
@@ -159,64 +151,4 @@ export function blackjackMove(guildId, userId, move) {
   if (game.current >= game.hands.length) return settle(guildId, userId, game);
   touch(guildId, userId, game);
   return activeView(guildId, userId, game);
-}
-
-// ───────────────────────── Rulet (tek sıfırlı, Avrupa) ─────────────────────────
-
-const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
-const BET_KEY = /^(?:n(?:[0-9]|[12][0-9]|3[0-6])|red|black|even|odd|low|high|d[123]|c[123])$/;
-const MAX_CELLS = 40;
-
-/** Bahis anahtarı ve gelen sayı için ödeme çarpanı (bahis dahil). 0 gelince dış bahisler kaybeder. */
-function multiplier(key, n) {
-  if (key[0] === 'n') return Number(key.slice(1)) === n ? 36 : 0;
-  if (n === 0) return 0;
-  switch (key) {
-    case 'red': return RED.has(n) ? 2 : 0;
-    case 'black': return RED.has(n) ? 0 : 2;
-    case 'even': return n % 2 === 0 ? 2 : 0;
-    case 'odd': return n % 2 === 1 ? 2 : 0;
-    case 'low': return n <= 18 ? 2 : 0;
-    case 'high': return n >= 19 ? 2 : 0;
-    case 'd1': return n <= 12 ? 3 : 0;
-    case 'd2': return n > 12 && n <= 24 ? 3 : 0;
-    case 'd3': return n > 24 ? 3 : 0;
-    case 'c1': return n % 3 === 1 ? 3 : 0;
-    case 'c2': return n % 3 === 2 ? 3 : 0;
-    case 'c3': return n % 3 === 0 ? 3 : 0;
-    default: return 0;
-  }
-}
-
-export function roulette(guildId, userId, body) {
-  ensureEnabled(guildId);
-  const entries = Object.entries(body.bets && typeof body.bets === 'object' ? body.bets : {});
-  if (!entries.length) throw new UserError('Önce masaya bahis koy.');
-  if (entries.length > MAX_CELLS) throw new UserError('Çok fazla kutuya bahis koydun.');
-  let total = 0;
-  const bets = [];
-  for (const [key, raw] of entries) {
-    const amount = Number(raw);
-    if (!BET_KEY.test(key) || !Number.isInteger(amount) || amount < MIN_BET) throw new UserError(`Her bahis en az ${MIN_BET} coin olmalı.`);
-    total += amount;
-    bets.push([key, amount]);
-  }
-  if (total > MAX_BET) throw new UserError(`Toplam bahis en fazla ${MAX_BET.toLocaleString('tr-TR')} coin olabilir.`);
-
-  const unlock = lockGame(guildId, userId);
-  try {
-    takeMoney(guildId, userId, total);
-    const result = randomInt(37);
-    const payout = bets.reduce((sum, [key, amount]) => sum + amount * multiplier(key, result), 0);
-    return {
-      result,
-      color: result === 0 ? 'green' : RED.has(result) ? 'red' : 'black',
-      total,
-      payout,
-      net: payout - total,
-      balance: addMoney(guildId, userId, payout),
-    };
-  } finally {
-    unlock();
-  }
 }

@@ -177,9 +177,6 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
 .reel img{width:60px;height:60px}
 .reel.spin img{animation:spin .16s linear infinite}
 .reel.hit{border-color:#ffd479;box-shadow:0 0 22px #ffd479}
-.coin-stage{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:390px;perspective:800px}
-.coin{position:relative;z-index:2;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9a8,#d9a53c 70%);border:6px solid #a87a23;box-shadow:inset 0 0 0 4px rgba(255,255,255,.35),0 0 30px rgba(255,209,102,.4);display:flex;align-items:center;justify-content:center;font-size:54px;font-weight:800;color:#6b4a10}
-.coin.flip{animation:coinToss .9s cubic-bezier(.3,.7,.5,1)}
 .music-form{display:flex;gap:6px}
 .music-form input{flex:1;min-width:0;background:var(--panel2);border:0;border-radius:12px;padding:11px 14px}
 .music-form button{border:0;border-radius:12px;padding:10px 20px;cursor:pointer}
@@ -282,15 +279,6 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
 .lever{position:absolute;right:-30px;top:120px;width:12px;height:110px;border-radius:6px;background:linear-gradient(90deg,#8a8a8a,#eee,#777);transform-origin:50% 100%}
 .lever i{position:absolute;left:-10px;top:-24px;width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a7a,#b30f0f)}
 .cabinet:has(.reel.spin) .lever{transform:scaleY(-.55) translateY(-90%)}
-.coin-room{background:radial-gradient(ellipse at 50% 40%,rgba(255,209,102,.2),transparent 55%),linear-gradient(180deg,#0f2a26,#0a0f12);justify-content:center}
-.flip-hand{width:230px;height:auto;margin-top:6px;overflow:visible}
-.flip-hand .sleeve{fill:var(--accent);stroke:#176b5b;stroke-width:5}
-.flip-hand .skin *{fill:#f2c9a1;stroke:#8a5a35;stroke-width:5}
-.flip-hand .thumb{transform-origin:60px 95px}
-.coin-stage:has(.coin.flip) .thumb{animation:thumbFlick .3s ease}
-.coin-picks{margin:10px 0 18px}
-.casino .coin-picks button{display:flex;align-items:center;gap:8px;padding:13px 34px;border:3px solid #ffd479;border-radius:34px;background:linear-gradient(180deg,#ffd479,#e89a1c);box-shadow:0 4px 0 #8c5a0c;color:#3a2200;font-size:18px;font-weight:800}
-.casino .coin-picks button img{width:24px;height:24px}
 .chip{border:3px dashed rgba(255,255,255,.75)!important;color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.45)}
 .chips .chip:nth-child(1){background:#2f6fc4}.chips .chip:nth-child(2){background:#1f9a7f}.chips .chip:nth-child(3){background:#8e44c7}.chips .chip:nth-child(4){background:#cf5a2a}
 /* Sıralama */
@@ -321,8 +309,6 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
 .runner-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--panel)}
 .avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
 .hero-avatar{width:38px;height:38px;margin-right:10px;border-radius:50%;object-fit:cover;vertical-align:-9px}
-@keyframes coinToss{0%{transform:translateY(0) rotateX(0)}50%{transform:translateY(-210px) rotateX(900deg)}100%{transform:translateY(0) rotateX(1800deg)}}
-@keyframes thumbFlick{40%{transform:rotate(-26deg)}}
 @keyframes bulbs{50%{background-position:9px 0;opacity:.65}}
 @keyframes confetti{to{transform:translateY(520px) rotate(540deg)}}
 @keyframes pulse{50%{transform:scale(1.08);opacity:.75}}
