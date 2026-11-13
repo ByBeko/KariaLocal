@@ -1,0 +1,94 @@
+{
+ "type": "minecraft:entity",
+ "pools": [
+  {
+   "bonus_rolls": 0,
+   "rolls": 1,
+   "entries": [
+    {
+     "type": "minecraft:item",
+     "name": "bookofdragons:monstrousnightmare_scales",
+     "functions": [
+      {
+       "function": "minecraft:set_count",
+       "count": {
+        "type": "minecraft:uniform",
+        "min": 3,
+        "max": 5
+       }
+      },
+      {
+       "function": "minecraft:enchanted_count_increase",
+       "enchantment": "minecraft:looting",
+       "count": {
+        "type": "minecraft:uniform",
+        "min": 0,
+        "max": 1
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "rolls": 1,
+   "entries": [
+    {
+     "type": "minecraft:item",
+     "name": "inferno:stoker_meat",
+     "weight": 1,
+     "functions": [
+      {
+       "function": "minecraft:set_count",
+       "count": {
+        "type": "minecraft:uniform",
+        "min": 1,
+        "max": 6
+       }
+      },
+      {
+       "function": "minecraft:apply_bonus",
+       "enchantment": "minecraft:fortune",
+       "formula": "minecraft:ore_drops"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "rolls": 1,
+   "entries": [
+    {
+     "type": "minecraft:item",
+     "name": "inferno:oil",
+     "weight": 1,
+     "functions": [
+      {
+       "function": "minecraft:set_count",
+       "count": {
+        "type": "minecraft:uniform",
+        "min": 1,
+        "max": 3
+       }
+      },
+      {
+       "function": "minecraft:apply_bonus",
+       "enchantment": "minecraft:fortune",
+       "formula": "minecraft:ore_drops"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "rolls": 1,
+   "entries": [
+    {
+     "type": "minecraft:item",
+     "name": "minecraft:air",
+     "weight": 99
+    }
+   ]
+  }
+ ]
+}

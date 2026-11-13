@@ -1,0 +1,1250 @@
+[
+ {
+  "projectID": 456956,
+  "ad": "Chipped",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/chipped",
+  "fileID": 5813117,
+  "dosya": "chipped-neoforge-1.21.1-4.0.2.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 15020578,
+  "tarih": "2024-10-15"
+ },
+ {
+  "projectID": 410295,
+  "ad": "Konkrete",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/konkrete",
+  "fileID": 5453385,
+  "dosya": "konkrete_neoforge_1.9.9_MC_1.21.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 618842,
+  "tarih": "2024-06-21"
+ },
+ {
+  "projectID": 283644,
+  "ad": "Placebo",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/placebo",
+  "fileID": 9153039,
+  "dosya": "Placebo-1.21.1-9.9.4.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 326063,
+  "tarih": "2026-10-13"
+ },
+ {
+  "projectID": 638111,
+  "ad": "Prism [Neo/Forge]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/prism-lib",
+  "fileID": 6372979,
+  "dosya": "Prism-1.21.1-neoforge-1.0.11.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 62031,
+  "tarih": "2025-04-01"
+ },
+ {
+  "projectID": 570544,
+  "ad": "Eating Animation [Neo/Forge]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/eating-animation-forge",
+  "fileID": 5567664,
+  "dosya": "eatinganimation-1.21.0-6.0.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 289863,
+  "tarih": "2024-07-26"
+ },
+ {
+  "projectID": 448233,
+  "ad": "Entity Culling Fabric/Forge",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/entityculling",
+  "fileID": 9100286,
+  "dosya": "entityculling-neoforge-1.11.3-mc1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 1510075,
+  "tarih": "2026-10-08"
+ },
+ {
+  "projectID": 463155,
+  "ad": "Falling Leaves (NeoForge/Forge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/falling-leaves-forge",
+  "fileID": 9225531,
+  "dosya": "fallingleaves-1.21.1-2.6.0.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 153794,
+  "tarih": "2026-10-17"
+ },
+ {
+  "projectID": 938643,
+  "ad": "Melody",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/melody",
+  "fileID": 5453382,
+  "dosya": "melody_neoforge_1.0.10_MC_1.21.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 36096,
+  "tarih": "2024-06-21"
+ },
+ {
+  "projectID": 511040,
+  "ad": "Durability Tooltip",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/durability-tooltip",
+  "fileID": 8830219,
+  "dosya": "durabilitytooltip-1.2.0-neoforge-mc1.21.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 20821,
+  "tarih": "2026-09-07"
+ },
+ {
+  "projectID": 237749,
+  "ad": "CoroUtil",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/coroutil",
+  "fileID": 7796187,
+  "dosya": "coroutil-neoforge-1.21.0-1.3.9.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 65716,
+  "tarih": "2026-03-22"
+ },
+ {
+  "projectID": 844662,
+  "ad": "[EMF] Entity Model Features [Fabric & Forge]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/entity-model-features",
+  "fileID": 9188526,
+  "dosya": "entity_model_features-3.3.12-1.21-neoforge.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 656382,
+  "tarih": "2026-10-15"
+ },
+ {
+  "projectID": 465066,
+  "ad": "ExpandAbility",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/expandability",
+  "fileID": 5428824,
+  "dosya": "expandability-12.0.0.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 44765,
+  "tarih": "2024-06-14"
+ },
+ {
+  "projectID": 239197,
+  "ad": "CraftTweaker",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/crafttweaker",
+  "fileID": 7772819,
+  "dosya": "CraftTweaker-neoforge-1.21.1-21.0.38.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 3465718,
+  "tarih": "2026-03-17"
+ },
+ {
+  "projectID": 263420,
+  "ad": "Xaero's Minimap",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/xaeros-minimap",
+  "fileID": 9067173,
+  "dosya": "xaerominimap-neoforge-1.21.1-26.6.0.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 2186351,
+  "tarih": "2026-10-05"
+ },
+ {
+  "projectID": 238222,
+  "ad": "Just Enough Items (JEI)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/jei",
+  "fileID": 9205121,
+  "dosya": "jei-1.21.1-neoforge-19.64.0.455.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 2375741,
+  "tarih": "2026-10-16"
+ },
+ {
+  "projectID": 303657,
+  "ad": "Kiwi 🥝 (Neo/Forge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/kiwi",
+  "fileID": 8423062,
+  "dosya": "Kiwi-1.21.1-NeoForge-15.8.7.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 1539578,
+  "tarih": "2026-07-13"
+ },
+ {
+  "projectID": 654373,
+  "ad": "Embeddium (Rubidium) Extra",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/rubidium-extra",
+  "fileID": 6860464,
+  "dosya": "rubidium-extra-0.5.7e+mc1.21-build.132.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 383418,
+  "tarih": "2025-08-07"
+ },
+ {
+  "projectID": 398521,
+  "ad": "Farmer's Delight",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/farmers-delight",
+  "fileID": 8765184,
+  "dosya": "FarmersDelight-1.21.1-1.3.4.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 3160490,
+  "tarih": "2026-08-29"
+ },
+ {
+  "projectID": 422301,
+  "ad": "Sophisticated Backpacks",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/sophisticated-backpacks",
+  "fileID": 9524812,
+  "dosya": "sophisticatedbackpacks-1.21.1-3.26.21.2249.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 1265683,
+  "tarih": "2026-11-09"
+ },
+ {
+  "projectID": 608235,
+  "ad": "YDM's Weapon Master",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/ydms-weapon-master",
+  "fileID": 6476374,
+  "dosya": "weaponmaster_ydm-1.21.1-neoforge-4.2.7.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 344392,
+  "tarih": "2025-04-29"
+ },
+ {
+  "projectID": 228525,
+  "ad": "Bookshelf",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/bookshelf",
+  "fileID": 7606240,
+  "dosya": "bookshelf-neoforge-1.21.1-21.1.81.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 328813,
+  "tarih": "2026-02-10"
+ },
+ {
+  "projectID": 360203,
+  "ad": "Guard Villagers",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/guard-villagers",
+  "fileID": 8767509,
+  "dosya": "guardvillagers-2.4.12-1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 283407,
+  "tarih": "2026-08-30"
+ },
+ {
+  "projectID": 570431,
+  "ad": "Trade Cycling",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/trade-cycling",
+  "fileID": 9155549,
+  "dosya": "trade-cycling-neoforge-1.21.1-1.0.23.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 86678,
+  "tarih": "2026-10-13"
+ },
+ {
+  "projectID": 679177,
+  "ad": "libIPN",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/libipn",
+  "fileID": 7810552,
+  "dosya": "libIPN-neoforge-1.21.1-6.6.3.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 626146,
+  "tarih": "2026-03-25"
+ },
+ {
+  "projectID": 908741,
+  "ad": "Embeddium",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/embeddium",
+  "fileID": 6118392,
+  "dosya": "embeddium-1.0.15+mc1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 1048745,
+  "tarih": "2025-01-24"
+ },
+ {
+  "projectID": 390717,
+  "ad": "Starter Kit",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/starter-kit",
+  "fileID": 9259631,
+  "dosya": "starterkit-1.21.1-9.0.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Server"
+  ],
+  "boyut": 308889,
+  "tarih": "2026-10-19"
+ },
+ {
+  "projectID": 324717,
+  "ad": "Jade 🔍",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/jade",
+  "fileID": 8591319,
+  "dosya": "Jade-1.21.1-NeoForge-15.10.6.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 726853,
+  "tarih": "2026-08-06"
+ },
+ {
+  "projectID": 267602,
+  "ad": "ConnectedTexturesMod",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/ctm",
+  "fileID": 5587515,
+  "dosya": "CTM-1.21-1.2.1+3.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 240791,
+  "tarih": "2024-08-01"
+ },
+ {
+  "projectID": 412082,
+  "ad": "Supplementaries",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/supplementaries",
+  "fileID": 9211734,
+  "dosya": "supplementaries-1.21.1-4.0.2-neoforge.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 13840377,
+  "tarih": "2026-10-16"
+ },
+ {
+  "projectID": 619320,
+  "ad": "Sophisticated Storage",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/sophisticated-storage",
+  "fileID": 9555026,
+  "dosya": "sophisticatedstorage-1.21.1-1.6.17.2224.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 1938094,
+  "tarih": "2026-11-11"
+ },
+ {
+  "projectID": 790626,
+  "ad": "ModernFix",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/modernfix",
+  "fileID": 9309399,
+  "dosya": "modernfix-neoforge-5.27.27+mc1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 614138,
+  "tarih": "2026-10-24"
+ },
+ {
+  "projectID": 652877,
+  "ad": "Infernos - HTTYD",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/infernos-httyd",
+  "fileID": 9415917,
+  "dosya": "inferno-1.7.4.2-neoforge-1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 617653,
+  "tarih": "2026-11-03"
+ },
+ {
+  "projectID": 495476,
+  "ad": "Puzzles Lib",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/puzzles-lib",
+  "fileID": 9331322,
+  "dosya": "puzzleslib-v21.1.66-mc1.21.1+neoforge.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 1451120,
+  "tarih": "2026-10-26"
+ },
+ {
+  "projectID": 570017,
+  "ad": "Radium Reforged",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/radium-reforged",
+  "fileID": 5740426,
+  "dosya": "radium-mc1.21.1-0.13.1+git.4994e83.jar",
+  "surum_turu": "beta",
+  "ortam": [],
+  "boyut": 749577,
+  "tarih": "2024-09-20"
+ },
+ {
+  "projectID": 367706,
+  "ad": "FancyMenu",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/fancymenu",
+  "fileID": 9537151,
+  "dosya": "fancymenu_neoforge_3.10.0_MC_1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 36346978,
+  "tarih": "2026-11-10"
+ },
+ {
+  "projectID": 686836,
+  "ad": "Tectonic",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/tectonic",
+  "fileID": 8855043,
+  "dosya": "tectonic-3.0.28-neoforge-21.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 451757,
+  "tarih": "2026-09-11"
+ },
+ {
+  "projectID": 511770,
+  "ad": "Drippy Loading Screen",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/drippy-loading-screen",
+  "fileID": 8552907,
+  "dosya": "drippyloadingscreen_neoforge_3.1.5_MC_1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 168632,
+  "tarih": "2026-08-01"
+ },
+ {
+  "projectID": 551736,
+  "ad": "Sodium/Embeddium Dynamic Lights",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/dynamiclights-reforged",
+  "fileID": 6044477,
+  "dosya": "sodiumdynamiclights-neoforge-1.0.10-1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 299353,
+  "tarih": "2025-01-02"
+ },
+ {
+  "projectID": 968560,
+  "ad": "dragons of berk",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/dragons-of-berk",
+  "fileID": 9446092,
+  "dosya": "dragonsofberk-1.21.1-1.2.3.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 11753157,
+  "tarih": "2026-11-04"
+ },
+ {
+  "projectID": 658587,
+  "ad": "playerAnimator",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/playeranimator",
+  "fileID": 7389814,
+  "dosya": "player-animation-lib-forge-2.0.4+1.21.1.jar",
+  "surum_turu": "beta",
+  "ortam": [],
+  "boyut": 203149,
+  "tarih": "2025-12-28"
+ },
+ {
+  "projectID": 639842,
+  "ad": "Better Combat [Fabric & Forge]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/better-combat-by-daedelus",
+  "fileID": 8430183,
+  "dosya": "bettercombat-neoforge-2.4.0+1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 1045389,
+  "tarih": "2026-07-14"
+ },
+ {
+  "projectID": 233019,
+  "ad": "AI Improvements: Performance Tuning",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/ai-improvements",
+  "fileID": 5426792,
+  "dosya": "AI-Improvements-1.21-0.5.3.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 28984,
+  "tarih": "2024-06-14"
+ },
+ {
+  "projectID": 626761,
+  "ad": "Towns and Towers",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/towns-and-towers",
+  "fileID": 8657120,
+  "dosya": "t_and_t-fabric-neoforge-1.13.11.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 3553006,
+  "tarih": "2026-08-15"
+ },
+ {
+  "projectID": 438332,
+  "ad": "SuperMartijn642's Config Lib",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/supermartijn642s-config-lib",
+  "fileID": 5546996,
+  "dosya": "supermartijn642configlib-1.1.8-neoforge-mc1.21.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 207514,
+  "tarih": "2024-07-19"
+ },
+ {
+  "projectID": 317780,
+  "ad": "Xaero's World Map",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/xaeros-world-map",
+  "fileID": 9067277,
+  "dosya": "xaeroworldmap-neoforge-1.21.1-1.47.0.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 1427078,
+  "tarih": "2026-10-05"
+ },
+ {
+  "projectID": 1177884,
+  "ad": "FastQuit-Forge",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/fastquit-forge",
+  "fileID": 8795159,
+  "dosya": "Fastquit-3.0.2+1.21neoforge.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 152255,
+  "tarih": "2026-09-02"
+ },
+ {
+  "projectID": 288885,
+  "ad": "FastWorkbench",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/fastworkbench",
+  "fileID": 6751534,
+  "dosya": "FastWorkbench-1.21.1-9.1.3.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 28635,
+  "tarih": "2025-07-10"
+ },
+ {
+  "projectID": 495693,
+  "ad": "Farsight [Forge/Neo]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/farsight",
+  "fileID": 9364832,
+  "dosya": "farsight-1.21.1-5.8.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 31165,
+  "tarih": "2026-10-29"
+ },
+ {
+  "projectID": 419699,
+  "ad": "Architectury API",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/architectury-api",
+  "fileID": 8492726,
+  "dosya": "architectury-13.0.11-neoforge.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 584734,
+  "tarih": "2026-07-23"
+ },
+ {
+  "projectID": 309927,
+  "ad": "Curios API",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/curios",
+  "fileID": 6529130,
+  "dosya": "curios-neoforge-9.5.1+1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 410690,
+  "tarih": "2025-05-14"
+ },
+ {
+  "projectID": 274259,
+  "ad": "Carry On",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/carry-on",
+  "fileID": 8512888,
+  "dosya": "carryon-neoforge-1.21.1-2.2.6.13.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 361486,
+  "tarih": "2026-07-26"
+ },
+ {
+  "projectID": 452834,
+  "ad": "RightClickHarvest",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/rightclickharvest",
+  "fileID": 7508749,
+  "dosya": "rightclickharvest-neoforge-4.6.1+1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 287634,
+  "tarih": "2026-01-22"
+ },
+ {
+  "projectID": 316582,
+  "ad": "Corpse",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/corpse",
+  "fileID": 9289316,
+  "dosya": "corpse-neoforge-1.21.1-1.1.22.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 256780,
+  "tarih": "2026-10-22"
+ },
+ {
+  "projectID": 663477,
+  "ad": "Let Me Despawn",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/let-me-despawn",
+  "fileID": 9415983,
+  "dosya": "letmedespawn-neoforge-1.21.1-1.26.11.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 29590,
+  "tarih": "2026-11-03"
+ },
+ {
+  "projectID": 532127,
+  "ad": "Legendary Tooltips [Neo/Forge]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/legendary-tooltips",
+  "fileID": 6400660,
+  "dosya": "LegendaryTooltips-1.21.1-neoforge-1.5.5.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 81808,
+  "tarih": "2025-04-08"
+ },
+ {
+  "projectID": 663658,
+  "ad": "Do a Barrel Roll",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/do-a-barrel-roll",
+  "fileID": 6189476,
+  "dosya": "do_a_barrel_roll-neoforge-3.7.3+1.21.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 465787,
+  "tarih": "2025-02-13"
+ },
+ {
+  "projectID": 531761,
+  "ad": "Balm",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/balm",
+  "fileID": 9406246,
+  "dosya": "balm-neoforge-1.21.1-21.0.67.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 786010,
+  "tarih": "2026-11-02"
+ },
+ {
+  "projectID": 568563,
+  "ad": "[ETF] Entity Texture Features - [Fabric & Forge]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/entity-texture-features-fabric",
+  "fileID": 9420332,
+  "dosya": "entity_texture_features-7.2.7-1.21-neoforge.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 811876,
+  "tarih": "2026-11-03"
+ },
+ {
+  "projectID": 520110,
+  "ad": "Iceberg [Neo/Forge]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/iceberg",
+  "fileID": 6423863,
+  "dosya": "Iceberg-1.21.1-neoforge-1.3.2.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 213853,
+  "tarih": "2025-04-14"
+ },
+ {
+  "projectID": 475117,
+  "ad": "FastSuite",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/fastsuite",
+  "fileID": 7527945,
+  "dosya": "FastSuite-1.21.1-6.0.7.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 28193,
+  "tarih": "2026-01-26"
+ },
+ {
+  "projectID": 473451,
+  "ad": "Serene Shrubbery",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/serene-shrubbery",
+  "fileID": 8134790,
+  "dosya": "SereneShrubbery-NeoForge-1.21.1-v2.4.0.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 841114,
+  "tarih": "2026-05-23"
+ },
+ {
+  "projectID": 1154099,
+  "ad": "Crash Assistant",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/crash-assistant",
+  "fileID": 6548454,
+  "dosya": "CrashAssistant-neoforge-1.21.1-1.8.0.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 678434,
+  "tarih": "2025-05-19"
+ },
+ {
+  "projectID": 458048,
+  "ad": "Diagonal Fences",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/diagonal-fences",
+  "fileID": 5918197,
+  "dosya": "DiagonalFences-v21.1.1-1.21.1-NeoForge.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 171557,
+  "tarih": "2024-11-18"
+ },
+ {
+  "projectID": 429235,
+  "ad": "FerriteCore ((Neo)Forge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/ferritecore",
+  "fileID": 7524151,
+  "dosya": "ferritecore-7.0.3-neoforge.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 121559,
+  "tarih": "2026-01-25"
+ },
+ {
+  "projectID": 342584,
+  "ad": "Collective",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/collective",
+  "fileID": 9548438,
+  "dosya": "collective-1.21.1-8.86.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 1633821,
+  "tarih": "2026-11-10"
+ },
+ {
+  "projectID": 306770,
+  "ad": "Patchouli",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/patchouli",
+  "fileID": 7730942,
+  "dosya": "Patchouli-1.21.1-93-NEOFORGE.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 646777,
+  "tarih": "2026-03-08"
+ },
+ {
+  "projectID": 245755,
+  "ad": "Waystones",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/waystones",
+  "fileID": 8969751,
+  "dosya": "waystones-neoforge-1.21.1-21.1.46.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 1223229,
+  "tarih": "2026-09-25"
+ },
+ {
+  "projectID": 499826,
+  "ad": "Advancement Plaques [Neo/Forge]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/advancement-plaques",
+  "fileID": 5905995,
+  "dosya": "AdvancementPlaques-1.21.1-neoforge-1.6.8.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 195730,
+  "tarih": "2024-11-15"
+ },
+ {
+  "projectID": 561885,
+  "ad": "Just Zoom",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/just-zoom",
+  "fileID": 9325459,
+  "dosya": "justzoom_neoforge_3.1.0_MC_1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 168109,
+  "tarih": "2026-10-25"
+ },
+ {
+  "projectID": 353942,
+  "ad": "Snow Under Trees",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/snow-under-trees",
+  "fileID": 8249253,
+  "dosya": "snowundertrees-1.21.1-1.5.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 30512,
+  "tarih": "2026-06-14"
+ },
+ {
+  "projectID": 348521,
+  "ad": "Cloth Config API (Fabric/Forge/NeoForge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/cloth-config",
+  "fileID": 5729127,
+  "dosya": "cloth-config-15.0.140-neoforge.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 1163890,
+  "tarih": "2024-09-16"
+ },
+ {
+  "projectID": 351264,
+  "ad": "Kotlin for Forge",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/kotlin-for-forge",
+  "fileID": 8335665,
+  "dosya": "kotlinforforge-5.12.0-all.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 7279276,
+  "tarih": "2026-06-28"
+ },
+ {
+  "projectID": 1249053,
+  "ad": "FastEvent",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/fast-event",
+  "fileID": 6531468,
+  "dosya": "FastEvent-1.21.1-neoforge-1.1.2.jar",
+  "surum_turu": "alpha",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 33218,
+  "tarih": "2025-05-15"
+ },
+ {
+  "projectID": 308663,
+  "ad": "Snow! Real Magic! ⛄ (Neo/Forge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/snow-real-magic",
+  "fileID": 8988910,
+  "dosya": "SnowRealMagic-1.21.1-NeoForge-12.2.3.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 3907234,
+  "tarih": "2026-09-27"
+ },
+ {
+  "projectID": 1138130,
+  "ad": "Corpse x Curios API Compat",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/corpse-x-curios-api-compat",
+  "fileID": 9541624,
+  "dosya": "corpsecurioscompat-1.21.1-NeoForge-4.2.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 24162,
+  "tarih": "2026-11-10"
+ },
+ {
+  "projectID": 1325984,
+  "ad": "NoPackCompatCheck",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/nopackcompatcheck",
+  "fileID": 6879128,
+  "dosya": "nopackcompatcheck-0.1.0-neoforge-mc1.21+.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 22039,
+  "tarih": "2025-08-12"
+ },
+ {
+  "projectID": 670986,
+  "ad": "Saturn",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/saturn",
+  "fileID": 6139965,
+  "dosya": "saturn-mc1.21.1-0.1.5.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 84147,
+  "tarih": "2025-01-30"
+ },
+ {
+  "projectID": 312353,
+  "ad": "Artifacts",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/artifacts",
+  "fileID": 8791899,
+  "dosya": "artifacts-neoforge-13.2.5.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 1086922,
+  "tarih": "2026-09-02"
+ },
+ {
+  "projectID": 1442925,
+  "ad": "No Chat Restrictions",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/no-chat-restrictions",
+  "fileID": 9017051,
+  "dosya": "NoChatRestrictions-NeoForge-MC1.21.11-v1.0.3.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 9377,
+  "tarih": "2026-09-30"
+ },
+ {
+  "projectID": 431611,
+  "ad": "Vein Mining (Fabric/Forge/Quilt)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/vein-mining",
+  "fileID": 5579900,
+  "dosya": "veinmining-neoforge-5.0.0-beta.2+1.21.jar",
+  "surum_turu": "beta",
+  "ortam": [],
+  "boyut": 221494,
+  "tarih": "2024-07-30"
+ },
+ {
+  "projectID": 495267,
+  "ad": "Inventory Profiles Next",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/inventory-profiles-next",
+  "fileID": 7810574,
+  "dosya": "InventoryProfilesNext-neoforge-1.21.1-2.2.5.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 1295466,
+  "tarih": "2026-03-25"
+ },
+ {
+  "projectID": 550579,
+  "ad": "ServerCore",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/servercore",
+  "fileID": 8312220,
+  "dosya": "servercore-neoforge-1.5.19+1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 1462674,
+  "tarih": "2026-06-24"
+ },
+ {
+  "projectID": 388172,
+  "ad": "GeckoLib",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/geckolib",
+  "fileID": 8893490,
+  "dosya": "geckolib-neoforge-1.21.1-4.9.3.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 634531,
+  "tarih": "2026-09-16"
+ },
+ {
+  "projectID": 521480,
+  "ad": "Skin Layers 3D",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/skin-layers-3d",
+  "fileID": 9243656,
+  "dosya": "skinlayers3d-neoforge-1.11.4-mc1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client"
+  ],
+  "boyut": 1905514,
+  "tarih": "2026-10-18"
+ },
+ {
+  "projectID": 499980,
+  "ad": "Moonlight Lib",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/selene",
+  "fileID": 9519534,
+  "dosya": "moonlight-1.21.1-3.8.3-neoforge.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 2327347,
+  "tarih": "2026-11-09"
+ },
+ {
+  "projectID": 535489,
+  "ad": "Sound Physics Remastered",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/sound-physics-remastered",
+  "fileID": 9279974,
+  "dosya": "sound-physics-remastered-neoforge-1.21.1-1.5.2.jar",
+  "surum_turu": "beta",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 204230,
+  "tarih": "2026-10-21"
+ },
+ {
+  "projectID": 299540,
+  "ad": "FastFurnace",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/fastfurnace",
+  "fileID": 6751551,
+  "dosya": "FastFurnace-1.21.1-9.0.1.jar",
+  "surum_turu": "release",
+  "ortam": [],
+  "boyut": 4623,
+  "tarih": "2025-07-10"
+ },
+ {
+  "projectID": 618298,
+  "ad": "Sophisticated Core",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/sophisticated-core",
+  "fileID": 9555037,
+  "dosya": "sophisticatedcore-1.21.1-1.5.33.2470.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 1845993,
+  "tarih": "2026-11-11"
+ },
+ {
+  "projectID": 559312,
+  "ad": "Easy NPC",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/easy-npc",
+  "fileID": 9411885,
+  "dosya": "easy_npc_bundle-neoforge-1.21.1-7.18.0.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 25224,
+  "tarih": "2026-11-02"
+ },
+ {
+  "projectID": 659887,
+  "ad": "Simply Swords [Fabric & Forge]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/simply-swords",
+  "fileID": 8746001,
+  "dosya": "simplyswords-neoforge-1.70.2-1.21.1.jar",
+  "surum_turu": "release",
+  "ortam": [
+   "Client",
+   "Server"
+  ],
+  "boyut": 16282660,
+  "tarih": "2026-08-27"
+ }
+]
