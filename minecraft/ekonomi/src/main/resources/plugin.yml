@@ -1,0 +1,29 @@
+name: KariaEkonomi
+version: '1.0.0'
+main: live.karia.ekonomi.KariaEkonomi
+api-version: '1.21'
+author: Karia
+description: Karia botunun cüzdanına bağlı Vault ekonomisi
+depend: [Vault]
+loadbefore: [Towny]
+commands:
+  bagla:
+    description: Minecraft hesabını Karia Discord cüzdanına bağlar
+    usage: /bagla
+  bakiye:
+    description: Bakiyeni gösterir
+    usage: /bakiye [oyuncu]
+    aliases: [para, balance, bal]
+  ode:
+    description: Başka bir oyuncuya para gönderir
+    usage: /ode <oyuncu> <miktar>
+    aliases: [pay]
+  ekonomi:
+    description: Ekonomi yönetimi
+    usage: /ekonomi <ver|al|durum> [oyuncu] [miktar]
+    permission: karia.ekonomi.admin
+permissions:
+  karia.ekonomi.admin:
+    default: op
+  karia.ekonomi.bakiye.diger:
+    default: op

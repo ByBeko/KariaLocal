@@ -1,0 +1,24 @@
+# KariaEkonomi
+# Discord'a bağlı oyuncuların parası Karia botunun cüzdanındadır (karia.live köprüsü üzerinden).
+# Bağlı olmayan oyuncular, kasabalar ve uluslar sunucuda yerel cüzdan kullanır.
+# Oyuncu /bagla ile hesabını bağlayınca yerel bakiyesi bot cüzdanına aktarılır.
+
+api:
+  # karia.live köprüsü. Sonunda / olmadan.
+  url: "https://karia.live/api/mc"
+  # Botun ve sitenin MC_API_SECRET değeri. Bu dosya sadece sunucuda durur, depoya girmez.
+  secret: ""
+  timeout-seconds: 5
+
+para-birimi:
+  tekil: "coin"
+  cogul: "coin"
+
+# Yeni (bağlı olmayan) oyuncuya ilk girişte verilecek yerel başlangıç parası
+baslangic-parasi: 0
+
+# Bağlı oyuncuların bakiyesi bu aralıkla bottan yenilenir (saniye)
+yenileme-saniye: 60
+
+mesaj-oneki: "&#5BE0F0&lKARIA &8» &f"
+bagla-adresi: "karia.live/minecraft"
