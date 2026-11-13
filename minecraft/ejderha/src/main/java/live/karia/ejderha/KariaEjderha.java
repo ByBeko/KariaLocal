@@ -17,6 +17,7 @@ import java.nio.file.Files;
 public final class KariaEjderha extends JavaPlugin {
     public NamespacedKey kSpecies, kBorn, kSaddle, kBred, kPart;
     private DragonManager dragons;
+    private ShipManager ships;
     private BedrockBridge bedrock;
 
     @Override
@@ -35,8 +36,15 @@ public final class KariaEjderha extends JavaPlugin {
 
         bedrock = new BedrockBridge(this);
         dragons = new DragonManager(this);
+        ships = new ShipManager(this);
         getServer().getPluginManager().registerEvents(new DragonListener(this), this);
         getServer().getPluginManager().registerEvents(bedrock, this);
+        getServer().getPluginManager().registerEvents(ships, this);
+        getServer().getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+            @org.bukkit.event.EventHandler
+            public void onWorldInit(org.bukkit.event.world.WorldInitEvent e) { addPopulator(e.getWorld()); }
+        }, this);
+        for (org.bukkit.World w : getServer().getWorlds()) addPopulator(w);
 
         EjderCommand ec = new EjderCommand(this);
         PluginCommand c = getCommand("ejder");
@@ -46,8 +54,17 @@ public final class KariaEjderha extends JavaPlugin {
         getLogger().info(Species.all().size() + " ejderha türü yüklendi; " + dragons.loaded().size() + " ejderha bağlandı.");
     }
 
+    private void addPopulator(org.bukkit.World w) {
+        if (!getConfig().getStringList("dunya.yapilar").contains(w.getName())) return;
+        if (w.getPopulators().stream().noneMatch(p -> p instanceof VikingPopulator)) {
+            w.getPopulators().add(new VikingPopulator(this));
+            getLogger().info("Viking kampları ve ejderha yuvaları açık: " + w.getName());
+        }
+    }
+
     @Override
     public void onDisable() {
+        if (ships != null) ships.shutdown();
         if (dragons != null) dragons.shutdown();
         if (bedrock != null) bedrock.removeAll();
     }
@@ -70,5 +87,6 @@ public final class KariaEjderha extends JavaPlugin {
     }
 
     public DragonManager dragons() { return dragons; }
+    public ShipManager ships() { return ships; }
     public BedrockBridge bedrock() { return bedrock; }
 }

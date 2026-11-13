@@ -27,11 +27,31 @@ hiz-carpani: 1.0
 kurt-olcek: 1.0
 
 dogal-dogma:
-  # Vahşi ejderhaların kendiliğinden doğacağı dünyalar (hub'dan sonraki dünya buraya yazılacak).
-  dunyalar: []
+  # Vahşi ejderhaların kendiliğinden doğacağı dünyalar.
+  dunyalar: [Ejder_Adasi]
   aralik-saniye: 30
   sans: 0.35
   dunya-basina-en-cok: 12
+
+dunya:
+  # /ejder ada komutunun götürdüğü dünya (hub'dan sonraki ejderha dünyası)
+  ad: Ejder_Adasi
+  # Viking kampı ve ejderha yuvası üretilecek dünyalar (yalnızca yeni oluşan chunk'larda)
+  yapilar: [Ejder_Adasi]
+  kamp-sansi: 110        # her chunk için 1/110
+  yuva-sansi: 150
+  yuva-min-yukseklik: 85
+
+gemi:
+  # Gemi kurulabilecek dünyalar (boş = hepsi)
+  dunyalar: [Ejder_Adasi]
+  en-cok-blok: 800
+  oyuncu-basina-en-cok: 2
+  # Her yün bloğu kaç bloğu havada tutar (yün * bu >= toplam blok ise gemi uçar)
+  balon-kaldirma: 8
+  su-hizi: 0.35
+  hava-hizi: 0.5
+  herkes-surebilir: false
 
 bedrock:
   # Bedrock (Geyser) oyuncularına ayrı model gösterilsin mi

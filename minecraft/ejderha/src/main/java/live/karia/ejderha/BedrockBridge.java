@@ -50,6 +50,22 @@ public final class BedrockBridge implements Listener {
 
     public boolean enabled() { return plugin.getConfig().getBoolean("bedrock.acik", true); }
 
+    public boolean hasFloodgate() { return enabled() && floodgate != null; }
+
+    /** Gemi: Bedrock oyuncularından BlockDisplay'leri gizle, düşen blok kopyalarını göster. */
+    void applyShip(Ship s) {
+        if (!hasFloodgate()) return;
+        for (Player p : Bukkit.getOnlinePlayers()) applyShip(p, s);
+    }
+
+    private void applyShip(Player p, Ship s) {
+        if (!isBedrock(p)) return;
+        for (Ship.Part part : s.parts) {
+            if (part.disp != null) p.hideEntity(plugin, part.disp);
+            if (part.bedrock != null) p.showEntity(plugin, part.bedrock);
+        }
+    }
+
     public boolean isBedrock(Player p) {
         if (floodgate != null) {
             try { return (boolean) isFloodgate.invoke(floodgate, p.getUniqueId()); } catch (Throwable ignored) {}
@@ -119,6 +135,7 @@ public final class BedrockBridge implements Listener {
         if (!enabled() || !isBedrock(e.getPlayer())) return;
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             for (Dragon d : plugin.dragons().loaded()) apply(e.getPlayer(), d, d.displays(), stands.get(d));
+            for (Ship s : plugin.ships().all()) applyShip(e.getPlayer(), s);
         }, 20L);
     }
 }

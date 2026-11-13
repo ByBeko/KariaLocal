@@ -43,6 +43,7 @@ public final class Items {
         SIMPLE.clear();
         SIMPLE.put("eyer", Items::saddle);
         SIMPLE.put("duduk", Items::whistle);
+        SIMPLE.put("dumen", Items::helm);
         SIMPLE.put("viking_baltasi", Items::vikingAxe);
         SIMPLE.put("savas_cekici", Items::warHammer);
         SIMPLE.put("pul_kilic", Items::scaleSword);
@@ -118,6 +119,14 @@ public final class Items {
                         t("Eğilip sağ tık: ejderhaların otursun / takip etsin.", NamedTextColor.GRAY)));
     }
 
+    public static ItemStack helm() {
+        return make(Material.BRICK, "dumen", "ejder/dumen", t("Gemi Dümeni", TextColor.color(0x9fd8ff)).decorate(TextDecoration.BOLD),
+                List.of(t("Yaptığın geminin güvertesine sağ tıkla:", NamedTextColor.GRAY),
+                        t("bağlı bloklar yüzen bir gemiye dönüşür.", NamedTextColor.GRAY),
+                        t("Yün bloklar balon olur; yeterince yün = uçan gemi.", NamedTextColor.DARK_GRAY),
+                        t("Demir atmak: inip dümene Shift + sağ tık.", NamedTextColor.DARK_GRAY)));
+    }
+
     private static void weaponStats(ItemMeta m, String id, double damage, double speed) {
         m.addAttributeModifier(Attribute.ATTACK_DAMAGE, new AttributeModifier(new NamespacedKey(plugin, id + "_hasar"), damage - 1, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
         m.addAttributeModifier(Attribute.ATTACK_SPEED, new AttributeModifier(new NamespacedKey(plugin, id + "_hiz"), speed - 4, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
@@ -170,6 +179,15 @@ public final class Items {
 
     // ------------------------------------------------------------------ tarifler
     static void registerRecipes() {
+        NamespacedKey hk = new NamespacedKey(plugin, "dumen");
+        Bukkit.removeRecipe(hk);
+        ShapedRecipe helmR = new ShapedRecipe(hk, helm());
+        helmR.shape("PSP", "SIS", "PSP");
+        helmR.setIngredient('P', new RecipeChoice.MaterialChoice(org.bukkit.Tag.PLANKS));
+        helmR.setIngredient('S', Material.STICK);
+        helmR.setIngredient('I', Material.IRON_INGOT);
+        Bukkit.addRecipe(helmR);
+
         List<ItemStack> scales = new ArrayList<>();
         for (Species s : Species.all()) scales.add(scale(s, 1));
         if (scales.isEmpty()) return;

@@ -34,10 +34,35 @@ public final class EjderCommand implements TabExecutor {
             case "gonder" -> { if (s instanceof Player p) send(p); }
             case "bilgi" -> { if (s instanceof Player p) info(p); }
             case "turler" -> species(s);
+            case "ada" -> { if (s instanceof Player p) island(p); }
+            case "demir" -> {
+                if (!(s instanceof Player p)) break;
+                Ship sh = plugin.ships().nearest(p, 24);
+                if (sh == null) { msg(p, "Yakında gemi yok.", NamedTextColor.GRAY); break; }
+                if (!sh.owner.equals(p.getUniqueId()) && !admin) { msg(p, "Bu gemi senin değil.", NamedTextColor.RED); break; }
+                plugin.ships().anchor(sh, p, false);
+            }
             case "yardim" -> help(s, admin);
             case "ver" -> { if (admin) give(s, a); else noPerm(s); }
             case "dogur" -> { if (admin) spawn(s, a); else noPerm(s); }
             case "temizle" -> { if (admin) clear(s); else noPerm(s); }
+            case "gemikur" -> { // yönetici/konsol testi: /ejder gemikur <x> <y> <z> [dünya]
+                if (!admin || a.length < 4) { noPerm(s); break; }
+                org.bukkit.World w = a.length > 4 ? Bukkit.getWorld(a[4]) : (s instanceof Player p ? p.getWorld() : Bukkit.getWorlds().get(0));
+                if (w == null) break;
+                plugin.ships().assemble(null, w.getBlockAt(parseInt(a[1], 0), parseInt(a[2], 0), parseInt(a[3], 0)));
+            }
+            case "gemidemir" -> {
+                if (!admin) { noPerm(s); break; }
+                int n = 0;
+                for (Ship sh : new ArrayList<>(plugin.ships().all())) if (plugin.ships().anchor(sh, null, false)) n++;
+                msg(s, n + " gemiye demir atıldı (" + plugin.ships().count() + " kaldı).", NamedTextColor.GREEN);
+            }
+            case "gemidurum" -> {
+                if (!admin) { noPerm(s); break; }
+                for (Ship sh : plugin.ships().all())
+                    msg(s, String.format("gemi %s %s %.2f %.2f %.2f yaw=%.1f blok=%d ucar=%s", sh.id.toString().substring(0, 8), sh.world.getName(), sh.x, sh.y, sh.z, sh.yaw, sh.parts.size(), sh.canFly), NamedTextColor.GRAY);
+            }
             case "yenile" -> {
                 if (!admin) { noPerm(s); break; }
                 plugin.reloadAll();
@@ -46,6 +71,17 @@ public final class EjderCommand implements TabExecutor {
             default -> help(s, admin);
         }
         return true;
+    }
+
+    private void island(Player p) {
+        String wn = plugin.getConfig().getString("dunya.ad", "Ejder_Adasi");
+        org.bukkit.World w = Bukkit.getWorld(wn);
+        if (w == null) { msg(p, "Ejder Adası henüz açılmadı.", NamedTextColor.RED); return; }
+        if (p.getWorld() == w) { msg(p, "Zaten Ejder Adası'ndasın.", NamedTextColor.GRAY); return; }
+        p.teleportAsync(w.getSpawnLocation().add(0.5, 0, 0.5)).thenAccept(ok -> {
+            if (ok) p.showTitle(net.kyori.adventure.title.Title.title(Component.text("Ejder Adası", NamedTextColor.GOLD),
+                    Component.text("Ejderhalar, Viking kampları, gemiler", NamedTextColor.GRAY)));
+        });
     }
 
     private void noPerm(CommandSender s) { msg(s, "Bu komut için yetkin yok.", NamedTextColor.RED); }
@@ -57,6 +93,8 @@ public final class EjderCommand implements TabExecutor {
         msg(s, "/ejder gonder · baktığın ejderhanı ahıra gönder", NamedTextColor.GRAY);
         msg(s, "/ejder bilgi · baktığın ejderha hakkında bilgi", NamedTextColor.GRAY);
         msg(s, "/ejder turler · tüm türler ve yaşadıkları yerler", NamedTextColor.GRAY);
+        msg(s, "/ejder ada · Ejder Adası'na git", NamedTextColor.GRAY);
+        msg(s, "/ejder demir · yakındaki gemine demir at", NamedTextColor.GRAY);
         if (admin) msg(s, "Yönetici: ver <tür|eşya> [oyuncu] [adet] · dogur <tür> [yavru|genc|yetiskin] [evcil] · temizle · yenile", NamedTextColor.DARK_GRAY);
     }
 
@@ -197,7 +235,7 @@ public final class EjderCommand implements TabExecutor {
         List<String> out = new ArrayList<>();
         boolean admin = s.hasPermission("karia.ejder.admin");
         if (a.length == 1) {
-            out.addAll(List.of("liste", "cagir", "gonder", "bilgi", "turler", "yardim"));
+            out.addAll(List.of("liste", "cagir", "gonder", "bilgi", "turler", "ada", "demir", "yardim"));
             if (admin) out.addAll(List.of("ver", "dogur", "temizle", "yenile"));
         } else if (a.length == 2 && (a[0].equalsIgnoreCase("ver") || a[0].equalsIgnoreCase("dogur")) && admin) {
             for (Species sp : Species.all()) { out.add(sp.id); if (a[0].equalsIgnoreCase("ver")) out.add(sp.id + ":pul"); }

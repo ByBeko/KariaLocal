@@ -5,6 +5,7 @@ api-version: '1.21'
 author: Karia
 description: Karia'nın özgün ejderhaları (evcilleştirme, binme, uçma, üreme, element nefesi) ve Viking eşyaları. Java + Bedrock (Geyser).
 softdepend: [floodgate, Geyser-Spigot]
+loadbefore: [Multiverse-Core]
 commands:
   ejder:
     description: Ejderhaların ve ejderha komutları
