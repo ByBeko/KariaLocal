@@ -63,7 +63,7 @@ export function initTables(ctx) {
     if (data.closed) {
       if (data.balance !== undefined) setBalance(data.balance);
       if (watching?.id === id) stop();
-      if (current?.table === id) soloIntro(current.game, current.root);
+      if (current?.table === id) soloIntro(current.game, current.root, false);
       return data;
     }
     if (watching?.id === id) apply(watching, data, t0);
@@ -189,11 +189,11 @@ export function initTables(ctx) {
       // Solo masada artık oturmuyorsan (süre doldu, kalktın) masa yerine tanıtım ekranı gösterilir
       if (solo && room.mySeat < 0) {
         if (data.balance !== undefined) setBalance(data.balance);
-        return soloIntro(game, root);
+        return soloIntro(game, root, false);
       }
       draw(room, data, root);
     }, () => {
-      if (solo) return soloIntro(game, root);
+      if (solo) return soloIntro(game, root, false);
       say('Masa kapandı.');
       showLobby(game, root);
     });
@@ -228,7 +228,7 @@ export function initTables(ctx) {
 
   function drawPoker(room, data, root) {
     setBalance(data.balance);
-    if (room.id.startsWith('solo-') && room.mySeat < 0) return soloIntro('poker', root);
+    if (room.id.startsWith('solo-') && room.mySeat < 0) return soloIntro('poker', root, false);
     const seated = room.mySeat >= 0;
     const table = el('div', { className: 'ptable' });
     const felt = el('div', { className: 'pfelt' },
@@ -419,7 +419,7 @@ export function initTables(ctx) {
   let dieBoxes = new Map(); // son çizimdeki zar kutuları; animasyon yeniden çizimde de doğru kutuya yazar
 
   function drawDice(room, data, root) {
-    if (room.id.startsWith('solo-') && room.mySeat < 0) return soloIntro('zar', root);
+    if (room.id.startsWith('solo-') && room.mySeat < 0) return soloIntro('zar', root, false);
     const seated = room.mySeat >= 0;
     const table = el('div', { className: 'ztable' });
     const center = el('div', { className: 'zcenter' },
@@ -928,7 +928,9 @@ export function initTables(ctx) {
   }
   for (const b of document.querySelectorAll('[data-mode]')) {
     b.addEventListener('click', () => {
-      if (!activeGame || modeOf(activeGame) === b.dataset.mode) return;
+      // Solo masadan kalkmışsan aynı Solo butonu masayı yeniden açar
+      const rejoin = b.dataset.mode === 'solo' && current?.solo && !current.table;
+      if (!activeGame || (modeOf(activeGame) === b.dataset.mode && !rejoin)) return;
       try { localStorage.setItem(`karia-mode-${activeGame}`, b.dataset.mode); } catch {}
       sfx.chip();
       open(activeGame);
@@ -943,7 +945,9 @@ export function initTables(ctx) {
     labirent: ['Solo Karia Labirent', 'Bota karşı koridor yarışı: karşı kenara ilk varan kazanır, sıranda yürür ya da rakibin önüne engel koyarsın. Giriş 100 coin, kazanan 200 alır. Masada Hazırım’a bas.'],
   };
 
-  async function soloIntro(game, root) {
+  // Solo'ya girince masa "Başla" beklemeden açılır. auto=false: masadan yeni kalkıldı, kendiliğinden tekrar oturtulmaz
+  // (yeniden oynamak için Solo'ya tekrar basılır).
+  async function soloIntro(game, root, auto = true) {
     stop();
     clearTimeout(lobbyTimer);
     current = { game, root, table: null, solo: true };
@@ -957,10 +961,12 @@ export function initTables(ctx) {
       el('img', { src: 'emojis/bot.png', alt: '' }),
       el('h3', { textContent: title }),
       el('p', { textContent: text }),
-      btn('Başla', () => guarded(async () => {
-        const made = await api('/tables/solo', { game });
-        openTable(game, made.id, root);
-      }), 'primary big')));
+      ...(auto ? [] : [el('p', { className: 'hint', textContent: 'Masadan kalktın. Tekrar oynamak için yukarıdan Solo’ya bas.' })])));
+    if (!auto) return;
+    guarded(async () => {
+      const made = await api('/tables/solo', { game });
+      if (current?.root === root && !current.table) openTable(game, made.id, root);
+    });
   }
 
   function open(name) {
