@@ -122,8 +122,8 @@ export function initBoards(ctx) {
     // Beraberlik: teklif et, rakibin teklifini kabul et ya da reddet
     const opponentOffered = room.drawOffer != null && room.drawOffer !== room.mySeat;
     const drawButtons = room.phase !== 'playing' || room.mySeat < 0 ? []
-      : opponentOffered ? [btn('Beraberliği Kabul Et', () => act(room.id, 'draw'), 'primary'), btn('Reddet', () => act(room.id, 'decline'), 'ghost')]
-        : room.canOfferDraw ? [btn('Berabere Teklif Et', () => act(room.id, 'draw'), 'ghost')] : [];
+      : opponentOffered ? [btn('Kabul Et', () => act(room.id, 'draw'), 'primary'), btn('Reddet', () => act(room.id, 'decline'), 'ghost')]
+        : room.canOfferDraw ? [btn('Berabere Teklif', () => act(room.id, 'draw'), 'ghost')] : [];
     const offerNote = opponentOffered ? el('p', { className: 'hint big-result', textContent: 'Rakibin beraberlik teklif ediyor.' })
       : room.drawOffer === room.mySeat ? el('p', { className: 'hint', textContent: 'Beraberlik teklifin rakibinde.' }) : null;
     root.replaceChildren(
@@ -220,7 +220,7 @@ export function initBoards(ctx) {
         el('span', { className: `pawn p${p.color}` }),
         el('div', {}, el('b', { textContent: p.seat === room.mySeat ? 'Sen' : p.name }), el('small', { textContent: `Hedefe ${p.dist} adım` })),
         wallDots(p.walls))),
-      el('p', { textContent: 'Karşı kenara ilk varan kazanır. Sıranda ya parlayan bir kareye yürü ya da iki karenin arasındaki oluğa tıklayıp engel koy. Engel rakibin yolunu uzatır ama tamamen kapatamaz; rakip yanındaysa üstünden atlarsın.' }));
+      el('p', { textContent: 'Karşı kenara ilk varan kazanır. Sıranda parlayan kareye yürü ya da iki kare arasındaki oluğa engel koy.' }));
     const status = room.phase === 'playing'
       ? el('p', { className: 'hint', textContent: myTurn ? (me.walls ? 'Sıra sende: yürü ya da engel koy.' : 'Sıra sende: engelin kalmadı, yürü.') : room.lastAction ?? 'Rakibin düşünüyor...' })
       : null;

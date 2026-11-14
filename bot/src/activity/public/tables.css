@@ -650,3 +650,49 @@
 /* Mobil: açılan perler çok olunca ıstakayı aşağı itmesin */
 @media (max-width:900px){.okf .ok-melds{max-height:210px;overflow-y:auto}}
 @media (max-width:480px){.roulette-kind{gap:4px}.roulette-kind button{padding:6px 9px}.roulette-kind small{display:none}}
+
+/* ── Sade oyun düzeni ──
+   Üstte tek şerit: oyun sekmeleri + Solo/Online. Altta masa; bahisli oyunlarda sağda bahis paneli.
+   Bahis almayan oyunlarda (poker, zar, satranç, okey, labirent) sağ panel yok, masa tüm genişliği kullanır. */
+.game-bar{display:flex;align-items:center;gap:10px}
+.game-bar[hidden]{display:none}
+.game-bar #game-switch{flex:1;min-width:0;margin:0}
+.game-bar .mode-switch{flex:none;margin:0}
+@media (min-width:901px){
+  .content.game main{grid-template-columns:minmax(0,1fr) 250px;grid-template-rows:auto minmax(0,1fr)}
+  .content.game #game-bar{grid-column:1 / -1;grid-row:1}
+  .content.game #game-switch{display:flex;width:auto;gap:2px;padding:4px}
+  .content.game #game-switch button{flex:1;min-width:0;flex-direction:column;justify-content:center;gap:3px;padding:7px 2px;font-size:12px;white-space:nowrap}
+  .content.game .panel:not([hidden]){grid-column:1;grid-row:2}
+  .content.game .betbar{grid-column:2;grid-row:2}
+  .content.game.no-bet main{grid-template-columns:minmax(0,1fr)}
+  .content.game.no-bet .betbar{display:none!important}
+}
+@media (max-width:900px){
+  .game-bar{flex-direction:column;align-items:stretch;gap:8px;margin-bottom:12px}
+  .game-bar .mode-switch{align-self:center}
+}
+/* Oyun başlamadan önceki bekleme ekranı (okey ve diğer sıra masaları): koltuklar ortada iki sütun */
+.room-root>.tt-players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:640px;margin:auto auto 0}
+.room-root>.tt-players+.pcontrols{width:100%;max-width:640px;margin:0 auto auto}
+@media (max-width:600px){.room-root>.tt-players{grid-template-columns:minmax(0,1fr)}}
+/* Poker: alttaki (senin) koltuğun yatay dizilir; dikeyde masanın ortasına, pota taşmaz */
+.pseat.s0{flex-direction:row;width:auto;gap:8px;align-items:center}
+.pseat.s0 .dealer-btn{top:-6px;right:-10px}
+/* Satranç ve labirent (masaüstü): tahta ile bilgi kutusu ortada yan yana; aradaki boşluk kalkar */
+@media (min-width:901px){
+  .tt-layout{display:flex;justify-content:center;align-items:center;gap:18px}
+  .tt-layout>.chess-wrap,.tt-layout>.lab-wrap{flex:0 1 auto;height:100%;aspect-ratio:1;max-width:calc(100% - 278px)}
+  .tt-layout>.tt-side{flex:none;width:260px;align-self:center}
+  @container room (max-width:700px){
+    .tt-layout{flex-direction:column;align-items:stretch}
+    .tt-layout>.chess-wrap,.tt-layout>.lab-wrap{max-width:none;width:auto;flex:1 1 0;min-height:0;aspect-ratio:auto}
+    .tt-layout>.tt-side{width:auto}
+  }
+}
+/* Mobil: oyun sekmeleri tek satırda, yana kaydırılır (masa aşağı itilmesin) */
+@media (max-width:900px){
+  .game-bar #game-switch{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;width:100%}
+  .game-bar #game-switch::-webkit-scrollbar{display:none}
+  .game-bar #game-switch button{flex:none}
+}

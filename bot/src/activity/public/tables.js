@@ -243,6 +243,7 @@ export function initTables(ctx) {
     room.seats.forEach((s, i) => {
       const pos = spot(i, room.mySeat);
       if (!s) {
+        if (seated && room.id.startsWith('solo-')) return; // solo masada boş koltuk gösterilmez
         if (seated) return table.append(el('div', { className: `pseat empty s${pos}` }));
         const sit = btn('Otur', () => drawBuyIn(room, i, root), 'sit');
         return table.append(el('div', { className: `pseat empty s${pos}` }, sit));
@@ -344,7 +345,8 @@ export function initTables(ctx) {
   }
 
   function roomLog(lines = []) {
-    return el('div', { className: 'room-log' }, ...lines.slice(-3).map((t) => el('span', { textContent: t })));
+    // Sadece son olay; masanın altını kalabalık etmesin
+    return el('div', { className: 'room-log' }, ...lines.slice(-1).map((t) => el('span', { textContent: t })));
   }
 
   // ── Blackjack masası ──
@@ -432,6 +434,7 @@ export function initTables(ctx) {
     room.seats.forEach((s, i) => {
       const pos = spot(i, room.mySeat);
       if (!s) {
+        if (seated && room.id.startsWith('solo-')) return; // solo masada boş koltuk gösterilmez
         table.append(el('div', { className: `pseat empty s${pos}` }, ...(seated ? [] : [btn('Otur', () => act(room.id, 'join', { seat: i }), 'sit')])));
         return;
       }
@@ -906,7 +909,7 @@ export function initTables(ctx) {
     const prev = rl.room;
     rl.room = room;
     const status = $('roulette-status');
-    if (room.phase === 'open') status.replaceChildren(el('span', { textContent: room.id.startsWith('solo-') ? 'Solo: bahsini koy ve Çevir’e bas.' : 'Online: bahsini koy ve Çevir’e bas. Odada başkaları varsa çark herkes için birlikte döner.' }));
+    if (room.phase === 'open') status.replaceChildren(el('span', { textContent: 'Bahsini koy, Çevir’e bas.' }));
     else if (room.phase === 'betting') status.replaceChildren(countdown(`Çark {s} sn sonra dönüyor • ${room.players.length} oyuncu`, room.endsAt));
     else if (room.phase === 'spinning') status.replaceChildren(el('span', { textContent: 'Çark dönüyor...' }));
     else if (room.result) status.replaceChildren(el('span', { textContent: `${room.result.result} ${COLOR_TR[room.result.color]} geldi.` }));
@@ -1004,8 +1007,7 @@ export function initTables(ctx) {
       sw.hidden = true;
       return;
     }
-    sw.hidden = false;
-    if (panel.firstElementChild !== sw) panel.prepend(sw);
+    sw.hidden = false; // anahtar, oyun sekmelerinin yanında (üst şerit) durur
     for (const b of sw.querySelectorAll('[data-mode]')) b.classList.toggle('active', b.dataset.mode === modeOf(name));
   }
   for (const b of document.querySelectorAll('[data-mode]')) {
