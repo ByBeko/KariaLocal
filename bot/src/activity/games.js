@@ -35,6 +35,7 @@ export function slot(guildId, userId, body, name = 'Bir oyuncu') {
 // ───────────────────────── Blackjack ─────────────────────────
 
 const cardJson = (c) => ({ r: c.r, s: c.s[0] });
+const insuranceCost = (game) => Math.floor(game.hands[0].bet / 2);
 const cardValue = (c) => (['J', 'Q', 'K'].includes(c.r) ? 10 : c.r === 'A' ? 11 : Number(c.r));
 
 function view(game, reveal) {
@@ -55,12 +56,19 @@ function view(game, reveal) {
 function activeView(guildId, userId, game) {
   const hand = game.hands[game.current];
   const enough = getBalance(guildId, userId) >= hand.bet;
+  const pending = game.insurance === 'pending';
   return {
     ...view(game, false),
     active: true,
     balance: getBalance(guildId, userId),
-    canDouble: hand.cards.length === 2 && enough,
-    canSplit: game.hands.length === 1 && hand.cards.length === 2 && cardValue(hand.cards[0]) === cardValue(hand.cards[1]) && enough,
+    // Krupiyenin açık kartı As: önce sigorta kararı verilir, sonra el oynanır
+    insurancePending: pending,
+    canInsure: pending && getBalance(guildId, userId) >= insuranceCost(game),
+    insuranceCost: insuranceCost(game),
+    insured: game.insured ?? 0,
+    canDouble: !pending && hand.cards.length === 2 && enough,
+    canSplit: !pending && game.hands.length === 1 && hand.cards.length === 2 && cardValue(hand.cards[0]) === cardValue(hand.cards[1]) && enough,
+    canSurrender: !pending && game.hands.length === 1 && hand.cards.length === 2,
   };
 }
 
@@ -80,10 +88,17 @@ function settle(guildId, userId, game) {
     payout += blackjackPayout(h.bet, h.outcome);
     staked += h.bet;
   }
+  // Sigorta 2'ye 1 öder: krupiye blackjack yaptıysa sigorta bahsinin 3 katı döner
+  const insurance = game.insured ?? 0;
+  const insuranceWon = insurance > 0 && isBlackjack(game.dealer);
+  if (insurance) {
+    staked += insurance;
+    if (insuranceWon) payout += insurance * 3;
+  }
   game.unlock();
   const net = payout - staked;
   const outcome = game.hands.length === 1 ? game.hands[0].outcome : net > 0 ? 'win' : net < 0 ? 'lose' : 'push';
-  return { ...view(game, true), active: false, outcome, net, balance: addMoney(guildId, userId, payout) };
+  return { ...view(game, true), active: false, outcome, net, insured: insurance, insuranceWon, balance: addMoney(guildId, userId, payout) };
 }
 
 function touch(guildId, userId, game) {
@@ -113,6 +128,13 @@ export function blackjackStart(guildId, userId, body) {
     throw error;
   }
   const player = game.hands[0].cards;
+  // Açık kart As ve sende blackjack yoksa krupiye bakmadan önce sigorta sorulur
+  if (!isBlackjack(player) && game.dealer[0].r === 'A') {
+    game.insurance = 'pending';
+    games.set(userId, game);
+    touch(guildId, userId, game);
+    return activeView(guildId, userId, game);
+  }
   if (isBlackjack(player) || isBlackjack(game.dealer)) {
     game.forced = isBlackjack(player) && isBlackjack(game.dealer) ? 'push' : isBlackjack(player) ? 'blackjack' : 'lose';
     return settle(guildId, userId, game);
@@ -126,6 +148,28 @@ export function blackjackMove(guildId, userId, move) {
   const game = games.get(userId);
   if (!game) throw new UserError('Devam eden bir elin yok.');
   const hand = game.hands[game.current];
+
+  if (game.insurance === 'pending') {
+    if (move !== 'insure' && move !== 'noinsure') throw new UserError('Önce sigorta kararını ver.');
+    if (move === 'insure') {
+      takeMoney(guildId, userId, insuranceCost(game));
+      game.insured = insuranceCost(game);
+    }
+    game.insurance = 'done';
+    // Krupiye kartına bakar: blackjack ise el hemen biter (sigorta varsa öder)
+    if (isBlackjack(game.dealer)) {
+      game.forced = 'lose';
+      return settle(guildId, userId, game);
+    }
+    touch(guildId, userId, game);
+    return activeView(guildId, userId, game);
+  }
+
+  if (move === 'surrender') {
+    if (game.hands.length > 1 || hand.cards.length !== 2) throw new UserError('Sadece ilk iki kartta teslim olabilirsin.');
+    game.forced = 'surrender';
+    return settle(guildId, userId, game);
+  }
 
   if (move === 'split') {
     if (game.hands.length > 1 || hand.cards.length !== 2 || cardValue(hand.cards[0]) !== cardValue(hand.cards[1])) throw new UserError('Bu eli ikiye ayıramazsın.');

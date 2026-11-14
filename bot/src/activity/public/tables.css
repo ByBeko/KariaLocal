@@ -548,6 +548,8 @@
 /* Okey 101 masası: rakipler masanın etrafında, köşelerde atılan taşlar, ortada keçe, altta iki sıralı ıstaka */
 #okey-root{gap:8px}
 .okt{display:grid;grid-template-columns:64px minmax(0,1fr) 64px;grid-template-rows:auto minmax(170px,1fr) auto;gap:8px;flex:1 0 auto}
+/* Masaüstünde masa ekrana sığar: açılan perler çoğalınca orta alan kendi içinde kayar */
+@media (min-width:901px){.okt{flex:1 1 0;min-height:0;grid-template-rows:auto minmax(120px,1fr) auto}}
 .okc{display:grid;place-items:center;border-radius:12px}
 .okc.drop{background:rgba(239,122,127,.12);box-shadow:inset 0 0 0 2px rgba(239,122,127,.45)}
 .okc.can .tile{animation:okPulse 1.2s ease-in-out infinite}
@@ -588,7 +590,7 @@
 .tile b{margin-top:-8px}
 .tile.sm b,.tile.empty b{margin-top:0}
 /* Istaka: iki sıra × 15 yuva; yuvalar sürükleme hedefidir */
-.ok-rack{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:4px 3px;padding:10px 12px 12px;border-radius:12px;background:linear-gradient(180deg,#d39a3c,#a8701f 48%,#c48a33 52%,#9a6418);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -3px 0 rgba(0,0,0,.25),0 8px 18px rgba(0,0,0,.5);min-height:0}
+.ok-rack{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:4px 3px;padding:10px 12px 12px;border-radius:12px;background:linear-gradient(180deg,#d39a3c,#a8701f 48%,#c48a33 52%,#9a6418);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -3px 0 rgba(0,0,0,.25),0 8px 18px rgba(0,0,0,.5);flex:none}
 .ok-slot{position:relative;aspect-ratio:38/52;min-width:0;border-radius:6px;background:rgba(80,45,5,.18)}
 .ok-slot.drop-hot{background:rgba(255,255,255,.35);box-shadow:inset 0 0 0 2px #fff}
 .ok-slot .tile{position:absolute;inset:0;width:auto;height:auto;font-size:clamp(14px,2.3vw,22px);touch-action:none}
@@ -610,3 +612,41 @@
   .tile::after{bottom:3px;width:4px;height:4px}
   .tile b{margin-top:-4px}
 }
+/* Oyun alanı darsa (iki yan panel açıkken ~700px altı) bilgi kutusu tahtanın altına geçer, tahta kalan yüksekliği kullanır */
+.room-root{container:room/inline-size}
+@media (min-width:901px){
+  @container room (max-width:700px){
+    .tt-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;align-items:stretch;gap:8px}
+    .tt-layout .tt-side{justify-content:flex-start;gap:6px}
+    .tt-layout .tt-players,.tt-layout .lab-help{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+    .lab-help p{display:none}
+    .chess-moves{max-height:52px}
+  }
+}
+/* Satranç: terfi seçimi */
+.chess-wrap{position:relative}
+.promo-pick{position:absolute;inset:0;margin:auto;width:max-content;height:max-content;display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 16px;border-radius:16px;background:rgba(4,33,30,.94);box-shadow:0 0 0 2px #4fcfb4,0 16px 40px rgba(0,0,0,.6);z-index:5}
+.promo-pick p{margin:0;font-weight:800;color:#e6fffa}
+.promo-pick>div{display:flex;gap:8px}
+.promo-pick button{display:flex;flex-direction:column;align-items:center;gap:2px;width:62px;padding:8px 0;border:0;border-radius:12px;background:#e8efe9;cursor:pointer}
+.promo-pick button:hover{background:#ffd479}
+.promo-pick .pc{font-size:38px!important}
+.promo-pick small{font-size:11px;font-weight:700;color:#0b2f2b}
+/* Rulet: bahis türü (iç bahisler) */
+.roulette-kind{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.roulette-kind button{padding:6px 12px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(0,0,0,.3);color:#e6fffa;font-weight:700;font-size:12px;cursor:pointer}
+.roulette-kind button small{opacity:.65;font-weight:600;margin-left:3px}
+.roulette-kind button.active{background:#4fcfb4;border-color:#4fcfb4;color:#04211e}
+.rc.preview{outline:2px dashed #ffd479;outline-offset:-3px;filter:brightness(1.25)}
+.rc.covered{box-shadow:inset 0 0 0 3px rgba(255,212,121,.75)}
+.rc.first{outline:3px solid #4fcfb4;outline-offset:-3px}
+.roulette-groups{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-height:26px}
+.rg{display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 10px;border-radius:999px;background:rgba(0,0,0,.35);font-size:12px;color:#e6fffa}
+.rg em{font-style:normal;padding:0 7px;border-radius:9px;background:#ffd479;color:#3a2200;font-weight:800}
+.rg.placed em{background:#4fcfb4;color:#04211e}
+.rg.hit{box-shadow:0 0 0 2px var(--gold)}
+.rg button{width:20px;height:20px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;cursor:pointer;line-height:1}
+.rg button:hover{background:#b3262f}
+/* Mobil: açılan perler çok olunca ıstakayı aşağı itmesin */
+@media (max-width:900px){.okf .ok-melds{max-height:210px;overflow-y:auto}}
+@media (max-width:480px){.roulette-kind{gap:4px}.roulette-kind button{padding:6px 9px}.roulette-kind small{display:none}}

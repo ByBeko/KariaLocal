@@ -75,9 +75,9 @@ const NO_BET = ['poker', 'zar', 'satranc', 'okey', 'labirent']; // fiş ve giri�
 let tables = null;
 
 const GAME_INFO = {
-  blackjack: [['kupa', 'Kazanç', '2×'], ['kart', 'Blackjack', '2,5×'], ['yenile', 'Beraberlik', 'İade']],
+  blackjack: [['kupa', 'Kazanç', '2×'], ['kart', 'Blackjack', '2,5×'], ['yenile', 'Beraberlik', 'İade'], ['kalkan', 'Sigorta (krupiye As)', '2:1'], ['bayrak', 'Teslim', 'Yarısı döner']],
   slot: [['slot_yedi', 'Üçlü', '50×'], ['elmas', 'Üçlü', '20×'], ['zil', 'Üçlü', '10×'], ['kalp', 'Üçlü', '5×'], ['hediye', 'Üçlü', '4×'], ['kurabiye', 'Üçlü', '3×'], ['coin', 'Herhangi ikili', '1,5×']],
-  roulette: [['elmas', 'Tek sayı', '36×'], ['kalp', 'Kırmızı / Siyah / Tek / Çift', '2×'], ['zil', 'Düzine / Sütun', '3×'], ['arkadaslar', 'Masa', 'Herkes aynı çarkta']],
+  roulette: [['elmas', 'Tek sayı', '36×'], ['yildiz', 'Ayrık / Sokak', '18× / 12×'], ['madalya', 'Köşe / Altılı', '9× / 6×'], ['kalp', 'Kırmızı / Siyah / Tek / Çift', '2×'], ['zil', 'Düzine / Sütun', '3×']],
   poker: [['tac', 'Floş Royal / Kent Renk', 'Pot'], ['kupa', 'Kare / Full / Renk', 'Pot'], ['arkadaslar', 'Masa', '2-6 oyuncu'], ['coin', 'Kalkınca', 'Fişin cüzdana döner']],
   tayyare: [['roket', 'Düşmeden çek', 'Bahis × çarpan'], ['yildiz', 'En yüksek', '1000×'], ['ayarlar', 'Otomatik çek', 'Hedefte öder']],
   zar: [['kupa', 'En yüksek zar', 'Potun hepsi'], ['yenile', 'Beraberlik', 'Yeniden atış'], ['arkadaslar', 'Masa', '2-6 oyuncu']],
@@ -189,7 +189,7 @@ function cardEl(card) {
   return root;
 }
 
-const OUTCOME = { blackjack: 'BLACKJACK!', win: 'Kazandın!', push: 'Berabere', lose: 'Krupiye kazandı', bust: "21'i geçtin" };
+const OUTCOME = { blackjack: 'BLACKJACK!', win: 'Kazandın!', push: 'Berabere', lose: 'Krupiye kazandı', bust: "21'i geçtin", surrender: 'Teslim oldun, yarısı döndü' };
 
 let cardsOnTable = 0;
 function drawBlackjack(g, fresh = false) {
@@ -207,22 +207,30 @@ function drawBlackjack(g, fresh = false) {
   $('player-total').textContent = multi ? '' : g.playerTotal;
   $('dealer-total').textContent = g.dealerTotal ?? '';
   $('bj-start').hidden = g.active;
-  $('bj-hit').hidden = !g.active;
-  $('bj-stand').hidden = !g.active;
-  $('bj-double').hidden = !g.active;
+  // Krupiyenin açık kartı As: önce yalnızca sigorta kararı sorulur
+  const playing = g.active && !g.insurancePending;
+  $('bj-hit').hidden = !playing;
+  $('bj-stand').hidden = !playing;
+  $('bj-double').hidden = !playing;
   $('bj-double').disabled = !g.canDouble;
-  $('bj-split').hidden = !(g.active && g.canSplit);
+  $('bj-split').hidden = !(playing && g.canSplit);
+  $('bj-surrender').hidden = !(playing && g.canSurrender);
+  $('bj-insure').hidden = !(g.active && g.insurancePending);
+  $('bj-insure').disabled = !g.canInsure;
+  $('bj-noinsure').hidden = !(g.active && g.insurancePending);
   setBalance(g.balance);
-  if (g.active) say(`Bahis: ${fmt(g.bet)}`);
+  if (g.active && g.insurancePending) say(`Krupiyenin açık kartı As. Sigorta: ${fmt(g.insuranceCost)} (krupiye blackjack yaparsa 2'ye 1 öder)`);
+  else if (g.active) say(`Bahis: ${fmt(g.bet)}${g.insured ? ` • Sigorta ${fmt(g.insured)}` : ''}`);
   else {
-    const result = multi ? g.hands.map((h, i) => `El ${i + 1}: ${OUTCOME[h.outcome]}`).join(' • ') : OUTCOME[g.outcome];
+    const insurance = g.insured ? ` • Sigorta ${g.insuranceWon ? 'ödedi' : 'kaybetti'}` : '';
+    const result = (multi ? g.hands.map((h, i) => `El ${i + 1}: ${OUTCOME[h.outcome]}`).join(' • ') : OUTCOME[g.outcome]) + insurance;
     say(`${result} ${g.net ? netText(g.net) : ''}`.trim(), g.net > 0 ? 'win' : g.net < 0 ? 'lose' : 'info');
     setTimeout(() => sfx.result(g.net), 420);
   }
 }
 
 $('bj-start').addEventListener('click', () => guarded(async () => drawBlackjack(await api('/blackjack/start', { bet: String(betValue()) }), true)));
-for (const [id, move] of [['bj-hit', 'hit'], ['bj-stand', 'stand'], ['bj-double', 'double'], ['bj-split', 'split']]) {
+for (const [id, move] of [['bj-hit', 'hit'], ['bj-stand', 'stand'], ['bj-double', 'double'], ['bj-split', 'split'], ['bj-surrender', 'surrender'], ['bj-insure', 'insure'], ['bj-noinsure', 'noinsure']]) {
   $(id).addEventListener('click', () => guarded(async () => drawBlackjack(await api(`/blackjack/${move}`, {}))));
 }
 

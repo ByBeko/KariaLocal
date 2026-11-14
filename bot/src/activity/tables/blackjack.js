@@ -95,7 +95,7 @@ export class BlackjackTable extends Room {
       const j = Math.floor(Math.random() * (i + 1));
       [deck[i], deck[j]] = [deck[j], deck[i]];
     }
-    for (const p of players) Object.assign(p, { cards: [deck.pop(), deck.pop()], done: false, outcome: null, payout: 0, doubled: false });
+    for (const p of players) Object.assign(p, { cards: [deck.pop(), deck.pop()], done: false, outcome: null, payout: 0, doubled: false, surrendered: false });
     this.round = { deck, players, dealer: [deck.pop(), deck.pop()], turn: -1, deadline: 0 };
     this.phase = 'playing';
     if (isBlackjack(this.round.dealer)) return this.settle();
@@ -136,14 +136,14 @@ export class BlackjackTable extends Room {
     const r = this.round;
     r.turn = -1;
     const dealerBj = isBlackjack(r.dealer);
-    if (!dealerBj && r.players.some((p) => handTotal(p.cards) <= 21 && !isBlackjack(p.cards))) {
+    if (!dealerBj && r.players.some((p) => !p.surrendered && handTotal(p.cards) <= 21 && !isBlackjack(p.cards))) {
       while (handTotal(r.dealer) < 17) r.dealer.push(r.deck.pop());
     }
     const dealer = handTotal(r.dealer);
     for (const p of r.players) {
       const total = handTotal(p.cards);
       const bj = isBlackjack(p.cards);
-      p.outcome = dealerBj ? (bj ? 'push' : 'lose') : bj ? 'blackjack' : total > 21 ? 'bust' : dealer > 21 || total > dealer ? 'win' : total === dealer ? 'push' : 'lose';
+      p.outcome = p.surrendered ? 'surrender' : dealerBj ? (bj ? 'push' : 'lose') : bj ? 'blackjack' : total > 21 ? 'bust' : dealer > 21 || total > dealer ? 'win' : total === dealer ? 'push' : 'lose';
       p.payout = blackjackPayout(p.bet, p.outcome);
       release(this.guildId, p.id, p.bet, p.payout);
     }
@@ -169,6 +169,11 @@ export class BlackjackTable extends Room {
       p.bet *= 2;
       p.doubled = true;
       p.cards.push(this.round.deck.pop());
+      return this.stand(p);
+    }
+    if (action === 'surrender') {
+      if (p.cards.length !== 2) throw new UserError('Sadece ilk iki kartta teslim olabilirsin.');
+      p.surrendered = true; // bahsin yarısı el sonunda döner
       return this.stand(p);
     }
     if (action === 'hit') {
@@ -200,7 +205,7 @@ export class BlackjackTable extends Room {
       dealer: r ? (reveal ? r.dealer.map(cardJson) : [cardJson(r.dealer[0]), null]) : [],
       dealerTotal: r && reveal ? handTotal(r.dealer) : null,
       turn: r?.turn ?? -1, deadline: r?.deadline ?? 0, turnMs: TURN_MS,
-      controls: myTurn ? { canDouble: me.cards.length === 2 } : null, log: this.log, past: this.past,
+      controls: myTurn ? { canDouble: me.cards.length === 2, canSurrender: me.cards.length === 2 } : null, log: this.log, past: this.past,
     };
   }
 }

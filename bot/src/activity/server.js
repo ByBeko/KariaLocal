@@ -194,6 +194,9 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
       case '/blackjack/stand': return blackjackMove(guildId, id, 'stand');
       case '/blackjack/double': return blackjackMove(guildId, id, 'double');
       case '/blackjack/split': return blackjackMove(guildId, id, 'split');
+      case '/blackjack/surrender': return blackjackMove(guildId, id, 'surrender');
+      case '/blackjack/insure': return blackjackMove(guildId, id, 'insure');
+      case '/blackjack/noinsure': return blackjackMove(guildId, id, 'noinsure');
       case '/music/play': {
         const query = String(body.query ?? '').trim().slice(0, 500);
         if (!query) throw new UserError('Şarkı adı ya da link yaz.');

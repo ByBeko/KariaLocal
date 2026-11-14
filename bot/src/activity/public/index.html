@@ -6,7 +6,7 @@
 <title>Karia</title>
 <link rel="icon" href="logo.png">
 <link rel="stylesheet" href="style.css?v=3">
-<link rel="stylesheet" href="tables.css?v=17">
+<link rel="stylesheet" href="tables.css?v=18">
 </head>
 <body>
 <div id="boot" class="boot"><img src="logo.png" alt="Karia"><p id="boot-text">Karia açılıyor...</p></div>
@@ -117,6 +117,9 @@
           <button id="bj-double" hidden><img src="emojis/dolar2.png" alt="">İkiye Katla</button>
           <button id="bj-hit" hidden><img src="emojis/arti_rozet.png" alt="">Kart Çek</button>
           <button id="bj-stand" hidden><img src="emojis/onayli.png" alt="">Dur</button>
+          <button id="bj-surrender" hidden><img src="emojis/bayrak.png" alt="">Teslim Ol</button>
+          <button id="bj-insure" hidden><img src="emojis/kalkan.png" alt="">Sigorta Al</button>
+          <button id="bj-noinsure" hidden><img src="emojis/onayli.png" alt="">Sigortasız Devam</button>
         </div>
       </div>
     </section>
@@ -140,7 +143,15 @@
         <div class="wheel-box"><div id="wheel" class="wheel"></div><div class="wheel-pin"></div><div id="roulette-result" class="roulette-result"></div></div>
         <div id="roulette-history" class="roulette-history"></div>
         <div id="roulette-status" class="roulette-status"></div>
+        <div id="roulette-kind" class="roulette-kind" role="tablist" aria-label="Bahis türü">
+          <button type="button" data-kind="tek" class="active">Tek <small>36×</small></button>
+          <button type="button" data-kind="ayrik">Ayrık <small>18×</small></button>
+          <button type="button" data-kind="sokak">Sokak <small>12×</small></button>
+          <button type="button" data-kind="kose">Köşe <small>9×</small></button>
+          <button type="button" data-kind="altili">Altılı <small>6×</small></button>
+        </div>
         <div id="roulette-board" class="roulette-board"></div>
+        <div id="roulette-groups" class="roulette-groups"></div>
         <div class="roulette-tools">
           <button id="roulette-undo" type="button">Geri al</button>
           <button id="roulette-clear" type="button">Temizle</button>
@@ -345,6 +356,6 @@
   </main>
   </div>
 </div>
-<script type="module" src="app.js?v=10"></script>
+<script type="module" src="app.js?v=11"></script>
 </body>
 </html>

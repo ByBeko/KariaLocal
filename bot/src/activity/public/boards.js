@@ -55,6 +55,8 @@ export function initBoards(ctx) {
   const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
   let chessPick = -1;
   let chessKey = '';
+  let chessPromo = null; // { from, to }: terfi için taş seçimi bekleniyor
+  const PROMOS = [['q', 'Vezir'], ['r', 'Kale'], ['b', 'Fil'], ['n', 'At']];
 
   function drawChess(room, data, root) {
     const flip = room.myColor === 'b';
@@ -64,6 +66,7 @@ export function initBoards(ctx) {
       if (chessKey && room.lastMove) sfx.card(1);
       chessKey = key;
       chessPick = -1;
+      chessPromo = null;
     }
     const targets = new Set(legal.filter((m) => m[0] === chessPick).map((m) => m[1]));
     const king = room.board.indexOf(room.toMove === 'w' ? 'K' : 'k');
@@ -83,8 +86,12 @@ export function initBoards(ctx) {
       if (v >= 56) cell.append(el('i', { className: 'file', textContent: 'abcdefgh'[i % 8] }));
       cell.addEventListener('click', () => {
         if (targets.has(i)) {
-          const promo = legal.some((m) => m[0] === chessPick && m[1] === i && m[2]) ? 'q' : undefined;
-          act(room.id, 'move', { from: chessPick, to: i, promo });
+          // Terfi: piyon son sıraya varınca hangi taşa dönüşeceği sorulur
+          if (legal.some((m) => m[0] === chessPick && m[1] === i && m[2])) {
+            chessPromo = { from: chessPick, to: i };
+            return drawChess(room, data, root);
+          }
+          act(room.id, 'move', { from: chessPick, to: i });
           chessPick = -1;
           return;
         }
@@ -97,12 +104,34 @@ export function initBoards(ctx) {
     const status = room.phase === 'playing'
       ? el('p', { className: 'hint', textContent: room.myColor ? (room.toMove === room.myColor ? `Sıra sende (${room.myColor === 'w' ? 'beyaz' : 'siyah'})${room.check ? ' • ŞAH!' : ''}` : `Rakibin düşünüyor${room.check ? ' • ŞAH!' : ''}`) : `Sıra: ${room.toMove === 'w' ? 'beyaz' : 'siyah'}` })
       : null;
+    // Terfi seçimi tahtanın üstünde açılır
+    const promoPick = chessPromo
+      ? el('div', { className: 'promo-pick' },
+        el('p', { textContent: 'Piyon neye dönüşsün?' }),
+        el('div', {}, ...PROMOS.map(([k, name]) => {
+          const b = el('button', { type: 'button', title: name }, el('span', { className: `pc ${room.myColor}`, textContent: GLYPH[k] }), el('small', { textContent: name }));
+          b.addEventListener('click', () => {
+            act(room.id, 'move', { ...chessPromo, promo: k });
+            chessPromo = null;
+            chessPick = -1;
+          });
+          return b;
+        })),
+        btn('Vazgeç', () => { chessPromo = null; drawChess(room, data, root); }, 'ghost'))
+      : null;
+    // Beraberlik: teklif et, rakibin teklifini kabul et ya da reddet
+    const opponentOffered = room.drawOffer != null && room.drawOffer !== room.mySeat;
+    const drawButtons = room.phase !== 'playing' || room.mySeat < 0 ? []
+      : opponentOffered ? [btn('Beraberliği Kabul Et', () => act(room.id, 'draw'), 'primary'), btn('Reddet', () => act(room.id, 'decline'), 'ghost')]
+        : room.canOfferDraw ? [btn('Berabere Teklif Et', () => act(room.id, 'draw'), 'ghost')] : [];
+    const offerNote = opponentOffered ? el('p', { className: 'hint big-result', textContent: 'Rakibin beraberlik teklif ediyor.' })
+      : room.drawOffer === room.mySeat ? el('p', { className: 'hint', textContent: 'Beraberlik teklifin rakibinde.' }) : null;
     root.replaceChildren(
-      roomHead(room, data, root, [...resign(room), stakeTag(room)]),
+      roomHead(room, data, root, [...drawButtons, ...resign(room), stakeTag(room)]),
       el('div', { className: 'tt-layout' },
-        el('div', { className: 'chess-wrap' }, board),
+        el('div', { className: 'chess-wrap' }, board, ...(promoPick ? [promoPick] : [])),
         el('div', { className: 'tt-side' }, players(room, (s) => (room.colors?.[s.seat] ? el('em', { className: `seat-tag chip-${room.colors[s.seat]}`, textContent: colorName(s.seat) }) : null)),
-          ...(status ? [status] : []),
+          ...(status ? [status] : []), ...(offerNote ? [offerNote] : []),
           el('div', { className: 'chess-moves' }, ...(room.moves ?? []).map((m, k) => el('span', { textContent: m, className: k === room.moves.length - 1 ? 'new' : '' }))))),
       waitingBar(room), roomLog(room.log), pastBox('turn', room.past));
     resultSound(room, root);
@@ -199,7 +228,8 @@ export function initBoards(ctx) {
       roomHead(room, data, root, [...resign(room), stakeTag(room)]),
       el('div', { className: 'tt-layout' },
         el('div', { className: 'lab-wrap' }, grid),
-        el('div', { className: 'tt-side' }, players(room), ...(status ? [status] : []), info)),
+        // Oyun sürerken oyuncular zaten bilgi kutusunda (kalan adım ve engel); koltuk listesi tekrar etmesin
+        el('div', { className: 'tt-side' }, ...(room.phase === 'playing' ? [] : [players(room)]), ...(status ? [status] : []), info)),
       waitingBar(room), roomLog(room.log), pastBox('turn', room.past));
     resultSound(room, root);
   }
@@ -271,7 +301,17 @@ export function initBoards(ctx) {
     return out;
   }
 
-  /** Eldeki taşlar ile ıstakayı eşitler: giden taş yuvasından çıkar, gelen taş bırakıldığı yere ya da ilk boş yuvaya oturur */
+  /** Yeni gelen taş için yuva: iki yanı da boş olan sondaki yuva, böylece perlerin arasındaki boşluğa girip onları birleştirmez */
+  function looseSlot() {
+    const empty = (i) => ok.slots[i] == null;
+    for (let i = ROW * 2 - 1; i >= 0; i--) {
+      const k = i % ROW;
+      if (empty(i) && (k === 0 || empty(i - 1)) && (k === ROW - 1 || empty(i + 1))) return i;
+    }
+    return ok.slots.lastIndexOf(null);
+  }
+
+  /** Eldeki taşlar ile ıstakayı eşitler: giden taş yuvasından çıkar, gelen taş bırakıldığı yere ya da boş bir yuvaya oturur */
   function syncRack(room) {
     const key = `${room.id}-${room.indicator ? `${room.indicator.c}-${room.indicator.n}` : ''}-${room.okey ? `${room.okey.color}-${room.okey.num}` : ''}`;
     const hand = new Set(room.hand.map((t) => t.id));
@@ -288,7 +328,7 @@ export function initBoards(ctx) {
     const placed = new Set(ok.slots.filter((id) => id != null));
     for (const t of room.hand) {
       if (placed.has(t.id)) continue;
-      const at = ok.pendingSlot >= 0 && ok.slots[ok.pendingSlot] == null ? ok.pendingSlot : ok.slots.indexOf(null);
+      const at = ok.pendingSlot >= 0 && ok.slots[ok.pendingSlot] == null ? ok.pendingSlot : looseSlot();
       ok.pendingSlot = -1;
       if (at < 0) break;
       ok.slots[at] = t.id;

@@ -360,7 +360,7 @@ export function initTables(ctx) {
     table.append(el('div', { className: 'bj-arc' },
       el('div', { className: 'felt-mark' }, el('img', { src: 'logo.png', alt: '' }), el('span', { textContent: 'KARIA BLACKJACK' })),
       el('small', { textContent: '3:2 ÖDER • KRUPİYE 17\'DE DURUR' })));
-    const OUT = { blackjack: 'Blackjack!', win: 'Kazandı', push: 'Berabere', lose: 'Kaybetti', bust: 'Battı' };
+    const OUT = { blackjack: 'Blackjack!', win: 'Kazandı', push: 'Berabere', lose: 'Kaybetti', bust: 'Battı', surrender: 'Teslim oldu' };
     const row = el('div', { className: 'bj-seats' });
     room.seats.forEach((s, i) => {
       const pos = spot(i, room.mySeat);
@@ -400,7 +400,8 @@ export function initTables(ctx) {
       controls.append(timer,
         btn('Kart Çek', () => act(room.id, 'hit'), 'pk call'),
         btn('Dur', () => act(room.id, 'stand'), 'pk check'),
-        ...(room.controls.canDouble ? [btn('İkiye Katla', () => act(room.id, 'double'), 'pk raise')] : []));
+        ...(room.controls.canDouble ? [btn('İkiye Katla', () => act(room.id, 'double'), 'pk raise')] : []),
+        ...(room.controls.canSurrender ? [btn('Teslim Ol', () => act(room.id, 'surrender'), 'pk fold')] : []));
     } else if (room.phase === 'betting' && !me.bet) {
       controls.append(btn(`Bahis Koy • ${fmt(betValue())}`, () => act(room.id, 'bet', { bet: betValue() }), 'primary big'));
       if (room.endsAt) controls.append(el('p', { className: 'hint' }, countdown('Kartlar {s} sn sonra dağıtılıyor', room.endsAt)));
@@ -696,7 +697,31 @@ export function initTables(ctx) {
   const REDS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
   const numColor = (n) => (n === 0 ? 'green' : REDS.has(n) ? 'red' : 'black');
   const COLOR_TR = { green: 'yeşil', red: 'kırmızı', black: 'siyah' };
-  const rl = { room: null, pending: new Map(), order: [], last: null, wheelDeg: 0, spunAt: 0, settledAt: 0 };
+  const rl = { room: null, pending: new Map(), order: [], last: null, wheelDeg: 0, spunAt: 0, settledAt: 0, kind: 'tek', first: null };
+
+  // ── İç bahisler: seçilen türe göre tıklanan sayının kapsadığı grup (sunucu da aynı grupları kabul eder) ──
+  const KIND_NAME = { 2: 'Ayrık', 3: 'Sokak', 4: 'Köşe', 6: 'Altılı' };
+  const groupKey = (nums) => `g${[...nums].sort((a, b) => a - b).join('-')}`;
+  const groupNums = (key) => key.slice(1).split('-').map(Number);
+  const adjacent = (a, b) => {
+    const [lo, hi] = a < b ? [a, b] : [b, a];
+    if (lo === 0) return hi <= 3;
+    return (hi - lo === 1 && lo % 3 !== 0) || hi - lo === 3;
+  };
+  function groupFor(kind, n) {
+    if (kind === 'sokak') return n === 0 ? [0, 1, 2] : [3 * Math.ceil(n / 3) - 2, 3 * Math.ceil(n / 3) - 1, 3 * Math.ceil(n / 3)];
+    if (kind === 'kose') {
+      if (n === 0) return [0, 1, 2, 3];
+      let base = n % 3 === 0 ? n - 1 : n;
+      if (base > 32) base -= 3;
+      return [base, base + 1, base + 3, base + 4];
+    }
+    if (kind === 'altili') {
+      const r = Math.min(Math.max(Math.ceil(n / 3), 1), 11);
+      return [3 * r - 2, 3 * r - 1, 3 * r, 3 * r + 1, 3 * r + 2, 3 * r + 3];
+    }
+    return null;
+  }
 
   function buildWheel() {
     const slice = 360 / WHEEL.length;
@@ -742,6 +767,26 @@ export function initTables(ctx) {
       b.classList.toggle('others', (others[key] ?? 0) > (mine[key] ?? 0));
       b.classList.toggle('hit', rl.room?.phase === 'result' && rl.room.result && winsOn(key, rl.room.result.result));
     }
+    // Grup bahisleri: kapsadığı sayılar işaretlenir, altta liste olarak durur (sağ tık / × ile silinir)
+    const groups = new Map();
+    for (const [key, amount] of [...Object.entries(mine), ...rl.pending]) if (key[0] === 'g') groups.set(key, (groups.get(key) ?? 0) + amount);
+    const covered = new Set([...groups.keys()].flatMap(groupNums));
+    for (const b of $('roulette-board').children) {
+      const n = b.dataset.key[0] === 'n' ? Number(b.dataset.key.slice(1)) : -1;
+      b.classList.toggle('covered', covered.has(n));
+      b.classList.toggle('first', rl.first === n);
+    }
+    $('roulette-groups').replaceChildren(...[...groups].map(([key, amount]) => {
+      const nums = groupNums(key);
+      const chip = el('span', { className: `rg${mine[key] ? ' placed' : ''}${rl.room?.phase === 'result' && rl.room.result && winsOn(key, rl.room.result.result) ? ' hit' : ''}` },
+        el('b', { textContent: `${KIND_NAME[nums.length]} ${nums.join('-')}` }), el('em', { textContent: short(amount) }));
+      if (rl.pending.has(key)) {
+        const x = el('button', { type: 'button', textContent: '×', title: 'Kaldır' });
+        x.addEventListener('click', () => removeRouletteBet(key));
+        chip.append(x);
+      }
+      return chip;
+    }));
     const pend = pendingTotal();
     const placed = rl.room?.myTotal ?? 0;
     $('roulette-total').textContent = pend || placed ? `${placed ? `Masada ${fmt(placed)}` : ''}${pend && placed ? ' • ' : ''}${pend ? `Yeni ${fmt(pend)}` : ''}` : 'Masa boş';
@@ -753,6 +798,7 @@ export function initTables(ctx) {
 
   function winsOn(key, n) {
     if (key[0] === 'n') return Number(key.slice(1)) === n;
+    if (key[0] === 'g') return groupNums(key).includes(n);
     if (n === 0) return false;
     return { red: REDS.has(n), black: !REDS.has(n), even: n % 2 === 0, odd: n % 2 === 1, low: n <= 18, high: n >= 19, d1: n <= 12, d2: n > 12 && n <= 24, d3: n > 24, c1: n % 3 === 1, c2: n % 3 === 2, c3: n % 3 === 0 }[key] ?? false;
   }
@@ -781,8 +827,44 @@ export function initTables(ctx) {
   $('roulette-board').addEventListener('click', (event) => {
     const cell = event.target.closest('.rc');
     if (!cell) return;
-    try { placeRouletteBet(cell.dataset.key); } catch (error) { say(error.message, 'lose'); }
+    try {
+      const key = cell.dataset.key;
+      // Dış bahisler (renk, düzine...) türden bağımsızdır; tür sadece sayılara uygulanır
+      if (key[0] !== 'n' || rl.kind === 'tek') return placeRouletteBet(key);
+      const n = Number(key.slice(1));
+      if (rl.kind === 'ayrik') {
+        // Ayrık: iki komşu sayıya sırayla tıklanır
+        if (rl.first == null || rl.first === n || !adjacent(rl.first, n)) {
+          if (rl.first != null && rl.first !== n) say('Ayrık bahis için yan yana iki sayı seç.', 'lose');
+          rl.first = rl.first === n ? null : n;
+          return renderRouletteBets();
+        }
+        const pair = [rl.first, n];
+        rl.first = null;
+        return placeRouletteBet(groupKey(pair));
+      }
+      placeRouletteBet(groupKey(groupFor(rl.kind, n)));
+    } catch (error) { say(error.message, 'lose'); }
   });
+  // Seçili türde bir sayının üstüne gelince hangi sayıları kapsadığı görünür
+  $('roulette-board').addEventListener('pointerover', (event) => {
+    const cell = event.target.closest('.rc');
+    const n = cell?.dataset.key[0] === 'n' ? Number(cell.dataset.key.slice(1)) : -1;
+    const nums = n < 0 ? [] : rl.kind === 'ayrik' ? (rl.first != null && adjacent(rl.first, n) ? [rl.first, n] : [n]) : groupFor(rl.kind, n) ?? [n];
+    for (const b of $('roulette-board').children) b.classList.toggle('preview', nums.includes(Number(b.dataset.key.slice(1))) && b.dataset.key[0] === 'n');
+  });
+  $('roulette-board').addEventListener('pointerleave', () => {
+    for (const b of $('roulette-board').children) b.classList.remove('preview');
+  });
+  for (const b of document.querySelectorAll('#roulette-kind [data-kind]')) {
+    b.addEventListener('click', () => {
+      rl.kind = b.dataset.kind;
+      rl.first = null;
+      for (const o of document.querySelectorAll('#roulette-kind [data-kind]')) o.classList.toggle('active', o === b);
+      say({ tek: 'Tek: bir sayıya tıkla.', ayrik: 'Ayrık: yan yana iki sayıya sırayla tıkla.', sokak: 'Sokak: bir sütundaki üç sayı; herhangi birine tıkla.', kose: 'Köşe: dört sayının birleştiği köşe; sayıya tıkla.', altili: 'Altılı: yan yana iki sokak; sayıya tıkla.' }[rl.kind]);
+      renderRouletteBets();
+    });
+  }
   $('roulette-board').addEventListener('contextmenu', (event) => {
     const cell = event.target.closest('.rc');
     if (!cell) return;
@@ -875,7 +957,7 @@ export function initTables(ctx) {
     const me = room.players?.find((p) => p.id === myId());
     if (me) {
       const n = room.result.result;
-      const rate = (key) => (key[0] === 'n' ? 36 : /^[dc]/.test(key) ? 3 : 2);
+      const rate = (key) => (key[0] === 'n' ? 36 : key[0] === 'g' ? 36 / groupNums(key).length : /^[dc]/.test(key) ? 3 : 2);
       const payout = Object.entries(room.mine ?? {}).reduce((sum, [key, amount]) => sum + (winsOn(key, n) ? amount * rate(key) : 0), 0);
       const net = payout - me.total;
       sfx.result(net, me.total);

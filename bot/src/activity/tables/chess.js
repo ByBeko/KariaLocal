@@ -2,6 +2,7 @@
 // yetersiz taş). Bot alfa-beta araması ile oynar. Kare 0 = a8, 63 = h1; büyük harf beyaz, küçük harf siyah.
 import { UserError } from '../../utils/errors.js';
 import { TurnTable } from './turnTable.js';
+import { isBot } from './hub.js';
 
 export const CHESS_STAKES = [100, 500, 2500, 10000];
 const START = 'rnbqkbnrpppppppp................................PPPPPPPPRNBQKBNR'.split('');
@@ -220,6 +221,8 @@ export class ChessTable extends TurnTable {
     this.g.seen.set(key(this.g), 1);
     this.lastMove = null;
     this.moves = [];
+    this.drawOffer = null;
+    this.drawBlocked = null;
     this.nextTurn();
   }
 
@@ -239,12 +242,39 @@ export class ChessTable extends TurnTable {
     this.g.seen.set(key(this.g), (this.g.seen.get(key(this.g)) ?? 0) + 1);
     this.lastMove = { from: m.from, to: m.to };
     this.moves.push(san);
+    this.drawOffer = null; // hamle yapan, bekleyen teklifi reddetmiş sayılır
+    this.drawBlocked = null;
     clearTimeout(this.timer);
     this.nextTurn();
   }
 
+  /** Beraberlik teklifi: karşı taraf kabul ederse oyun berabere biter, rakip hamle yaparsa teklif düşer */
+  offerDraw(p) {
+    const other = this.players.find((o) => o !== p);
+    if (this.drawOffer === other) return this.finish([], 'anlaşmalı beraberlik');
+    if (this.drawOffer === p) throw new UserError('Teklifin rakibinde bekliyor.');
+    if (this.drawBlocked === p) throw new UserError('Yeni teklif için önce bir hamle oynanmalı.');
+    this.drawOffer = p;
+    this.drawBlocked = p;
+    this.note(`${p.name} beraberlik teklif etti.`);
+    if (isBot(other.id)) {
+      // Bot, durumu kendi aleyhine görüyorsa kabul eder
+      const score = evaluate(this.g.board) * (this.colors.get(other) === 'w' ? 1 : -1);
+      if (score < -150) return this.finish([], 'anlaşmalı beraberlik');
+      this.drawOffer = null;
+      this.note(`${other.name} beraberliği reddetti.`);
+    }
+  }
+
   move(p, action, body) {
     if (action === 'resign') return this.finish(this.players.filter((o) => o !== p), `${p.name} çekildi`);
+    if (action === 'draw') return this.offerDraw(p);
+    if (action === 'decline') {
+      if (!this.drawOffer || this.drawOffer === p) throw new UserError('Bekleyen bir teklif yok.');
+      this.note(`${p.name} beraberliği reddetti.`);
+      this.drawOffer = null;
+      return;
+    }
     if (action !== 'move') throw new UserError('Geçersiz hamle.');
     if (this.colors.get(p) !== this.g.turn) throw new UserError('Sıra sende değil.');
     const m = legalMoves(this.g).find((x) => x.from === Number(body.from) && x.to === Number(body.to) && (!x.promo || x.promo === (body.promo ?? 'q')));
@@ -283,6 +313,8 @@ export class ChessTable extends TurnTable {
       myColor, toMove: g?.turn ?? 'w', check: g ? inCheck(g) : false,
       legal: myTurn ? legalMoves(g).map((m) => [m.from, m.to, m.promo ?? '']) : [],
       lastMove: this.lastMove ?? null, moves: this.moves?.slice(-12) ?? [],
+      drawOffer: this.phase === 'playing' && this.drawOffer ? this.drawOffer.seat : null,
+      canOfferDraw: Boolean(me && this.phase === 'playing' && this.drawOffer !== me && this.drawBlocked !== me),
     };
   }
 }

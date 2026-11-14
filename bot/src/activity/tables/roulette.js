@@ -6,6 +6,22 @@ import { Room, hold, release } from './hub.js';
 
 export const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 const BET_KEY = /^(?:n(?:[0-9]|[12][0-9]|3[0-6])|red|black|even|odd|low|high|d[123]|c[123])$/;
+
+/** İç bahisler (sayılar küçükten büyüğe, "g1-2-4-5"): ayrık 2, sokak/üçlü 3, köşe 4, altılı 6 sayı. Masada geçerli olan gruplar: */
+export const GROUPS = (() => {
+  const out = new Set();
+  const add = (...nums) => out.add(`g${nums.join('-')}`);
+  for (let n = 1; n <= 36; n++) {
+    if (n % 3 !== 0) add(n, n + 1); // dikey ayrık
+    if (n <= 33) add(n, n + 3); // yatay ayrık
+    if (n % 3 !== 0 && n <= 32) add(n, n + 1, n + 3, n + 4); // köşe
+  }
+  for (let r = 1; r <= 12; r++) add(3 * r - 2, 3 * r - 1, 3 * r); // sokak
+  for (let r = 1; r <= 11; r++) add(3 * r - 2, 3 * r - 1, 3 * r, 3 * r + 1, 3 * r + 2, 3 * r + 3); // altılı
+  add(0, 1); add(0, 2); add(0, 3); add(0, 1, 2); add(0, 2, 3); add(0, 1, 2, 3); // sıfırlı ayrık, üçlü ve ilk dört
+  return out;
+})();
+const validKey = (key) => BET_KEY.test(key) || GROUPS.has(key);
 const MAX_CELLS = 40;
 const BET_MS = 15_000;
 const SPIN_MS = 5_000;
@@ -14,6 +30,10 @@ const RESULT_MS = 4_500;
 /** Bahis anahtarı ve gelen sayı için ödeme çarpanı (bahis dahil). 0 gelince dış bahisler kaybeder. */
 export function multiplier(key, n) {
   if (key[0] === 'n') return Number(key.slice(1)) === n ? 36 : 0;
+  if (key[0] === 'g') {
+    const nums = key.slice(1).split('-').map(Number);
+    return nums.includes(n) ? 36 / nums.length : 0;
+  }
   if (n === 0) return 0;
   switch (key) {
     case 'red': return RED.has(n) ? 2 : 0;
@@ -61,7 +81,7 @@ export class RouletteRoom extends Room {
     let added = 0;
     for (const [key, raw] of entries) {
       const amount = Number(raw);
-      if (!BET_KEY.test(key) || !Number.isInteger(amount) || amount < this.minBet) throw new UserError(`Her bahis en az ${this.minBet} coin olmalı.`);
+      if (!validKey(key) || !Number.isInteger(amount) || amount < this.minBet) throw new UserError(`Her bahis en az ${this.minBet} coin olmalı.`);
       cells.set(key, (cells.get(key) ?? 0) + amount);
       added += amount;
     }

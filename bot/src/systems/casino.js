@@ -55,8 +55,8 @@ export function handTotal(hand) {
 
 export const isBlackjack = (hand) => hand.length === 2 && handTotal(hand) === 21;
 
-/** outcome: blackjack | win | push | lose | bust */
-export const blackjackPayout = (bet, outcome) => ({ blackjack: Math.floor(bet * 2.5), win: bet * 2, push: bet, lose: 0, bust: 0 })[outcome];
+/** outcome: blackjack | win | push | lose | bust | surrender (teslim: bahsin yarısı döner) */
+export const blackjackPayout = (bet, outcome) => ({ blackjack: Math.floor(bet * 2.5), win: bet * 2, push: bet, lose: 0, bust: 0, surrender: Math.floor(bet / 2) })[outcome];
 
 /** Krupiye 17'ye kadar çeker ve el sonuçlanır */
 export function dealerPlay(deck, dealer, player) {
