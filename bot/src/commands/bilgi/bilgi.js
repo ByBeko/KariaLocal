@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, ChannelType } from 'discord.js';
+import { SlashCommandBuilder, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
+import { staffRows } from '../../components/bilgi.js';
 import { e } from '../../utils/emojis.js';
 import { kariaEmbed, label } from '../../utils/embeds.js';
 import { relativeTime } from '../../utils/time.js';
@@ -72,6 +73,40 @@ async function serverView(guild, client) {
   return embed;
 }
 
+// Butonlar components/bilgi.js'e gider; yanıtları butona basana özel (gizli) gelir
+const button = (id, text, key, fallback) =>
+  new ButtonBuilder().setCustomId(`bilgi:${id}`).setLabel(text).setEmoji(e(key, fallback)).setStyle(ButtonStyle.Secondary);
+
+function serverButtons() {
+  return [
+    new ActionRowBuilder().addComponents(
+      button('roller', 'Roller', 'rozet', '🎭'),
+      button('emoji', 'Emojiler', 'parilti', '😀'),
+      button('baglantilar', 'Bağlantılar', 'zincir', '🔗'),
+    ),
+  ];
+}
+
+function userButtons(user) {
+  const rows = [
+    new ActionRowBuilder().addComponents(
+      button(`avatar:${user.id}`, 'Avatar', 'foto', '🖼️'),
+      new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Discord Profili').setURL(`https://discord.com/users/${user.id}`).setEmoji(e('kullanici', '👤')),
+    ),
+  ];
+  if (!user.bot) {
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        button(`kart:${user.id}`, 'Seviye Kartı', 'yildiz', '⭐'),
+        button('oduller', 'Seviye Ödülleri', 'kupa', '🏆'),
+        button(`istatistik:${user.id}`, 'İstatistik', 'istatistik', '📈'),
+        button('siralama', 'Sıralama', 'kupa', '📊'),
+      ),
+    );
+  }
+  return rows;
+}
+
 export default {
   aliases: ['profil', 'kb', 'userinfo'],
   defaultSub: 'kullanici',
@@ -85,7 +120,23 @@ export default {
     .addSubcommand((s) => s.setName('sunucu').setDescription('Sunucu bilgileri')),
 
   async execute(interaction) {
-    const embed = interaction.options.getSubcommand() === 'sunucu' ? await serverView(interaction.guild, interaction.client) : await userView(interaction);
-    await interaction.reply({ embeds: [embed], allowedMentions: { parse: [] } });
+    const server = interaction.options.getSubcommand() === 'sunucu';
+    const embed = server ? await serverView(interaction.guild, interaction.client) : await userView(interaction);
+    const components = server ? serverButtons() : userButtons(interaction.options.getUser('kullanici') ?? interaction.user);
+    await interaction.reply({ embeds: [embed], components, allowedMentions: { parse: [] } });
+
+    // Yetkiliye, sadece kendisinin göreceği ceza butonları (uyar, sustur, jail, ban...) ayrıca gelir
+    const target = interaction.options.getUser('kullanici') ?? interaction.user;
+    if (server || target.bot || !isStaff(interaction.member)) return;
+    if (interaction.isPrefix) {
+      const open = new ButtonBuilder().setCustomId(`bilgi:yetkili:${target.id}`).setLabel('Yetkili İşlemleri').setEmoji(e('kalkan2', '🛡️')).setStyle(ButtonStyle.Secondary);
+      return interaction.followUp({ content: `${e('kalkan2', '🛡️')} Yetkili işlemleri sadece sana görünür, butona bas:`, components: [new ActionRowBuilder().addComponents(open)] }).catch(() => {});
+    }
+    const rows = staffRows(interaction.member, target.id);
+    if (rows.length) {
+      await interaction
+        .followUp({ content: `${e('kalkan2', '🛡️')} **${target.username}** için yetkili işlemleri (sadece sen görürsün):`, components: rows, flags: MessageFlags.Ephemeral })
+        .catch(() => {});
+    }
   },
 };

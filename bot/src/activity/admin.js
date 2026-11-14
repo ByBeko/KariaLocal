@@ -24,6 +24,10 @@ import { emojiList } from '../utils/emojis.js';
 import { getOpenTicket, claimTicket, markTicketClosed, finishTicket, approveTicket, approvalRoleName, mailInfo } from '../components/ticket.js';
 
 export const isPanelAdmin = (member) => getLevel(member) >= Level.ADMIN;
+/** Personel ve üstü paneli açar; komutları seviyesine göre görür */
+export const isPanelStaff = (member) => getLevel(member) >= Level.STAFF;
+/** Yetkililere açık bölümler. Burada olmayan her /admin yolu (ayarlar, sosyal, prime, mail, bot olarak yaz) sadece yöneticiye. */
+const STAFF_PATHS = /^\/admin\/(overview|run|dashboard\/\d+|cases|tickets(\/\d{17,20}(\/(reply|claim|close))?)?|reports(\/\d+\/resolve)?|suggestions(\/\d{17,20}\/delete)?)$/;
 
 // Panelde çalışamayanlar: blackjack butonla oynanır (Etkinlikte zaten var), emoji-yukle dosya ister
 const NOT_IN_PANEL = new Set(['blackjack', 'emoji-yukle']);
@@ -68,7 +72,7 @@ function commandViews(client, member) {
 }
 
 function overview(client, guild, member) {
-  const settings = Object.entries(SETTINGS).map(([key, s]) => ({ key, label: s.label, type: s.type, kind: s.kind ?? null, value: getSetting(guild.id, key) }));
+  const settings = !isPanelAdmin(member) ? [] : Object.entries(SETTINGS).map(([key, s]) => ({ key, label: s.label, type: s.type, kind: s.kind ?? null, value: getSetting(guild.id, key) }));
   const channels = [...guild.channels.cache.values()]
     .filter((c) => !c.isThread())
     .sort((a, b) => a.rawPosition - b.rawPosition)
@@ -79,7 +83,7 @@ function overview(client, guild, member) {
 }
 
 /** /ayarla ile aynı kurallar. Boş değer ayarı varsayılana döndürür. */
-async function changeSetting(guild, member, body) {
+export async function changeSetting(guild, member, body) {
   const key = String(body.key ?? '');
   const def = Object.hasOwn(SETTINGS, key) ? SETTINGS[key] : null;
   if (!def) throw new UserError('Böyle bir ayar yok.');
@@ -456,7 +460,8 @@ async function sayAsBot(guild, member, body) {
 }
 
 export async function adminRoute(client, guild, member, method, path, body) {
-  if (!isPanelAdmin(member)) return { __status: 403, error: 'Bu bölüm sadece yöneticiler içindir.' };
+  if (!isPanelStaff(member)) return { __status: 403, error: 'Bu bölüm sadece yetkililer içindir.' };
+  if (!isPanelAdmin(member) && !STAFF_PATHS.test(path)) return { __status: 403, error: 'Bu bölüm sadece yöneticiler içindir.' };
   if (method === 'GET') {
     const dash = path.match(/^\/admin\/dashboard\/(\d+)$/);
     if (dash) return dashboard(client, guild, Number(dash[1]));

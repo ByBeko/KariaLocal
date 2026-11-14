@@ -17,6 +17,7 @@ let limits = { minBet: 10, maxBet: 50000 };
 let balance = 0;
 let busy = false;
 let adminUser = false;
+let staffUser = false; // Personel+ : talepler, raporlar, cezalar ve kendi komutları
 let openThread = null;
 
 async function api(path, body) {
@@ -488,7 +489,7 @@ function drawCommandList() {
   const select = $('cmd-select');
   const current = select.value;
   const groups = new Map(CMD_CATEGORIES.map(([key]) => [key, []]));
-  for (const c of [...admin.commands, SAY_COMMAND, BUTTON_ROLE_COMMAND]) {
+  for (const c of [...admin.commands, ...(adminUser ? [SAY_COMMAND, BUTTON_ROLE_COMMAND] : [])]) {
     if (!`${c.name} ${c.description} ${c.keywords ?? ''}`.toLocaleLowerCase('tr').includes(query)) continue;
     if (!groups.has(c.category)) groups.set(c.category, []);
     groups.get(c.category).push(c);
@@ -1633,15 +1634,15 @@ async function refreshThread() {
 }
 
 async function refreshAdminLists() {
-  if (!adminUser || liveRunning || document.hidden || $('app').hidden) return;
+  if (!staffUser || liveRunning || document.hidden || $('app').hidden) return;
   liveRunning = true;
   liveTick += 1;
   try {
     const panel = document.querySelector('.panel:not([hidden])')?.dataset.panel;
-    const [{ tickets }, { reports }, mails] = await Promise.all([api('/admin/tickets'), api('/admin/reports'), api('/admin/social/mails')]);
+    const [{ tickets }, { reports }, mails] = await Promise.all([api('/admin/tickets'), api('/admin/reports'), adminUser ? api('/admin/social/mails') : null]);
     setBadge('badge-tickets', tickets.length);
     setBadge('badge-reports', reports.filter((r) => !r.resolved).length);
-    drawMails(mails);
+    if (mails) drawMails(mails);
     if (liveChanged('tickets', tickets) && panel === 'tickets') drawTicketList(tickets, { keepView: true });
     if (panel === 'tickets') await refreshThread();
     if (liveChanged('reports', reports) && panel === 'reports') drawReports(reports);
@@ -1680,19 +1681,21 @@ async function start() {
     balance = state.balance;
     $('balance').textContent = fmt(state.balance);
     $('username').textContent = state.user.username;
-    $('admin-nav').hidden = !state.isAdmin;
     adminUser = state.isAdmin;
+    staffUser = state.isAdmin || state.isStaff;
+    $('admin-nav').hidden = !staffUser;
+    for (const tab of document.querySelectorAll('[data-admin]')) tab.hidden = !adminUser;
     $('avatar-letter').textContent = state.user.username.slice(0, 1).toLocaleUpperCase('tr');
     myId = state.user.id;
     const sideAvatar = new Image();
     sideAvatar.alt = '';
     sideAvatar.onload = () => $('avatar-letter').replaceChildren(sideAvatar);
     sideAvatar.src = `avatar/${myId}.png`;
-    $('role-badge').textContent = state.isAdmin ? 'Yönetici' : 'Üye';
-    $('role-badge').classList.toggle('admin', state.isAdmin);
-    if (state.isAdmin) { // menü kapalıyken de bekleyen işler görünsün
+    $('role-badge').textContent = state.isAdmin ? 'Yönetici' : staffUser ? 'Yetkili' : 'Üye';
+    $('role-badge').classList.toggle('admin', staffUser);
+    if (staffUser) { // menü kapalıyken de bekleyen işler görünsün
       api('/admin/dashboard/1').then((d) => { setBadge('badge-tickets', d.open.tickets); setBadge('badge-reports', d.open.reports); }).catch(() => {});
-      api('/admin/social/mails').then(drawMails).catch(() => {});
+      if (adminUser) api('/admin/social/mails').then(drawMails).catch(() => {});
     }
     if (state.blackjack) drawBlackjack({ ...state.blackjack, balance: state.balance });
     if (state.music) drawMusic(state.music);

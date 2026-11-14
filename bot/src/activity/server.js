@@ -9,7 +9,7 @@ import { slot, slotWins, blackjackStart, blackjackMove, activeBlackjack } from '
 import { startTables, tablesRoute } from './tables/index.js';
 import { playlistRoute } from './playlists.js';
 import { getQueue, playQuery, requireVoice, voteSkip, stopMusic, goBack } from '../systems/music.js';
-import { adminRoute, isPanelAdmin } from './admin.js';
+import { adminRoute, isPanelAdmin, isPanelStaff } from './admin.js';
 import { recordVote } from '../systems/monthlyGifts.js';
 import { receiveSupportMail } from '../components/ticket.js';
 import { socialHttp, startSocial } from '../systems/social.js';
@@ -167,7 +167,7 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
     }
 
     if (req.method === 'GET' && pathname === '/state') {
-      return { user, isAdmin: isPanelAdmin(member), balance: getBalance(guildId, id), blackjack: activeBlackjack(guildId, id), music: musicView(guild()) };
+      return { user, isAdmin: isPanelAdmin(member), isStaff: isPanelStaff(member), balance: getBalance(guildId, id), blackjack: activeBlackjack(guildId, id), music: musicView(guild()) };
     }
     if (req.method === 'GET' && pathname === '/home') return homeView(guild(), member);
     const board = pathname.match(/^\/leaderboard\/(\w+)$/);

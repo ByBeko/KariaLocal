@@ -1,7 +1,9 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { kariaEmbed, label, bar, pingQuality } from '../../utils/embeds.js';
+import { Level } from '../../utils/permissions.js';
 
 export default {
+  level: Level.STAFF, // yetkili panelinde görünür
   data: new SlashCommandBuilder().setName('ping').setDescription('Botun gecikmesini gösterir.'),
 
   async execute(interaction) {
