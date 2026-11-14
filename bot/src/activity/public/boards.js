@@ -102,7 +102,7 @@ export function initBoards(ctx) {
     }
     const colorName = (seat) => ({ w: 'Beyaz', b: 'Siyah' })[room.colors?.[seat]] ?? '';
     const status = room.phase === 'playing'
-      ? el('p', { className: 'hint', textContent: room.myColor ? (room.toMove === room.myColor ? `Sıra sende (${room.myColor === 'w' ? 'beyaz' : 'siyah'})${room.check ? ' • ŞAH!' : ''}` : `Rakibin düşünüyor${room.check ? ' • ŞAH!' : ''}`) : `Sıra: ${room.toMove === 'w' ? 'beyaz' : 'siyah'}` })
+      ? el('p', { className: `hint${room.myColor && room.toMove === room.myColor ? ' turn-strip' : ''}`, textContent: room.myColor ? (room.toMove === room.myColor ? `Sıra sende (${room.myColor === 'w' ? 'beyaz' : 'siyah'})${room.check ? ' • ŞAH!' : ''}` : `Rakibin düşünüyor${room.check ? ' • ŞAH!' : ''}`) : `Sıra: ${room.toMove === 'w' ? 'beyaz' : 'siyah'}` })
       : null;
     // Terfi seçimi tahtanın üstünde açılır
     const promoPick = chessPromo
@@ -222,7 +222,7 @@ export function initBoards(ctx) {
         wallDots(p.walls))),
       el('p', { textContent: 'Karşı kenara ilk varan kazanır. Sıranda parlayan kareye yürü ya da iki kare arasındaki oluğa engel koy.' }));
     const status = room.phase === 'playing'
-      ? el('p', { className: 'hint', textContent: myTurn ? (me.walls ? 'Sıra sende: yürü ya da engel koy.' : 'Sıra sende: engelin kalmadı, yürü.') : room.lastAction ?? 'Rakibin düşünüyor...' })
+      ? el('p', { className: `hint${myTurn ? ' turn-strip' : ''}`, textContent: myTurn ? (me.walls ? 'Sıra sende: yürü ya da engel koy.' : 'Sıra sende: engelin kalmadı, yürü.') : room.lastAction ?? 'Rakibin düşünüyor...' })
       : null;
     root.replaceChildren(
       roomHead(room, data, root, [...resign(room), stakeTag(room)]),
@@ -548,7 +548,7 @@ export function initBoards(ctx) {
     const badge = el('div', { className: `ok-score${meldPoints >= 101 || pairCount >= 5 ? ' ready' : ''}`, title: 'Istakadaki geçerli perlerin toplamı' },
       el('b', { textContent: usePairs ? String(pairCount) : String(meldPoints) }), el('small', { textContent: usePairs ? 'çift' : 'sayı' }));
 
-    const controls = el('div', { className: 'pcontrols ok-controls' });
+    const controls = el('div', { className: `pcontrols ok-controls${me && room.phase === 'playing' && myTurn ? ' my-turn' : ''}` });
     if (me && room.phase === 'playing') {
       if (myTurn) {
         const timer = el('div', { className: 'turn-bar' });

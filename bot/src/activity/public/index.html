@@ -6,7 +6,7 @@
 <title>Karia</title>
 <link rel="icon" href="logo.png">
 <link rel="stylesheet" href="style.css?v=3">
-<link rel="stylesheet" href="tables.css?v=19">
+<link rel="stylesheet" href="tables.css?v=22">
 </head>
 <body>
 <div id="boot" class="boot"><img src="logo.png" alt="Karia"><p id="boot-text">Karia açılıyor...</p></div>
@@ -63,8 +63,6 @@
       <div id="board-list" class="board"></div>
     </section>
 
-    <!-- Oyun sayfasının üst şeridi: oyun sekmeleri ve (varsa) Solo / Online -->
-    <div id="game-bar" class="game-bar" hidden>
     <div id="game-switch" class="period" role="tablist" hidden>
       <button data-game="blackjack" class="active"><img src="emojis/kart.png" alt="">Blackjack</button>
       <button data-game="poker"><img src="emojis/maca.png" alt="">Poker</button>
@@ -80,7 +78,6 @@
     <div id="mode-switch" class="mode-switch" role="tablist" hidden>
       <button type="button" data-mode="solo"><img src="emojis/bot.png" alt="">Solo</button>
       <button type="button" data-mode="online"><img src="emojis/arkadaslar.png" alt="">Online</button>
-    </div>
     </div>
 
     <section id="betbar" class="betbar" hidden>
@@ -130,7 +127,7 @@
     <section class="panel casino slot-room" data-panel="slot" hidden>
       <div class="cabinet">
         <div class="marquee"><span class="bulbs"></span><strong>KARIA JACKPOT</strong><em><img src="emojis/alev.png" alt="">777<img src="emojis/alev.png" alt=""></em><span class="bulbs"></span></div>
-        <div class="machine">
+        <div class="machine idle">
           <div class="reel"><img id="reel0" src="emojis/slot_yedi.png" alt=""></div>
           <div class="reel"><img id="reel1" src="emojis/slot_yedi.png" alt=""></div>
           <div class="reel"><img id="reel2" src="emojis/slot_yedi.png" alt=""></div>
@@ -359,6 +356,6 @@
   </main>
   </div>
 </div>
-<script type="module" src="app.js?v=12"></script>
+<script type="module" src="app.js?v=14"></script>
 </body>
 </html>

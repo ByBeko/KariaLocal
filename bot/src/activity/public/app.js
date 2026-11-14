@@ -105,16 +105,12 @@ function openTab(name) {
   for (const t of document.querySelectorAll('.tab')) t.classList.toggle('active', t.dataset.tab === sideName);
   for (const p of document.querySelectorAll('.panel')) p.hidden = p.dataset.panel !== name;
   for (const b of document.querySelectorAll('[data-game]')) b.classList.toggle('active', b.dataset.game === name);
-  if (isGame) document.querySelector(`[data-game="${name}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center' }); // mobilde kaydırılan sekme şeridi
   $('betbar').hidden = !isGame;
   $('betbar').classList.toggle('no-bet', NO_BET.includes(name));
   $('game-switch').hidden = !isGame;
-  $('game-bar').hidden = !isGame;
   if (isGame) drawGameInfo(name);
   document.querySelector('.content').classList.toggle('fill', isGame || ['home', 'music', 'leaderboard', 'tickets'].includes(name));
   document.querySelector('.content').classList.toggle('game', isGame);
-  // Fiş ve giriş masada seçilen oyunlarda bahis paneli yok: masa tüm genişliği kullanır
-  document.querySelector('.content').classList.toggle('no-bet', isGame && NO_BET.includes(name));
   document.querySelector('.content').classList.toggle('fit', name === 'music'); // müzik de ekrana sığar, sayfa kaymaz
   const active = document.querySelector(`.tab[data-tab="${sideName}"]`);
   if ($('admin-links').contains(active)) setAdminOpen(true);
@@ -241,6 +237,7 @@ for (const [id, move] of [['bj-hit', 'hit'], ['bj-stand', 'stand'], ['bj-double'
 // ── Slot ──
 $('slot-spin').addEventListener('click', () => guarded(async () => {
   const reels = [0, 1, 2].map((i) => $(`reel${i}`));
+  document.querySelector('.machine')?.classList.remove('idle');
   const boxes = reels.map((r) => r.parentElement);
   boxes.forEach((b) => { b.classList.remove('hit'); b.classList.add('spin'); });
   say('');

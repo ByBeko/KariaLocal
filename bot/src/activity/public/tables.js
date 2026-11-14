@@ -223,6 +223,7 @@ export function initTables(ctx) {
   // ── Poker ──
   let raiseTo = 0;
   let raiseTurn = '';
+  let raiseOpen = ''; // Yükselt'e ilk basışta tutar seçici açılır; açık kaldığı sıra
   let lastPokerTurn = '';
   let lastBoard = 0;
 
@@ -277,7 +278,7 @@ export function initTables(ctx) {
     }
     if (!room.result) delete root.dataset.cheered;
 
-    const controls = el('div', { className: 'pcontrols' });
+    const controls = el('div', { className: `pcontrols${room.controls ? ' my-turn' : ''}` });
     if (!seated) controls.append(el('p', { className: 'hint', textContent: room.seats.some((s) => !s) ? 'Boş bir koltuğa tıklayıp otur.' : 'Masa dolu, izliyorsun.' }));
     else if (room.controls) controls.append(...pokerControls(room));
     else {
@@ -313,19 +314,36 @@ export function initTables(ctx) {
     if (c.canRaise && c.maxTo > c.currentBet) {
       const range = el('input', { type: 'range', min: String(c.minTo), max: String(c.maxTo), step: String(room.sb), value: String(raiseTo) });
       const label = el('b', { textContent: fmt(raiseTo) });
-      const raise = btn(`${c.currentBet ? 'Yükselt' : 'Bahis'}`, () => act(room.id, raiseTo >= c.maxTo ? 'allin' : 'raise', { amount: raiseTo }), 'pk raise');
+      const verb = c.currentBet ? 'Yükselt' : 'Bahis';
+      // Sade görünüm: tutar seçici (Min / ½ Pot / Pot / kaydırıcı) Yükselt'e ilk basışta açılır, ikinci basış onaylar
+      const open = () => raiseOpen === key;
+      const raiseText = () => (open() ? `${verb} ${fmt(raiseTo)}` : verb);
+      const raise = btn(raiseText(), () => {
+        if (!open()) {
+          raiseOpen = key;
+          box.classList.remove('closed');
+          raise.textContent = raiseText();
+          return;
+        }
+        act(room.id, raiseTo >= c.maxTo ? 'allin' : 'raise', { amount: raiseTo });
+      }, 'pk raise');
+      const sync = () => {
+        label.textContent = fmt(raiseTo);
+        raise.textContent = raiseText();
+      };
       range.addEventListener('input', () => {
         raiseTo = Number(range.value);
-        label.textContent = fmt(raiseTo);
+        sync();
       });
       const preset = (text, value) => btn(text, () => {
         raiseTo = Math.min(Math.max(Math.floor(value), c.minTo), c.maxTo);
         range.value = String(raiseTo);
-        label.textContent = fmt(raiseTo);
+        sync();
       }, 'mini');
-      out.push(el('div', { className: 'raise-box' },
+      const box = el('div', { className: `raise-box${open() ? '' : ' closed'}` },
         el('div', { className: 'raise-presets' }, preset('Min', c.minTo), preset('½ Pot', c.currentBet + c.pot / 2), preset('Pot', c.currentBet + c.pot), label),
-        range), raise);
+        range);
+      out.push(box, raise);
     }
     out.push(btn('Hepsi', () => act(room.id, 'allin'), 'pk allin'));
     return out;
@@ -393,7 +411,7 @@ export function initTables(ctx) {
     if (room.phase === 'playing' && lastBjPhase !== 'playing') sfx.card(3);
     lastBjPhase = room.phase;
 
-    const controls = el('div', { className: 'pcontrols' });
+    const controls = el('div', { className: `pcontrols${room.controls ? ' my-turn' : ''}` });
     if (!seated) controls.append(el('p', { className: 'hint', textContent: 'Boş bir koltuğa tıklayıp otur.' }));
     else if (room.controls) {
       const timer = el('div', { className: 'turn-bar' });
@@ -1007,7 +1025,8 @@ export function initTables(ctx) {
       sw.hidden = true;
       return;
     }
-    sw.hidden = false; // anahtar, oyun sekmelerinin yanında (üst şerit) durur
+    sw.hidden = false;
+    if (panel.firstElementChild !== sw) panel.prepend(sw);
     for (const b of sw.querySelectorAll('[data-mode]')) b.classList.toggle('active', b.dataset.mode === modeOf(name));
   }
   for (const b of document.querySelectorAll('[data-mode]')) {

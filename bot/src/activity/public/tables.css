@@ -651,27 +651,6 @@
 @media (max-width:900px){.okf .ok-melds{max-height:210px;overflow-y:auto}}
 @media (max-width:480px){.roulette-kind{gap:4px}.roulette-kind button{padding:6px 9px}.roulette-kind small{display:none}}
 
-/* ── Sade oyun düzeni ──
-   Üstte tek şerit: oyun sekmeleri + Solo/Online. Altta masa; bahisli oyunlarda sağda bahis paneli.
-   Bahis almayan oyunlarda (poker, zar, satranç, okey, labirent) sağ panel yok, masa tüm genişliği kullanır. */
-.game-bar{display:flex;align-items:center;gap:10px}
-.game-bar[hidden]{display:none}
-.game-bar #game-switch{flex:1;min-width:0;margin:0}
-.game-bar .mode-switch{flex:none;margin:0}
-@media (min-width:901px){
-  .content.game main{grid-template-columns:minmax(0,1fr) 250px;grid-template-rows:auto minmax(0,1fr)}
-  .content.game #game-bar{grid-column:1 / -1;grid-row:1}
-  .content.game #game-switch{display:flex;width:auto;gap:2px;padding:4px}
-  .content.game #game-switch button{flex:1;min-width:0;flex-direction:column;justify-content:center;gap:3px;padding:7px 2px;font-size:12px;white-space:nowrap}
-  .content.game .panel:not([hidden]){grid-column:1;grid-row:2}
-  .content.game .betbar{grid-column:2;grid-row:2}
-  .content.game.no-bet main{grid-template-columns:minmax(0,1fr)}
-  .content.game.no-bet .betbar{display:none!important}
-}
-@media (max-width:900px){
-  .game-bar{flex-direction:column;align-items:stretch;gap:8px;margin-bottom:12px}
-  .game-bar .mode-switch{align-self:center}
-}
 /* Oyun başlamadan önceki bekleme ekranı (okey ve diğer sıra masaları): koltuklar ortada iki sütun */
 .room-root>.tt-players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:640px;margin:auto auto 0}
 .room-root>.tt-players+.pcontrols{width:100%;max-width:640px;margin:0 auto auto}
@@ -690,9 +669,57 @@
     .tt-layout>.tt-side{width:auto}
   }
 }
-/* Mobil: oyun sekmeleri tek satırda, yana kaydırılır (masa aşağı itilmesin) */
-@media (max-width:900px){
-  .game-bar #game-switch{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;width:100%}
-  .game-bar #game-switch::-webkit-scrollbar{display:none}
-  .game-bar #game-switch button{flex:none}
+
+/* ───────── Ortak masa dili ─────────
+   Her oyunda aynı aksiyon çubuğu (koyu, yuvarlak) ve aynı hap butonlar:
+   ana eylem (Dağıt, Çevir, Bahis Koy, Hazırım) altın · olumlu hamle (Kart Çek, Gör, Çek) turkuaz ·
+   olumsuz hamle (Pas, Teslim, İptal) koyu kırmızı · yardımcı butonlar şeffaf. */
+:root{--act-bar:rgba(0,0,0,.3);--pill-h:46px}
+.pill-gold{background:linear-gradient(180deg,#ffd479,#e89a1c);color:#3a2200;box-shadow:0 3px 0 #8c5a0c}
+
+/* Blackjack (solo): tahta şerit ve yuvarlak düğmeler yerine ortak çubuk */
+.casino .table .actions{width:auto;margin:auto 0 0;padding:12px;gap:8px;border-radius:16px;background:var(--act-bar)}
+.casino .table .actions button{width:auto;height:var(--pill-h);min-width:96px;padding:0 18px;flex-direction:row;gap:6px;border:0;border-radius:23px;font-size:15px;font-weight:800;line-height:1;background:#4fcfb4;color:#04211e;box-shadow:0 3px 0 rgba(0,0,0,.4)}
+.casino .table .actions button img{width:18px;height:18px}
+.casino .table .actions button:disabled{opacity:.45;cursor:default}
+.casino .table .actions .deal,#bj-double,#bj-insure{background:linear-gradient(180deg,#ffd479,#e89a1c);color:#3a2200;box-shadow:0 3px 0 #8c5a0c}
+.casino .table .actions .deal{height:50px;padding:0 36px;border-radius:25px;font-size:18px}
+#bj-split,#bj-noinsure{background:#0b2f2b;color:#bff7ec;box-shadow:inset 0 0 0 1px rgba(79,207,180,.45)}
+#bj-surrender{background:#3b1519;color:#ffb3b7}
+/* Masadaki yazı süsü daha geride; kartlar öne çıksın */
+.casino .table .felt-art{opacity:.55;width:80%;margin:0 auto}
+
+/* Rulet: araçlar ortak çubukta; Çevir altın */
+.roulette-tools{padding:10px 12px;border-radius:16px;background:var(--act-bar)}
+.roulette-tools button:not(.spin-btn){height:38px;padding:0 14px;border-radius:19px;background:transparent;box-shadow:inset 0 0 0 1px rgba(191,247,236,.25);color:#e8fbf7;font-weight:700}
+.roulette-tools .spin-btn,#slot-spin{height:50px;padding:0 36px;border:0;border-radius:25px;font-size:18px;background:linear-gradient(180deg,#ffd479,#e89a1c);color:#3a2200;box-shadow:0 3px 0 #8c5a0c}
+.roulette-tools .spin-btn:active,#slot-spin:active{transform:translateY(2px);box-shadow:0 1px 0 #8c5a0c}
+.roulette-tools .spin-btn img,#slot-spin img{width:20px;height:20px}
+.roulette-tools .spin-btn:disabled{opacity:.45;cursor:default}
+
+/* Slot: ilk çevirmeden önce makaralar soluk (777 kazanmış gibi görünmesin) */
+.machine.idle .reel img{opacity:.3;filter:grayscale(1)}
+
+/* Tayyare: Bahis Koy altın hap, Çek turkuaz, İptal kırmızı; ortak çubuk */
+.tay-bottom{border-radius:16px;background:var(--act-bar)}
+.tay-btn{height:52px;border-radius:26px;font-size:18px;background:linear-gradient(180deg,#ffd479,#e89a1c);color:#3a2200;box-shadow:0 3px 0 #8c5a0c}
+.tay-btn:active{box-shadow:0 1px 0 #8c5a0c}
+.tay-btn.cash{background:#4fcfb4;color:#04211e;box-shadow:0 3px 0 rgba(0,0,0,.4)}
+.tay-btn.cancel{background:#3b1519;color:#ffb3b7;box-shadow:0 3px 0 rgba(0,0,0,.4)}
+/* Geçmiş çarpanlar eksen yazılarının üstüne binmesin */
+.tay-history{left:44px}
+
+/* Poker: tutar seçici Yükselt'e basınca açılır */
+.raise-box.closed{display:none}
+
+/* Sıra masaları: hamle sırası sendeyse aksiyon çubuğu belirgin */
+.pcontrols.my-turn{box-shadow:inset 0 0 0 2px var(--gold),0 0 18px rgba(255,212,121,.25)}
+/* Satranç ve labirent: "Sıra sende" tek belirgin şerit */
+.room-root .hint.turn-strip{margin:0;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#ffd479,#e89a1c);color:#3a2200!important;font-weight:800;text-align:center}
+/* Mobil: aksiyon hapları küçülür, çubuk iki satırı geçmez */
+@media (max-width:600px){
+  .casino .table .actions{gap:6px;padding:10px 8px}
+  .casino .table .actions button{height:40px;min-width:0;padding:0 12px;font-size:13px}
+  .casino .table .actions button img{width:15px;height:15px}
+  .casino .table .actions .deal{height:46px;padding:0 28px;font-size:16px}
 }
