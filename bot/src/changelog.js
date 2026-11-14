@@ -1,5 +1,6 @@
 // Haftalık güncelleme yazısının kaynağı. Bot değiştikçe yeni bir kayıt ekle (id her seferinde bir artar).
 // Yayınlanmamış kayıtlar bir sonraki haftalık yazıya girer. Yeni komutlar ayrıca otomatik algılanır.
+// area: bot (varsayılan, #karia-local), minecraft (#minecraft) veya website (#website).
 export default [
   {
     id: 1,
@@ -47,13 +48,58 @@ export default [
       '`/bilgi` ile üye ve sunucu bilgileri tek komutta, `/roller` ile rol listesi eklendi.',
       'Yazı tura, slot ve blackjack yeni görünümde. Yeni oyuncular 200 coin ile başlıyor, günlük ödül 100 coin.',
       'Yardım menüsü sadeleştirildi.',
-      'Seviye atlamak artık daha zor: her seviye yaklaşık 5 gün sürüyor. Seviye 5, 10 ve böyle 50\'ye kadar her 5 seviyede bir rol veriliyor, mevcut seviyeler korundu.',
+      'Yeni rütbeler: Seviye 5 Köylü, 10 Zanaatkâr, 25 Tüccar, 50 Soylu, 75 Lord, 100 İmparator. Seviye yükseldikçe sonraki seviye zorlaşıyor, mevcut seviyeler korundu.',
       'Etkinlikte rulet eklendi, blackjack\'te ikiye ayırma geldi. Her oyundan sonra 5 saniye beklemek gerekiyor.',
       'Etkinlik ana sayfasından yetkililere şikayet gönderilebiliyor.',
       'Yetkililer Etkinlikten bota mesaj yazdırırken @ ile üye ve rol, # ile kanal etiketleyebiliyor.',
       'Etkinlikte komutlar yardım menüsü gibi gruplandı. Rulet çarkında sayılar var, kazançlar üstte bildirim olarak çıkıyor.',
       'Roller düzenlendi: ruh hali ve ilgi alanı rolleri üye rolünün altına alındı, rozetler turkuaz oldu.',
       'Karia Etkinliği yenilendi: casino masası, slot makinesi, kürsülü sıralama ve müzik oynatıcısı.',
+      'Seviye rolleri artık birikmiyor: yeni seviye rolü alınca eskisi otomatik kalkıyor.',
+      'Etkinlikteki oyunlara ses efektleri eklendi, yan menüden kapatılabiliyor.',
+      'YouTube bir şarkıyı açmazsa müzik aynı şarkıyı SoundCloud\'dan çalmayı deniyor.',
+    ],
+  },
+  {
+    id: 5,
+    items: [
+      '`/yardım` menüsüne karia.live bağlantıları eklendi.',
+      'Etkinlik artık tarayıcıdan da açılıyor: activity.karia.live',
+      'Yönetim panelinde talepler, raporlar ve öneriler sayfa yenilemeden geliyor.',
+    ],
+  },
+  {
+    id: 6,
+    area: 'website',
+    items: [
+      'karia.live yayında: ana sayfa, Karia Local, Karia paneli ve Minecraft bölümleri tek sitede.',
+      'Oyunlar, müzik ve yönetim paneli activity.karia.live adresinden Discord girişiyle açılıyor.',
+      'Karia paneli panel.karia.live adresine taşındı.',
+      'Site Cloudflare korumasına alındı.',
+    ],
+  },
+  {
+    id: 7,
+    area: 'minecraft',
+    items: [
+      'karia.live/minecraft sayfası açıldı: sunucu durumu, adres ve Discord bilgileri.',
+      'Discord coin bakiyesini Minecraft ile ortak kullanacak hesap bağlama altyapısı hazırlandı. Sunucu açılınca devreye girecek.',
+    ],
+  },
+  {
+    id: 8,
+    items: [
+      'Seviye atlayınca coin kazanılıyor: ulaşılan seviyenin 5 katı.',
+      'Seviye rolleri, Hata Avcısı, Erken Destekçi ve Prime rolleri alınınca tek seferlik coin ödülü veriliyor. En büyük ödül 100. seviyede.',
+    ],
+  },
+  {
+    id: 9,
+    items: [
+      'Prime ve Takviye ayrı roller oldu: Takviye pembe, Prime mor.',
+      'Her ay en çok oy veren üye 30 gün Prime, takviye çekilişini kazanan üye 30 gün Prime ve 1.000 coin kazanıyor.',
+      'Hata Bildirimi ve Sponsorluk taleplerinde yönetici onayıyla rol veriliyor.',
+      'Oy Ver kanalı Top.gg butonuna geçti, Roller kanalına tüm roller yazıldı.',
     ],
   },
 ];

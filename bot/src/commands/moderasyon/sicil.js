@@ -2,7 +2,7 @@ import { e } from '../../utils/emojis.js';
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType, MessageFlags } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
 import { getUserCases, countActiveWarns, CASE_TYPES, isJailed } from '../../systems/moderation.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed, label } from '../../utils/embeds.js';
 import { formatDuration, relativeTime } from '../../utils/time.js';
 
 export default {
@@ -27,14 +27,15 @@ export default {
       return `\`#${c.id}\` ${t.emoji} **${t.label}**${dur} • ${relativeTime(c.created_at)} • <@${c.mod_id}>${removed}\n└ ${c.reason.slice(0, 120)}`;
     });
 
-    const embed = brandEmbed()
-      .setAuthor({ name: `${user.tag} • Sicil`, iconURL: user.displayAvatarURL() })
-      .setDescription(lines.join('\n') || `Temiz sicil. ${e('parilti', '✨')}`)
+    const embed = kariaEmbed(interaction.client, 'Sicil', { icon: user.displayAvatarURL(), footer: 'Son 15 kayıt' })
+      .setTitle(user.tag)
+      .setThumbnail(user.displayAvatarURL({ size: 256 }))
       .addFields(
-        { name: 'Aktif uyarı', value: String(countActiveWarns(guild.id, user.id)), inline: true },
-        { name: 'Jail', value: isJailed(guild.id, user.id) ? 'Evet' : 'Hayır', inline: true },
+        { name: label('unlem', '⚠️', 'Aktif uyarı'), value: `**${countActiveWarns(guild.id, user.id)}**`, inline: true },
+        { name: label('kilit', '🔒', 'Jail'), value: isJailed(guild.id, user.id) ? '**Evet**' : 'Hayır', inline: true },
+        { name: label('kitap', '📒', 'Kayıt'), value: `**${cases.length}** ceza`, inline: true },
       )
-      .setFooter({ text: 'Son 15 kayıt gösteriliyor' });
+      .setDescription(lines.join('\n') || `Temiz sicil. ${e('parilti', '✨')}`);
 
     await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   },

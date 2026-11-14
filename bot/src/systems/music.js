@@ -16,19 +16,22 @@ import {
 } from '@discordjs/voice';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } from 'discord.js';
 import ffmpegPath from 'ffmpeg-static';
-import { brandEmbed } from '../utils/embeds.js';
+import { kariaEmbed } from '../utils/embeds.js';
 import { UserError } from '../utils/errors.js';
 import { isStaff } from '../utils/permissions.js';
 
 const require = createRequire(import.meta.url);
-const YTDLP = require('youtube-dl-exec').constants.YOUTUBE_DL_PATH;
+// Sunucuda paketin Python sürümü çalışmayabilir: YOUTUBE_DL_PATH ile tek dosyalık yt-dlp gösterilir
+const YTDLP = process.env.YOUTUBE_DL_PATH || require('youtube-dl-exec').constants.YOUTUBE_DL_PATH;
 
 const MAX_QUEUE = 200;
 const MAX_PLAYLIST = 100;
 const MAX_HISTORY = 20;
 const IDLE_LEAVE = 3 * 60_000; // sıra bitince bu kadar bekleyip çık
 const ALONE_LEAVE = 60_000; // kanalda kimse kalmayınca
-const PREFETCH_AT = 25; // şarkının bitmesine bu kadar saniye kala sıradakini hazırla
+const PREFETCH_DELAY = 4; // çalan şarkı başladıktan bu kadar saniye sonra sıradaki hazırlanır: geçince beklemeden başlar
+const YT_BLOCK_MS = 20 * 60_000; // YouTube "bot musun" derse bu süre doğrudan SoundCloud denenir
+let ytBlockedUntil = 0;
 export const DEFAULT_VOLUME = 70;
 
 const ALLOWED_HOSTS = /^(?:www\.|m\.|music\.)?(?:youtube\.com|youtu\.be|soundcloud\.com|on\.soundcloud\.com)$/i;
@@ -118,6 +121,22 @@ export async function resolveQuery(query, requesterId) {
 
 const MAX_ATTEMPTS = 3;
 
+/** YouTube şarkıyı sunucuya vermezse aynı şarkıyı SoundCloud'da arar: önizlemeleri eler, süresi en yakın olanı seçer */
+async function soundcloudAlternatives(track) {
+  const name = track.title.replace(/[([][^)\]]*(official|resmi|video|audio|lyric|klip)[^)\]]*[)\]]/gi, '').trim();
+  const out = await runYtdlpOnce(['--flat-playlist', '--print', '%(url)s\t%(duration)s', `scsearch5:${name}`], 25_000).catch(() => '');
+  const options = out
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => {
+      const [url, duration] = line.split('\t');
+      return { url, duration: Number(duration) || 0 };
+    })
+    .filter((o) => o.url?.startsWith('http') && o.duration >= 60 && (!track.duration || Math.abs(o.duration - track.duration) <= 60));
+  options.sort((a, b) => Math.abs(a.duration - track.duration) - Math.abs(b.duration - track.duration));
+  return options.slice(0, 3).map((o) => o.url);
+}
+
 /**
  * yt-dlp → ffmpeg → ham PCM (48 kHz stereo) akışı.
  * YouTube bağlantısı ara sıra SSL hatasıyla düşüyor; hiç ses gelmeden biterse kendiliğinden yeniden dener.
@@ -129,12 +148,14 @@ export function openStream(track) {
   let produced = false;
   let attempts = 0;
   let errorText = '';
+  let url = track.url;
+  let alternatives = null; // YouTube reddederse sırayla denenecek SoundCloud adresleri
 
   const start = () => {
     attempts++;
     const ytdlp = spawn(
       YTDLP,
-      [...BASE_ARGS, ...(track.live ? [] : ['--extractor-args', 'youtube:skip=hls']), '-f', 'bestaudio[acodec=opus]/bestaudio/best', '-o', '-', '--quiet', track.url],
+      [...BASE_ARGS, ...(track.live ? [] : ['--extractor-args', 'youtube:skip=hls']), '-f', 'bestaudio[acodec=opus]/bestaudio/best', '-o', '-', '--quiet', url],
       { windowsHide: true, env: ENV },
     );
     const ffmpeg = spawn(ffmpegPath, ['-hide_banner', '-loglevel', 'error', '-i', 'pipe:0', '-f', 's16le', '-ar', '48000', '-ac', '2', 'pipe:1'], {
@@ -174,12 +195,35 @@ export function openStream(track) {
     ffmpeg.once('close', async () => {
       await ytClosed;
       if (killed) return;
+      if (!produced && /Sign in to confirm/i.test(stderr)) ytBlockedUntil = Date.now() + YT_BLOCK_MS;
+      if (!produced && (alternatives || /Sign in to confirm/i.test(stderr))) {
+        alternatives ??= await soundcloudAlternatives(track);
+        if (killed) return;
+        const next = alternatives.shift();
+        if (next) {
+          console.log(`[Müzik] YouTube vermedi, SoundCloud'dan deneniyor: ${track.title}`);
+          url = next;
+          attempts = 0;
+          return start();
+        }
+        attempts = MAX_ATTEMPTS; // aynı engele tekrar denemenin faydası yok
+      }
       if (!produced && attempts < MAX_ATTEMPTS) return setTimeout(start, 800 * attempts);
       errorText = produced ? '' : stderr;
       out.end();
     });
   };
-  start();
+  // YouTube az önce bu sunucuyu engellediyse boşuna denenmez, aynı şarkı hemen SoundCloud'da aranır
+  (async () => {
+    if (Date.now() < ytBlockedUntil && /youtu\.?be/i.test(url)) {
+      alternatives = await soundcloudAlternatives(track);
+      if (killed) return;
+      const next = alternatives.shift();
+      if (next) url = next;
+      else alternatives = null;
+    }
+    start();
+  })();
 
   return {
     stream: out,
@@ -244,7 +288,7 @@ class GuildQueue {
     });
     this.player.on('error', (e) => console.error('[Müzik oynatıcı]', e.message));
 
-    this.prefetchTimer = setInterval(() => this.maybePrefetch(), 5_000);
+    this.prefetchTimer = setInterval(() => this.maybePrefetch(), 2_000);
     queues.set(guild.id, this);
   }
 
@@ -342,7 +386,7 @@ class GuildQueue {
     if (this.prepared || !this.current || this.current.live || !this.current.duration) return;
     const next = this.loop === 'track' ? null : this.tracks[0];
     if (!next || next.live) return;
-    if (this.current.duration - this.position <= PREFETCH_AT) this.prepared = { track: next, source: openStream(next) };
+    if (this.position >= PREFETCH_DELAY) this.prepared = { track: next, source: openStream(next) };
   }
 
   /** Sıra değişince (karıştır, sil) önceden hazırlanan şarkı geçersiz olabilir */
@@ -402,15 +446,18 @@ class GuildQueue {
 
   nowPlayingEmbed() {
     const t = this.current;
-    if (!t) return brandEmbed().setDescription('Şu an bir şey çalmıyor.');
+    if (!t) return kariaEmbed(null, 'Müzik').setDescription('Şu an bir şey çalmıyor.');
     const pos = this.position;
     const bar = t.duration ? progress(pos, t.duration) : `${e('nokta_kirmizi', '🔴')} CANLI`;
-    const embed = brandEmbed()
-      .setAuthor({ name: this.paused ? 'Duraklatıldı' : 'Şimdi çalıyor' })
-      .setDescription(`${e('muzik', '🎵')} **${trackLink(t)}**\n${t.uploader ? `${t.uploader} • ` : ''}<@${t.requesterId}> istedi\n\n${bar} \`${formatTime(pos)} / ${formatTime(t.duration)}\``)
-      .setFooter({
-        text: `Sırada ${this.tracks.length} şarkı • Ses %${this.volume} • Döngü: ${LOOP_NAMES[this.loop]}`,
-      });
+    const embed = kariaEmbed(null, this.paused ? 'Duraklatıldı' : 'Şimdi Çalıyor')
+      .setTitle(t.title.slice(0, 250))
+      .setURL(/^https?:\/\//.test(t.url ?? '') ? t.url : null)
+      .setDescription(`${t.uploader ? `${e('mikrofon', '🎤')} **${t.uploader}** · ` : ''}<@${t.requesterId}> istedi\n\n${bar} \`${formatTime(pos)} / ${formatTime(t.duration)}\``)
+      .addFields(
+        { name: `${e('pano', '📃')} Sıra`, value: `**${this.tracks.length}** şarkı`, inline: true },
+        { name: `${e('kulaklik', '🔊')} Ses`, value: `**%${this.volume}**`, inline: true },
+        { name: `${e('yenile', '🔁')} Döngü`, value: `**${LOOP_NAMES[this.loop]}**`, inline: true },
+      );
     if (t.thumbnail) embed.setThumbnail(t.thumbnail);
     return embed;
   }
@@ -487,12 +534,21 @@ const humans = (guild, channelId) => guild.channels.cache.get(channelId)?.member
 
 /** Şarkı ekler, gerekirse kanala katılır */
 export async function playQuery(member, textChannel, query) {
-  const { queue: existing, channel } = requireVoice(member, { needQueue: false });
-  const me = member.guild.members.me;
-  const perms = channel.permissionsFor(me);
-  if (!perms.has([PermissionFlagsBits.Connect, PermissionFlagsBits.Speak])) throw new UserError(`${channel} kanalına bağlanma ya da konuşma iznim yok.`);
-
+  checkVoice(member);
   const { tracks, playlist } = await resolveQuery(query, member.id);
+  return playTracks(member, textChannel, tracks, playlist);
+}
+
+function checkVoice(member) {
+  const { channel } = requireVoice(member, { needQueue: false });
+  const perms = channel.permissionsFor(member.guild.members.me);
+  if (!perms.has([PermissionFlagsBits.Connect, PermissionFlagsBits.Speak])) throw new UserError(`${channel} kanalına bağlanma ya da konuşma iznim yok.`);
+}
+
+/** Bilgileri hazır şarkıları (örn. çalma listesinden) aramadan sıraya ekler */
+export async function playTracks(member, textChannel, tracks, playlist = true) {
+  checkVoice(member);
+  const { queue: existing, channel } = requireVoice(member, { needQueue: false });
   let queue = existing;
   if (!queue) {
     queue = new GuildQueue(member.guild, channel, textChannel);

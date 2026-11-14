@@ -5,7 +5,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import config from '../config.js';
 import { UserError } from '../utils/errors.js';
 import { plain } from '../activity/server.js';
-import { adminRoute, isPanelAdmin } from '../activity/admin.js';
+import { adminRoute, isPanelAdmin, isPanelStaff } from '../activity/admin.js';
 import { getBalance, richBoard } from '../systems/economy.js';
 import { getProfile, levelBoard } from '../systems/levels.js';
 import { leaderboard, serverStats, userStats } from '../systems/stats.js';
@@ -92,6 +92,7 @@ function profileView(guild, member) {
   return {
     member: true,
     isAdmin: isPanelAdmin(member),
+    isStaff: isPanelStaff(member),
     displayName: member.displayName,
     joinedAt: member.joinedTimestamp,
     roles,

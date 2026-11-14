@@ -1,5 +1,5 @@
 import {
-  ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder,
+  ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, MessageFlags,
 } from 'discord.js';
 import { e } from '../utils/emojis.js';
 import { db } from '../core/database.js';
@@ -38,22 +38,19 @@ export function verifyPanel() {
 
 export function linksPanel() {
   const entries = Object.entries(config.links).filter(([, url]) => url);
-  const sections = [
-    {
-      icon: e('zincir', '🔗'),
-      title: 'Resmi Bağlantılar',
-      body: entries.map(([k, url]) => `${LINK_INFO[k]?.emoji ?? e('baglanti', '🔗')} **${LINK_INFO[k]?.label ?? k}:** ${url}`).join('\n') || 'Henüz link eklenmedi.',
-    },
-  ];
-  if (mcEnabled) sections.push({ icon: e('kazma', '⛏️'), title: 'Minecraft IP', body: `\`${mcIp}\`` });
-  const content = ruleText({ icon: e('baglanti', '🌍'), title: 'Bağlantılar', sections });
+  // Maskeli bağlantı ve boş satırsız düzen; önizlemeler mesajı uzatmasın diye kapalı
+  const lines = [`# ${e('baglanti', '🌍')}  Karia — Bağlantılar`, `### ${e('zincir', '🔗')}  Resmi Bağlantılar`];
+  if (entries.length) for (const [k, url] of entries) lines.push(`> ${LINK_INFO[k]?.emoji ?? e('baglanti', '🔗')} [${LINK_INFO[k]?.label ?? k}](${url})`);
+  else lines.push('> Henüz link eklenmedi.');
+  if (mcEnabled) lines.push(`### ${e('kazma', '⛏️')}  Minecraft IP`, `> \`${mcIp}\``);
+  const content = lines.join('\n');
 
   const buttons = entries.map(([k, url]) =>
     new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(url).setLabel(LINK_INFO[k]?.label ?? k).setEmoji(LINK_INFO[k]?.emoji ?? e('baglanti', '🔗')),
   );
   const rows = [];
   for (let i = 0; i < buttons.length; i += 5) rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
-  return panel(content, rows);
+  return { ...panel(content, rows), flags: MessageFlags.SuppressEmbeds };
 }
 
 export function ticketPanel() {

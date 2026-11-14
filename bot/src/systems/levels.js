@@ -5,25 +5,45 @@ import { db } from '../core/database.js';
 import { getSetting, setSetting } from '../core/settings.js';
 import { sendLog } from '../utils/logger.js';
 import { brandEmbed } from '../utils/embeds.js';
+import { grantLevelCoins } from './coinRewards.js';
 
 export const MSG_XP = [10, 20]; // mesaj başına rastgele XP aralığı
 export const MSG_COOLDOWN = 60_000; // aynı kişi dakikada bir XP alır (spam'le kasılmasın)
 export const VOICE_XP_PER_MIN = 3; // seste dakika başına (en az 2 kişi varken)
+export const VOICE_DAILY_CAP = 600; // seste günde en çok bu kadar XP: seste bekleyerek kasılmasın
 
-// Her seviye aynı XP ister. Düzenli aktif bir üye günde ortalama 600 XP kazanır (yaklaşık 40 mesaj ve biraz ses),
-// bu yüzden 3000 XP bir seviye için yaklaşık 5 gün demektir.
-export const XP_PER_LEVEL = 3000;
+// Seviye yükseldikçe sonraki seviye pahalılaşır. Düzenli aktif bir üye günde ortalama 600 XP kazanır:
+// Köylü (5) ~1 ay, Zanaatkâr (10) ~2 ay, Tüccar (25) ~6 ay, Soylu (50) ~15 ay, Lord (75) ~2,3 yıl, İmparator (100) ~3,6 yıl.
+const BASE_XP = 3000;
+const XP_STEP = 100;
+
+export const RANKS = [
+  { level: 5, name: 'Köylü', key: 'rutbe_koylu', icon: '🌾' },
+  { level: 10, name: 'Zanaatkâr', key: 'rutbe_zanaatkar', icon: '🔨' },
+  { level: 25, name: 'Tüccar', key: 'rutbe_tuccar', icon: '⚖️' },
+  { level: 50, name: 'Soylu', key: 'rutbe_soylu', icon: '🛡️' },
+  { level: 75, name: 'Lord', key: 'rutbe_lord', icon: '🏰' },
+  { level: 100, name: 'İmparator', key: 'rutbe_imparator', icon: '👑' },
+];
+export const rankEmoji = (level) => {
+  const rank = RANKS.find((r) => r.level === level);
+  return rank ? e(rank.key, rank.icon) : e('hediye', '🎁');
+};
 
 /** L. seviyeden L+1'e geçmek için gereken XP */
-export const xpToNext = () => XP_PER_LEVEL;
+export const xpToNext = (level) => BASE_XP + XP_STEP * level;
+
+/** Bir seviyeye ulaşmak için gereken toplam XP */
+export const totalXpFor = (level) => BASE_XP * level + (XP_STEP / 2) * level * (level - 1);
 
 /** Toplam XP'den seviye ve seviye içi ilerleme */
 export function levelFromXp(xp) {
-  return { level: Math.floor(xp / XP_PER_LEVEL), current: xp % XP_PER_LEVEL, needed: XP_PER_LEVEL };
+  const b = BASE_XP - XP_STEP / 2;
+  let level = Math.max(0, Math.floor((-b + Math.sqrt(b * b + 2 * XP_STEP * xp)) / XP_STEP));
+  while (totalXpFor(level + 1) <= xp) level++;
+  while (level > 0 && totalXpFor(level) > xp) level--;
+  return { level, current: xp - totalXpFor(level), needed: xpToNext(level) };
 }
-
-/** Bir seviyeye ulaşmak için gereken toplam XP */
-export const totalXpFor = (level) => level * XP_PER_LEVEL;
 
 const q = {
   get: db.prepare('SELECT * FROM levels WHERE guild_id=? AND user_id=?'),
@@ -85,23 +105,35 @@ export async function addXp(guild, userId, amount, { source, channel = null, byI
   return { oldLevel, level, xp };
 }
 
+// Üyede aynı anda yalnızca ulaştığı en yüksek seviye ödül rolü durur: yenisi verilince eskileri alınır.
 async function syncRewardRoles(member, level) {
+  const rewards = getRewards(member.guild.id);
+  const current = rewards.filter((r) => r.level <= level).at(-1); // getRewards seviyeye göre sıralı
   const given = [];
-  for (const reward of getRewards(member.guild.id)) {
-    if (reward.level > level || member.roles.cache.has(reward.roleId)) continue;
+  const removed = [];
+  for (const reward of rewards) {
     const role = member.guild.roles.cache.get(reward.roleId);
     if (!role?.editable) continue;
-    const ok = await member.roles.add(role, `Seviye ödülü (seviye ${reward.level})`).then(() => true).catch(() => false);
-    if (ok) given.push(role);
+    const has = member.roles.cache.has(reward.roleId);
+    if (reward === current) {
+      if (has) continue;
+      const ok = await member.roles.add(role, `Seviye ödülü (seviye ${reward.level})`).then(() => true).catch(() => false);
+      if (ok) given.push(role);
+    } else if (has) {
+      const ok = await member.roles.remove(role, `Daha yüksek seviye rolü alındı (seviye ${level})`).then(() => true).catch(() => false);
+      if (ok) removed.push(role);
+    }
   }
-  return given;
+  return { given, removed };
 }
 
 async function onLevelChange(guild, userId, oldLevel, level, { source, channel, xp }) {
   const member = guild.members.cache.get(userId) ?? (await guild.members.fetch(userId).catch(() => null));
   if (!member) return;
   const up = level > oldLevel;
-  const given = up ? await syncRewardRoles(member, level) : [];
+  const { given, removed } = await syncRewardRoles(member, level);
+  // Yetkilinin elle verdiği XP coin kazandırmaz
+  const coins = up && source !== 'yetkili' ? grantLevelCoins(guild.id, userId, oldLevel, level) : 0;
 
   await sendLog(guild, 'log_level', {
     embeds: [
@@ -111,7 +143,9 @@ async function onLevelChange(guild, userId, oldLevel, level, { source, channel, 
         .setDescription(
           `**Üye:** ${member}\n**Seviye:** ${oldLevel} → **${level}**\n**Toplam XP:** ${xp}\n**Kaynak:** ${source}` +
             (channel ? ` • ${channel}` : '') +
-            (given.length ? `\n**Ödül rolü verildi:** ${given.join(' ')}` : ''),
+            (given.length ? `\n**Ödül rolü verildi:** ${given.join(' ')}` : '') +
+            (removed.length ? `\n**Eski ödül rolü alındı:** ${removed.join(' ')}` : '') +
+            (coins ? `\n**Coin ödülü:** +${coins.toLocaleString('tr-TR')}` : ''),
         )
         .setTimestamp(),
     ],
@@ -122,8 +156,9 @@ async function onLevelChange(guild, userId, oldLevel, level, { source, channel, 
   if (!target?.isTextBased()) return;
   const embed = brandEmbed()
     .setColor(0xf1c40f)
-    .setDescription(`${e('konfeti', '🎉')} ${member} **${level}. seviyeye** ulaştı! ${e('yildiz', '⭐')}` + (given.length ? `\n${e('hediye', '🎁')} Kazandığı rol: ${given.join(' ')}` : ''))
+    .setDescription(`${e('konfeti', '🎉')} ${member} **${level}. seviyeye** ulaştı! ${e('yildiz', '⭐')}` + (given.length ? `\n${rankEmoji(RANKS.filter((r) => r.level <= level).at(-1)?.level)} Yeni rütbe: ${given.join(' ')}` : ''))
     .setThumbnail(member.user.displayAvatarURL({ size: 128 }));
+  if (coins) embed.setDescription(`${embed.data.description}\n${e('coin', '🪙')} **+${coins.toLocaleString('tr-TR')}** coin kazandı!`);
   await target.send({ content: `${member}`, embeds: [embed], allowedMentions: { users: [member.id] } }).catch(() => {});
 }
 
@@ -143,6 +178,7 @@ export async function handleMessageXp(message) {
 let client = null;
 export const setLevelClient = (c) => (client = c);
 const voiceRemainder = new Map(); // "guild:user" -> artan saniye
+const voiceToday = new Map(); // "guild:user" -> { day, xp } bugün sesten kazanılan
 
 /** stats.js ses süresini kaydederken çağırır (saniye cinsinden) */
 export function handleVoiceXp(guildId, userId, channelId, seconds) {
@@ -155,7 +191,14 @@ export function handleVoiceXp(guildId, userId, channelId, seconds) {
   const total = (voiceRemainder.get(key) ?? 0) + seconds;
   const minutes = Math.floor(total / 60);
   voiceRemainder.set(key, total - minutes * 60);
-  if (minutes > 0) addXp(guild, userId, minutes * VOICE_XP_PER_MIN, { source: 'ses', channel }).catch((e) => console.error('[Ses XP]', e.message));
+  if (minutes <= 0) return;
+  const today = new Date(Date.now() + 3 * 3_600_000).toISOString().slice(0, 10); // Türkiye günü
+  const used = voiceToday.get(key);
+  const spent = used?.day === today ? used.xp : 0;
+  const amount = Math.min(minutes * VOICE_XP_PER_MIN, VOICE_DAILY_CAP - spent);
+  if (amount <= 0) return;
+  voiceToday.set(key, { day: today, xp: spent + amount });
+  addXp(guild, userId, amount, { source: 'ses', channel }).catch((e) => console.error('[Ses XP]', e.message));
 }
 
 // ───────────────────────── İlk kurulum ─────────────────────────

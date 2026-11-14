@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, InteractionContextType } from 'discord.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed } from '../../utils/embeds.js';
 import { requireVoice } from '../../systems/music.js';
 import { e } from '../../utils/emojis.js';
 
@@ -14,10 +14,10 @@ export default {
   async execute(interaction) {
     const { queue } = requireVoice(interaction.member);
     const level = interaction.options.getInteger('duzey');
-    if (level === null) return interaction.reply({ embeds: [brandEmbed().setDescription(`${e('kulaklik', '🔊')} Ses düzeyi: **%${queue.volume}**`)] });
+    if (level === null) return interaction.reply({ embeds: [kariaEmbed(null, 'Müzik').setDescription(`${e('kulaklik', '🔊')} Ses düzeyi: **%${queue.volume}**`)] });
     const old = queue.volume;
     queue.setVolume(level);
     await queue.refreshPanel();
-    await interaction.reply({ embeds: [brandEmbed().setDescription(`${(level === 0 ? e('ses_kapali', '🔇') : e('kulaklik', '🔊'))} Ses düzeyi: %${old} → **%${level}**`)] });
+    await interaction.reply({ embeds: [kariaEmbed(null, 'Müzik').setDescription(`${(level === 0 ? e('ses_kapali', '🔇') : e('kulaklik', '🔊'))} Ses düzeyi: %${old} → **%${level}**`)] });
   },
 };

@@ -1,0 +1,20 @@
+# Derleme çıktıları
+kurucu/dist/
+kurucu/build/
+*.spec
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Mod listesi araçlarının indirme önbelleği ve üretilen paketler
+modpaket/onbellek/
+modpaket/dist/
+
+# Bu depoya ait olmayan diğer projeler
+ejderha/
+mod-uyumluluk.csv
+
+# KariaEkonomi derleme çıktıları ve indirilen bağımlılıklar
+ekonomi/lib/
+ekonomi/build/

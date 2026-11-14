@@ -2,7 +2,7 @@ import { e } from '../../utils/emojis.js';
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
 import { backfill } from '../../systems/backfill.js';
-import { brandEmbed, replySuccess } from '../../utils/embeds.js';
+import { replySuccess, kariaEmbed } from '../../utils/embeds.js';
 
 export default {
   level: Level.ADMIN,
@@ -18,7 +18,7 @@ export default {
     await interaction.deferReply();
     const progress = (done, total, messages) =>
       interaction
-        .editReply({ embeds: [brandEmbed().setDescription(`${e('hedef', '🔎')} Taranıyor... **${done}/${total}** kanal • ${messages} mesaj bulundu`)] })
+        .editReply({ embeds: [kariaEmbed(null, 'Geçmiş Tarama').setDescription(`${e('hedef', '🔎')} Taranıyor... **${done}/${total}** kanal • ${messages} mesaj bulundu`)] })
         .catch(() => {});
 
     const result = await backfill(interaction.guild, days, progress);

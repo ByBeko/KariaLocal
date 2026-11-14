@@ -1,0 +1,7 @@
+{
+ "parent": "karia:ejder/bas",
+ "textures": {
+  "skin": "karia:ejder/kor_kanat",
+  "particle": "karia:ejder/kor_kanat"
+ }
+}

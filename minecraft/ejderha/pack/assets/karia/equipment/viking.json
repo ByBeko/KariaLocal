@@ -1,0 +1,14 @@
+{
+ "layers": {
+  "humanoid": [
+   {
+    "texture": "karia:viking"
+   }
+  ],
+  "humanoid_leggings": [
+   {
+    "texture": "karia:viking"
+   }
+  ]
+ }
+}

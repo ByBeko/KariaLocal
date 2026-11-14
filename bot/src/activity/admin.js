@@ -16,9 +16,18 @@ import { serverStats, formatVoice } from '../systems/stats.js';
 import { CASE_TYPES } from '../systems/moderation.js';
 import { getQueue } from '../systems/music.js';
 import { listReports, openReportCount, resolveReport } from '../systems/reports.js';
-import { getOpenTicket, claimTicket, markTicketClosed, finishTicket } from '../components/ticket.js';
+import { primeView, addPrimeFromPanel, removePrimeFromPanel } from '../systems/prime.js';
+import { socialView, startConnect, disconnect, beginUpload, publishVideo, retryPost, tiktokCreator, deletePost } from '../systems/social.js';
+import { mailList, openMail, deleteMail } from '../systems/mailbox.js';
+import { roleProblem, sendButtonRoles } from '../systems/buttonRoles.js';
+import { emojiList } from '../utils/emojis.js';
+import { getOpenTicket, claimTicket, markTicketClosed, finishTicket, approveTicket, approvalRoleName, mailInfo } from '../components/ticket.js';
 
 export const isPanelAdmin = (member) => getLevel(member) >= Level.ADMIN;
+/** Personel ve üstü paneli açar; komutları seviyesine göre görür */
+export const isPanelStaff = (member) => getLevel(member) >= Level.STAFF;
+/** Yetkililere açık bölümler. Burada olmayan her /admin yolu (ayarlar, sosyal, prime, mail, bot olarak yaz) sadece yöneticiye. */
+const STAFF_PATHS = /^\/admin\/(overview|run|dashboard\/\d+|cases|tickets(\/\d{17,20}(\/(reply|claim|close))?)?|reports(\/\d+\/resolve)?|suggestions(\/\d{17,20}\/delete)?)$/;
 
 // Panelde çalışamayanlar: blackjack butonla oynanır (Etkinlikte zaten var), emoji-yukle dosya ister
 const NOT_IN_PANEL = new Set(['blackjack', 'emoji-yukle']);
@@ -63,18 +72,18 @@ function commandViews(client, member) {
 }
 
 function overview(client, guild, member) {
-  const settings = Object.entries(SETTINGS).map(([key, s]) => ({ key, label: s.label, type: s.type, kind: s.kind ?? null, value: getSetting(guild.id, key) }));
+  const settings = !isPanelAdmin(member) ? [] : Object.entries(SETTINGS).map(([key, s]) => ({ key, label: s.label, type: s.type, kind: s.kind ?? null, value: getSetting(guild.id, key) }));
   const channels = [...guild.channels.cache.values()]
     .filter((c) => !c.isThread())
     .sort((a, b) => a.rawPosition - b.rawPosition)
     .map((c) => ({ id: c.id, name: c.name, type: c.type }));
-  const roles = [...guild.roles.cache.values()].filter((r) => r.id !== guild.id).sort((a, b) => b.position - a.position).map((r) => ({ id: r.id, name: r.name, managed: r.managed }));
+  const roles = [...guild.roles.cache.values()].filter((r) => r.id !== guild.id).sort((a, b) => b.position - a.position).map((r) => ({ id: r.id, name: r.name, managed: r.managed, buttonable: !roleProblem(guild, r) }));
   const members = [...guild.members.cache.values()].slice(0, 1000).map((m) => ({ id: m.id, name: m.displayName, bot: m.user.bot })).sort((a, b) => a.name.localeCompare(b.name, 'tr'));
-  return { settings, channels, roles, members, commands: commandViews(client, member) };
+  return { settings, channels, roles, members, emojis: emojiList(), commands: commandViews(client, member) };
 }
 
 /** /ayarla ile aynı kurallar. Boş değer ayarı varsayılana döndürür. */
-async function changeSetting(guild, member, body) {
+export async function changeSetting(guild, member, body) {
   const key = String(body.key ?? '');
   const def = Object.hasOwn(SETTINGS, key) ? SETTINGS[key] : null;
   if (!def) throw new UserError('Böyle bir ayar yok.');
@@ -168,10 +177,10 @@ async function resolveValues(client, guild, options, input) {
 }
 
 /** Discord biçimlerini (emoji, etiket, zaman) okunur düz yazıya çevirir */
-export function cleanText(guild, text, { markdown = false } = {}) {
+export function cleanText(guild, text, { markdown = false, keepEmoji = false } = {}) {
   const name = (map, id, prefix) => `${prefix}${map.get(id)?.name ?? id}`;
   return String(text ?? '')
-    .replace(/<a?:(\w+):\d+>/g, markdown ? ':$1:' : '') // markdown: emoji adı kalır, arayüz kendi emojisini koyar
+    .replace(/<a?:(\w+):\d+>/g, keepEmoji ? '$&' : markdown ? ':$1:' : '') // markdown: emoji adı kalır, arayüz kendi emojisini koyar
     .replace(/<#(\d+)>/g, (_, id) => (guild.channels.cache.has(id) ? `#${guild.channels.cache.get(id).name.replace(/^[^\p{L}\p{N}]+/u, '')}` : ''))
     .replace(/<@&(\d+)>/g, (_, id) => name(guild.roles.cache, id, '@'))
     .replace(/<@!?(\d+)>/g, (_, id) => `@${guild.members.cache.get(id)?.displayName ?? id}`)
@@ -312,11 +321,16 @@ function dashboard(client, guild, rawDays) {
   };
 }
 
+function mailFields(channelId) {
+  const mail = mailInfo(channelId);
+  return mail ? { source: 'mail', email: mail.from_addr, subject: mail.subject } : { source: 'discord' };
+}
+
 function ticketList(guild) {
   return openTickets(guild).map((t) => ({
     id: t.channel_id, number: t.number,
-    category: config.ticketCategories.find((c) => c.value === t.category)?.label ?? t.category,
-    user: nameOf(guild, t.user_id), claimedBy: t.claimed_by ? nameOf(guild, t.claimed_by) : null, createdAt: t.created_at, url: jump(guild, t.channel_id),
+    category: config.ticketCategories.find((c) => c.value === t.category)?.label ?? (t.category === 'eposta' ? 'E-posta' : t.category),
+    user: nameOf(guild, t.user_id), claimedBy: t.claimed_by ? nameOf(guild, t.claimed_by) : null, createdAt: t.created_at, url: jump(guild, t.channel_id), approveRole: approvalRoleName(t.category), ...mailFields(t.channel_id),
   }));
 }
 
@@ -332,7 +346,10 @@ async function ticketMessages(guild, channelId) {
   const batch = await channel.messages.fetch({ limit: 40 });
   return {
     messages: [...batch.values()].reverse().map((m) => ({
-      id: m.id, author: m.member?.displayName ?? m.author.username, bot: m.author.bot, at: m.createdTimestamp,
+      id: m.id,
+      author: m.embeds[0]?.footer?.text === 'E-posta' ? m.embeds[0].author?.name ?? 'E-posta' : m.member?.displayName ?? m.author.username,
+      bot: m.author.bot && m.embeds[0]?.footer?.text !== 'E-posta',
+      at: m.createdTimestamp,
       text: cleanText(guild, m.content || m.embeds[0]?.description || m.embeds[0]?.title || ''), files: m.attachments.size,
     })),
   };
@@ -350,6 +367,10 @@ async function ticketAction(guild, member, channelId, action, body) {
     if (ticket.claimed_by) throw new UserError(`Bu talebi ${nameOf(guild, ticket.claimed_by)} üstlendi.`);
     claimTicket(channelId, member.id);
     await channel.send({ content: `${member.displayName} bu talebi üstlendi.`, allowedMentions: { parse: [] } });
+    return { tickets: ticketList(guild) };
+  }
+  if (action === 'approve') {
+    await approveTicket(channel, ticket, member.user);
     return { tickets: ticketList(guild) };
   }
   if (action === 'close') {
@@ -439,7 +460,8 @@ async function sayAsBot(guild, member, body) {
 }
 
 export async function adminRoute(client, guild, member, method, path, body) {
-  if (!isPanelAdmin(member)) return { __status: 403, error: 'Bu bölüm sadece yöneticiler içindir.' };
+  if (!isPanelStaff(member)) return { __status: 403, error: 'Bu bölüm sadece yetkililer içindir.' };
+  if (!isPanelAdmin(member) && !STAFF_PATHS.test(path)) return { __status: 403, error: 'Bu bölüm sadece yöneticiler içindir.' };
   if (method === 'GET') {
     const dash = path.match(/^\/admin\/dashboard\/(\d+)$/);
     if (dash) return dashboard(client, guild, Number(dash[1]));
@@ -449,9 +471,41 @@ export async function adminRoute(client, guild, member, method, path, body) {
     if (path === '/admin/reports') return { reports: reportList(guild) };
     if (path === '/admin/suggestions') return suggestionMessages(guild);
     if (path === '/admin/cases') return { cases: caseList(guild) };
+    if (path === '/admin/prime') return primeView(guild);
+    if (path === '/admin/social') return socialView();
+    if (path === '/admin/social/tiktok') return tiktokCreator();
+    if (path === '/admin/social/mails') return mailList();
+    const mailRead = path.match(/^\/admin\/social\/mails\/(\d+)$/);
+    if (mailRead) return openMail(Number(mailRead[1]));
   }
   if (method === 'POST') {
-    const ticket = path.match(/^\/admin\/tickets\/(\d{17,20})\/(reply|claim|close)$/);
+    const mailRemove = path.match(/^\/admin\/social\/mails\/(\d+)\/delete$/);
+    if (mailRemove) return deleteMail(Number(mailRemove[1]));
+    if (path === '/admin/button-roles') return sendButtonRoles(guild, member, { ...body, text: resolveMentions(guild, String(body.text ?? '')) });
+    if (path === '/admin/social/connect') return startConnect(member.id, String(body.platform ?? ''));
+    if (path === '/admin/social/disconnect') {
+      disconnect(String(body.platform ?? ''));
+      await sendLog(guild, 'log_staff', { content: `${member} panelden ${String(body.platform)} hesabının bağlantısını kaldırdı.`, allowedMentions: { parse: [] } });
+      return socialView();
+    }
+    if (path === '/admin/social/upload') return beginUpload(member.id, body);
+    if (path === '/admin/social/publish') {
+      const { title, platforms } = await publishVideo(member.id, body);
+      await sendLog(guild, 'log_staff', { content: `${member} panelden video paylaştı (${platforms.join(', ')}): ${title}`, allowedMentions: { parse: [] } });
+      return socialView();
+    }
+    if (path === '/admin/social/retry') {
+      retryPost(body.id);
+      return socialView();
+    }
+    if (path === '/admin/social/delete') {
+      const { title } = deletePost(body.id);
+      await sendLog(guild, 'log_staff', { content: `${member} panelden bir paylaşım kaydını sildi: ${title}`, allowedMentions: { parse: [] } });
+      return socialView();
+    }
+    if (path === '/admin/prime') return addPrimeFromPanel(guild, member, body.userId, body.days);
+    if (path === '/admin/prime/remove') return removePrimeFromPanel(guild, member, body.userId);
+    const ticket = path.match(/^\/admin\/tickets\/(\d{17,20})\/(reply|claim|close|approve)$/);
     if (ticket) return ticketAction(guild, member, ticket[1], ticket[2], body);
     const report = path.match(/^\/admin\/reports\/(\d+)\/resolve$/);
     if (report) {

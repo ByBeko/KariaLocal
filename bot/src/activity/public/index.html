@@ -5,14 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Karia</title>
 <link rel="icon" href="logo.png">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="tables.css?v=17">
 </head>
 <body>
 <div id="boot" class="boot"><img src="logo.png" alt="Karia"><p id="boot-text">Karia açılıyor...</p></div>
 
 <div id="app" class="app" hidden>
   <aside class="side">
-    <div class="side-brand"><span class="logo"><img src="logo.png" alt=""></span><strong>Karia</strong></div>
+    <div class="side-brand"><span class="logo"><img src="logo.png" alt=""></span><strong>Karia</strong><button type="button" id="sfx-toggle" class="sfx-toggle"></button></div>
     <div class="balance" title="Botla aynı bakiye">
       <img src="emojis/coin.png" alt="">
       <div><small>Bakiye</small><strong id="balance">0</strong></div>
@@ -30,12 +31,16 @@
           <button class="tab" data-tab="reports" role="tab"><img src="emojis/bayrak.png" alt="">Raporlar<b id="badge-reports" class="badge" hidden></b></button>
           <button class="tab" data-tab="suggestions" role="tab"><img src="emojis/ampul.png" alt="">Öneriler</button>
           <button class="tab" data-tab="cases" role="tab"><img src="emojis/tokmak.png" alt="">Cezalar</button>
-          <button class="tab" data-tab="modules" role="tab"><img src="emojis/araclar.png" alt="">Modüller</button>
-          <button class="tab" data-tab="settings" role="tab"><img src="emojis/ayarlar.png" alt="">Ayarlar</button>
+          <button class="tab" data-tab="prime" data-admin role="tab"><img src="emojis/tac.png" alt="">Prime</button>
+          <button class="tab" data-tab="social" data-admin role="tab"><img src="emojis/megafon.png" alt="">Sosyal Paylaşım</button>
+          <button class="tab" data-tab="mail" data-admin role="tab"><img src="emojis/mesaj.png" alt="">Mailler<b id="badge-mail" class="badge" hidden></b></button>
+          <button class="tab" data-tab="modules" data-admin role="tab"><img src="emojis/araclar.png" alt="">Modüller</button>
+          <button class="tab" data-tab="settings" data-admin role="tab"><img src="emojis/ayarlar.png" alt="">Ayarlar</button>
           <button class="tab" data-tab="commands" role="tab"><img src="emojis/kod.png" alt="">Komutlar</button>
         </div>
       </div>
     </nav>
+    <a id="site-back" class="site-back" href="https://karia.live" hidden>‹ karia.live</a>
     <div class="side-user"><span class="avatar" id="avatar-letter"></span><div><strong id="username"></strong><em id="role-badge" class="role"></em></div></div>
   </aside>
 
@@ -60,9 +65,19 @@
 
     <div id="game-switch" class="period" role="tablist" hidden>
       <button data-game="blackjack" class="active"><img src="emojis/kart.png" alt="">Blackjack</button>
-      <button data-game="slot"><img src="emojis/slot_yedi.png" alt="">Slot</button>
-      <button data-game="coin"><img src="emojis/coin.png" alt="">Yazı Tura</button>
+      <button data-game="poker"><img src="emojis/maca.png" alt="">Poker</button>
+      <button data-game="tayyare"><img src="emojis/tayyare.svg" alt="">Tayyare</button>
       <button data-game="roulette"><img src="emojis/oyun.png" alt="">Rulet</button>
+      <button data-game="zar"><img src="emojis/zar.svg" alt="">Zar</button>
+      <button data-game="slot"><img src="emojis/slot_yedi.png" alt="">Slot</button>
+      <button data-game="satranc"><img src="emojis/satranc.svg" alt="">Satranç</button>
+      <button data-game="okey"><img src="emojis/okey.svg" alt="">Okey 101</button>
+      <button data-game="labirent"><img src="emojis/labirent.svg" alt="">Labirent</button>
+    </div>
+
+    <div id="mode-switch" class="mode-switch" role="tablist" hidden>
+      <button type="button" data-mode="solo"><img src="emojis/bot.png" alt="">Solo</button>
+      <button type="button" data-mode="online"><img src="emojis/arkadaslar.png" alt="">Online</button>
     </div>
 
     <section id="betbar" class="betbar" hidden>
@@ -71,10 +86,10 @@
         <input id="bet" inputmode="numeric" value="100" autocomplete="off">
       </div>
       <div class="chips">
-        <button class="chip" data-add="10">+10</button>
-        <button class="chip" data-add="100">+100</button>
-        <button class="chip" data-add="1000">+1K</button>
-        <button class="chip" data-add="5000">+5K</button>
+        <span class="chip-wrap"><button class="chip" data-add="10">+10</button><button class="chip-minus" data-sub="10" aria-label="10 azalt" title="10 azalt">−</button></span>
+        <span class="chip-wrap"><button class="chip" data-add="100">+100</button><button class="chip-minus" data-sub="100" aria-label="100 azalt" title="100 azalt">−</button></span>
+        <span class="chip-wrap"><button class="chip" data-add="1000">+1K</button><button class="chip-minus" data-sub="1000" aria-label="1K azalt" title="1K azalt">−</button></span>
+        <span class="chip-wrap"><button class="chip" data-add="5000">+5K</button><button class="chip-minus" data-sub="5000" aria-label="5K azalt" title="5K azalt">−</button></span>
       </div>
       <div class="bet-tools">
         <button data-bet="half">½</button>
@@ -85,7 +100,8 @@
     </section>
 
     <section class="panel casino" data-panel="blackjack" hidden>
-      <div class="table">
+      <div id="bjm-root" class="room-root" hidden></div>
+      <div id="bj-solo" class="table">
         <div class="hand"><h3>Krupiye <span id="dealer-total" class="total"></span></h3><div id="dealer" class="cards"></div></div>
         <svg class="felt-art" viewBox="0 0 600 170" aria-hidden="true">
           <defs><path id="felt-arc" d="M30 96 Q300 196 570 96"/></defs>
@@ -116,32 +132,14 @@
         <div class="cabinet-base"><button id="slot-spin" class="spin-btn"><img src="emojis/slot_yedi.png" alt="">Çevir</button></div>
         <div class="lever" aria-hidden="true"><i></i></div>
       </div>
-    </section>
-
-    <section class="panel casino coin-room" data-panel="coin" hidden>
-      <div class="coin-stage">
-        <div id="coin" class="coin"><span>Y</span></div>
-        <svg class="flip-hand" viewBox="0 0 220 170" aria-hidden="true">
-          <path class="sleeve" d="M66 170 L66 118 Q110 104 154 118 L154 170 Z"/>
-          <g class="skin">
-            <rect x="48" y="54" width="124" height="74" rx="30"/>
-            <rect x="60" y="36" width="30" height="48" rx="15"/>
-            <rect x="89" y="30" width="30" height="54" rx="15"/>
-            <rect x="118" y="32" width="30" height="52" rx="15"/>
-            <rect x="146" y="42" width="28" height="44" rx="14"/>
-            <path class="thumb" d="M50 100 Q18 86 26 50 Q32 30 52 36 Q68 44 62 66 L78 92 Z"/>
-          </g>
-        </svg>
-      </div>
-      <div class="actions coin-picks">
-        <button data-pick="yazi"><img src="emojis/coin.png" alt="">Yazı</button>
-        <button data-pick="tura"><img src="emojis/coin.png" alt="">Tura</button>
-      </div>
+      <div id="slot-feed" class="slot-feed"></div>
     </section>
 
     <section class="panel casino roulette-room" data-panel="roulette" hidden>
       <div class="roulette">
         <div class="wheel-box"><div id="wheel" class="wheel"></div><div class="wheel-pin"></div><div id="roulette-result" class="roulette-result"></div></div>
+        <div id="roulette-history" class="roulette-history"></div>
+        <div id="roulette-status" class="roulette-status"></div>
         <div id="roulette-board" class="roulette-board"></div>
         <div class="roulette-tools">
           <button id="roulette-undo" type="button">Geri al</button>
@@ -150,22 +148,44 @@
           <span id="roulette-total" class="roulette-total">Masa boş</span>
           <button id="roulette-spin" class="spin-btn" type="button"><img src="emojis/oyun.png" alt="">Çevir</button>
         </div>
+        <div id="roulette-players" class="roulette-players"></div>
       </div>
     </section>
 
-    <section class="panel" data-panel="music" hidden>
-      <form id="music-form" class="music-form">
-        <input id="music-query" placeholder="Şarkı adı ya da YouTube linki" maxlength="500" autocomplete="off">
-        <button class="primary">Çal</button>
-      </form>
-      <h4>Sıradaki Şarkılar <span id="music-count" class="queue-count"></span></h4>
-      <ol id="music-list" class="queue"></ol>
-      <div class="player">
-        <div class="player-track">
-          <img id="music-cover" src="emojis/kulaklik.png" alt="">
-          <div><strong id="music-title">Bir şarkı aç</strong><small id="music-artist">Şu an çalmıyor</small></div>
+    <section class="panel casino karia-room" data-panel="poker" hidden><div id="poker-root" class="room-root"></div></section>
+    <section class="panel casino karia-room" data-panel="zar" hidden><div id="zar-root" class="room-root"></div></section>
+    <section class="panel casino karia-room" data-panel="satranc" hidden><div id="satranc-root" class="room-root"></div></section>
+    <section class="panel casino karia-room" data-panel="okey" hidden><div id="okey-root" class="room-root"></div></section>
+    <section class="panel casino karia-room" data-panel="labirent" hidden><div id="labirent-root" class="room-root"></div></section>
+
+    <section class="panel casino tay-room" data-panel="tayyare" hidden>
+      <div class="tay-sky">
+        <div id="tay-history" class="tay-history"></div>
+        <canvas id="tay-canvas"></canvas>
+        <div class="tay-brand"><img src="logo.png" alt="">SÜPER TAYYARE</div>
+        <div id="tay-mult" class="tay-mult"></div>
+        <div id="tay-status" class="tay-status"></div>
+      </div>
+      <div class="tay-bottom">
+        <div class="tay-controls">
+          <label class="tay-auto"><span>Otomatik çek</span><input id="tay-auto" inputmode="decimal" placeholder="Örn. 2,00" autocomplete="off"><b>×</b></label>
+          <button id="tay-btn" class="tay-btn" type="button">Bahis Koy</button>
         </div>
-        <div class="player-center">
+        <div id="tay-bets" class="tay-bets"></div>
+      </div>
+    </section>
+
+    <section class="panel music-room" data-panel="music" hidden>
+      <div class="music-layout">
+        <div class="now-card player">
+          <div id="music-backdrop" class="now-backdrop"></div>
+          <div class="now-cover"><img id="music-cover" src="emojis/kulaklik.png" alt=""></div>
+          <div class="now-text">
+            <small class="now-label"><i class="eq" aria-hidden="true"><b></b><b></b><b></b></i>Şimdi çalıyor</small>
+            <strong id="music-title">Bir şarkı aç</strong>
+            <small id="music-artist">Şu an çalmıyor</small>
+          </div>
+          <div class="player-time"><span id="music-now">0:00</span><div class="player-bar"><i id="music-fill"></i></div><span id="music-total">0:00</span></div>
           <div class="player-buttons">
             <button id="music-shuffle" aria-label="Karıştır" title="Karıştır" disabled><img src="emojis/karistir.png" alt=""></button>
             <button id="music-prev" class="flip" aria-label="Önceki şarkı" title="Önceki" disabled><img src="emojis/atla.png" alt=""></button>
@@ -173,22 +193,46 @@
             <button id="music-skip" aria-label="Sonraki şarkı" title="Sonraki" disabled><img src="emojis/atla.png" alt=""></button>
             <button id="music-loop" aria-label="Döngü" title="Döngü: kapalı" disabled><img src="emojis/yenile.png" alt=""><b id="music-loop-one" hidden>1</b></button>
           </div>
-          <div class="player-time"><span id="music-now">0:00</span><div class="player-bar"><i id="music-fill"></i></div><span id="music-total">0:00</span></div>
+          <div class="player-right">
+            <button id="music-save" aria-label="Çalan şarkıyı listeye ekle" title="Listeye ekle" disabled><img src="emojis/arti_rozet.png" alt=""></button>
+            <button id="music-stop" aria-label="Müziği durdur" title="Durdur" disabled><img src="emojis/durdur.png" alt=""></button>
+            <img class="vol-icon" src="emojis/kulaklik.png" alt="">
+            <input id="music-volume" type="range" min="0" max="150" value="70" aria-label="Ses düzeyi" disabled>
+          </div>
         </div>
-        <div class="player-right">
-          <button id="music-stop" aria-label="Müziği durdur" title="Durdur" disabled><img src="emojis/durdur.png" alt=""></button>
-          <img class="vol-icon" src="emojis/kulaklik.png" alt="">
-          <input id="music-volume" type="range" min="0" max="150" value="70" aria-label="Ses düzeyi" disabled>
+        <div class="music-side">
+          <form id="music-form" class="music-form">
+            <input id="music-query" placeholder="Şarkı adı ya da YouTube linki" maxlength="500" autocomplete="off">
+            <button class="primary">Çal</button>
+          </form>
+          <div class="music-tabs" role="tablist">
+            <button type="button" data-mtab="queue" class="active">Sıradaki Şarkılar <span id="music-count" class="queue-count"></span></button>
+            <button type="button" data-mtab="lists">Çalma Listelerim</button>
+          </div>
+          <ol id="music-list" class="queue"></ol>
+          <div id="playlist-box" class="queue plbox" hidden></div>
+          <p class="hint">Ses, bulunduğun ses kanalında bot üzerinden çalar.</p>
         </div>
       </div>
-      <p class="hint">Ses, bulunduğun ses kanalında bot üzerinden çalar.</p>
     </section>
 
     <section class="panel plain" data-panel="overview" hidden><div id="overview"></div></section>
 
     <section class="panel" data-panel="tickets" hidden>
-      <div id="ticket-list" class="items"></div>
-      <div id="ticket-view" class="thread" hidden></div>
+      <div class="desk">
+        <aside class="desk-side">
+          <div class="period desk-filter" role="tablist">
+            <button type="button" data-ticket-filter="all" class="active">Tümü</button>
+            <button type="button" data-ticket-filter="discord">Discord</button>
+            <button type="button" data-ticket-filter="mail">E-posta</button>
+          </div>
+          <div id="ticket-list" class="desk-list"></div>
+        </aside>
+        <div class="desk-main">
+          <div id="ticket-empty" class="desk-empty"><img src="emojis/cankurtaran.png" alt=""><strong>Bir talep seç</strong><p>Discord ve destek@karia.live adresinden gelen talepler burada toplanır.</p></div>
+          <div id="ticket-view" class="thread" hidden></div>
+        </div>
+      </div>
     </section>
 
     <section class="panel" data-panel="reports" hidden>
@@ -201,6 +245,51 @@
 
     <section class="panel" data-panel="cases" hidden>
       <div id="case-list" class="items"></div>
+    </section>
+
+    <section class="panel" data-panel="prime" hidden>
+      <div id="prime-form" class="prime-form"></div>
+      <div id="prime-list" class="items"></div>
+    </section>
+
+    <section class="panel" data-panel="mail" hidden>
+      <select id="mail-filter" class="field" aria-label="Adres"></select>
+      <div id="mail-list" class="items"></div>
+    </section>
+
+    <section class="panel" data-panel="social" hidden>
+      <div id="social-accounts" class="social-accounts"></div>
+      <form id="social-form" class="social-form">
+        <label class="social-file">
+          <input id="social-file" type="file" accept=".mp4,.mov,video/mp4,video/quicktime">
+          <span id="social-file-name">Video seç (MP4 veya MOV, en çok 1 GB)</span>
+        </label>
+        <input id="social-title" class="field" maxlength="100" placeholder="Başlık" autocomplete="off">
+        <textarea id="social-description" class="field" maxlength="2000" rows="4" placeholder="Açıklama ve etiketler"></textarea>
+        <div id="social-targets" class="social-targets"></div>
+        <fieldset id="social-tiktok" class="social-tiktok" hidden>
+          <legend>TikTok ayarları</legend>
+          <p id="tt-account" class="hint left">Hesap bilgisi alınıyor...</p>
+          <label class="tt-field"><span>Kimler görebilir</span>
+            <select id="tt-privacy" class="field"><option value="" disabled selected>Seç</option></select>
+          </label>
+          <div class="tt-checks">
+            <label><input id="tt-comment" type="checkbox"> Yorumlara izin ver</label>
+            <label><input id="tt-duet" type="checkbox"> Düete izin ver</label>
+            <label><input id="tt-stitch" type="checkbox"> Stitch'e izin ver</label>
+          </div>
+          <label class="tt-commercial"><input id="tt-commercial" type="checkbox"> Bu video bir markayı, ürünü ya da hizmeti tanıtıyor</label>
+          <div id="tt-commercial-box" class="tt-checks" hidden>
+            <label><input id="tt-yourbrand" type="checkbox"> Kendi markan: Karia'yı ya da kendi işini tanıtıyorsun. Video "Tanıtım içeriği" olarak etiketlenir.</label>
+            <label><input id="tt-branded" type="checkbox"> Markalı içerik: Bir markayla ücretli iş birliği. Video "Ücretli ortaklık" olarak etiketlenir.</label>
+          </div>
+          <p id="tt-duration" class="hint left social-limit" hidden></p>
+          <p id="tt-consent" class="hint left tt-consent"></p>
+        </fieldset>
+        <progress id="social-progress" class="social-progress" max="100" value="0" hidden></progress>
+        <button id="social-send" class="primary" type="submit">Hepsinde Paylaş</button>
+      </form>
+      <div id="social-list" class="items"></div>
     </section>
 
     <section class="panel" data-panel="modules" hidden>
@@ -234,6 +323,15 @@
             <div id="say-preview" class="say-preview" hidden></div>
             <div class="actions left"><button id="say-send" class="primary">Gönder</button></div>
           </div>
+          <div id="brole-card" class="say-card" hidden>
+            <h4>Buton Rol</h4>
+            <select id="brole-channel" class="field" aria-label="Kanal"></select>
+            <input id="brole-title" class="field" placeholder="Başlık" maxlength="80" autocomplete="off">
+            <textarea id="brole-text" class="field" rows="3" maxlength="1500" placeholder="Üyelere ne yazsın? (isteğe bağlı)"></textarea>
+            <div id="brole-rows" class="brole-rows"></div>
+            <p class="hint left">Üye butona basınca rolü alır, tekrar basınca bırakır. Yetkili izni olan roller listede çıkmaz.</p>
+            <div class="actions left"><button id="brole-add" type="button">Rol Ekle</button><button id="brole-send" type="button" class="primary">Gönder</button></div>
+          </div>
           <div id="cmd-card" class="cmd-card">
             <div id="cmd-form" class="cmd-form"><p class="hint left">Soldan bir komut seç. Bota mesaj yazdırmak için Yönetim grubuna bak.</p></div>
             <div class="actions left"><button id="cmd-run" class="primary" disabled>Çalıştır</button></div>
@@ -247,6 +345,6 @@
   </main>
   </div>
 </div>
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=10"></script>
 </body>
 </html>

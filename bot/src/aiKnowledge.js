@@ -8,10 +8,11 @@ export const FEATURES = [
   'Destek talebi: #destek-talebi kanalındaki menüden konu seçilir, kişiye özel kanal açılır.',
   'Üye şikayeti: herhangi bir kanalda /rapor kullanici sebep yazılır (#rapor diye bir kanal yoktur). Rapor gizlice yetkililere gider, 5 dakikada bir kullanılabilir, sadece / ile çalışır.',
   'AFK: /afk sebep. Biri etiketleyince sebep söylenir, kişi yazınca AFK biter.',
-  'Seviye: mesajla dakikada bir 10-20 XP, seste en az 2 kişiyken dakikada 3 XP kazanılır. Her seviye 3000 XP ister, düzenli aktif biri için yaklaşık 5 gün sürer. Seviye 5, 10, 15 ve böyle 50\'ye kadar her 5 seviyede bir rol verilir. Kart: /seviye.',
-  'Etkinlikte (Oyunlar sekmesi) blackjack, slot, yazı tura ve rulet vardır. Her oyundan sonra 5 saniye beklenir. Blackjack\'te kart çek, dur, ikiye katla ve aynı değerde iki kart gelince ikiye ayırma yapılabilir. Rulet sadece Etkinlikte vardır.',
+  'Coin ödülleri: seviye atlayınca seviyenin 5 katı coin verilir. Bir kez olmak üzere Köylü 250, Zanaatkâr 500, Tüccar 1.500, Soylu 4.000, Lord 8.000, İmparator 15.000, Hata Avcısı 1.000, Erken Destekçi 1.500, Takviye 2.500, Prime 3.000 coin kazandırır. Takviye 7 gün dolmadan çekilirse ödülün dörtte üçü geri alınır. Her ay en çok oy veren üye 30 gün Prime kazanır. Takviye basanlardan çekilişle 1 kişi her ay 30 gün Prime ve 1.000 coin kazanır. Takviye (pembe) ve Prime (mor) ayrı rollerdir. Hata Bildirimi ve Sponsorluk talepleri yönetici onaylarsa Hata Avcısı ve Sponsor rolü verilir.',
+  'Seviye: mesajla dakikada bir 10-20 XP, seste en az 2 kişiyken dakikada 3 XP (günde en çok 600) kazanılır. Seviye yükseldikçe sonraki seviye daha çok XP ister. Rütbeler: Seviye 5 Köylü, 10 Zanaatkâr, 25 Tüccar, 50 Soylu, 75 Lord, 100 İmparator. Üyede yalnızca ulaştığı en yüksek rütbe durur. Kart: /seviye, liste: /seviye oduller.',
+  'Etkinlikte (Oyunlar sekmesi) blackjack, poker, Süper Tayyare, rulet, zar düellosu ve slot vardır; oyunlar arasında bekleme yoktur. Poker (Texas Hold’em), blackjack masası ve zar düellosu 6 kişiye kadar aynı masada online oynanır; rulet ve Süper Tayyare odadaki herkesle ortaktır. Pokerde masaya fişle oturulur, kalkınca kalan fiş cüzdana döner. Süper Tayyare’de çarpan yükselir, tayyare düşmeden Çek’e basan bahsi × çarpan kadar alır; otomatik çekme hedefi konabilir. Zar düellosunda en yüksek atan potun hepsini alır. Ayrıca satranç, Okey 101 (101 ya da 5 çiftle açılır, elini ilk bitiren potu alır) ve Karia Labirent (karşı kenara ilk varan kazanır; sırada yürünür ya da karelerin arasına rakibin önünü kesen engel konur, kişi başı 10 engel) vardır. Her oyunda Solo (botlara karşı) ve Online (herkesle) seçimi bulunur. Blackjack’te kart çek, dur, ikiye katla ve tek kişilikte aynı değerde iki kart gelince ikiye ayırma yapılabilir. Bu masa oyunları sadece Etkinlikte vardır; yazı tura sadece /coinflip komutuyla oynanır.',
   'Ekonomi: coin sanaldır, gerçek değeri yoktur. Herkes ilk kullanımda 200 coin alır. Günlük ödül 100 coindir: /gunluk ya da Etkinlik ana sayfasındaki düğme, 20 saatte bir alınır. Bakiye: /bakiye. Gönderme: /gonder. Oyunlar: /coinflip, /slot, /blackjack.',
-  'Müzik: /cal ile YouTube\'dan çalınır, önce ses kanalına girmek gerekir. Kalabalıkta şarkı geçme oylamayla olur.',
+  'Müzik: /cal ile YouTube\'dan çalınır, önce ses kanalına girmek gerekir. Kalabalıkta şarkı geçme oylamayla olur. Etkinliğin Müzik bölümünde herkesin kendi çalma listeleri vardır: liste oluşturulur, şarkı aranarak ya da çalan şarkı + düğmesiyle eklenir, liste tek tıkla ya da karışık çalınır.',
   'Özel oda: "Özel Oda Oluştur" ses kanalına girince kişiye özel oda açılır.',
   'Roller: #roller kanalındaki menüden bildirim ve ilgi alanı rolleri seçilir. Rozetler (Karia Kodcu, Karia Oyuncu, Karia Yaratıcı) ve topluluk rolleri sunucuya girişteki sorulardan ya da Kanallar ve Roller sayfasından seçilir.',
   'Öneri: /oneri yazılır, #oy-ver kanalına gider ve üyeler oy verir.',
@@ -20,7 +21,7 @@ export const FEATURES = [
   'Anket: yetkililer açar, üyeler butonla tek oy verir, aynı seçeneğe tekrar basınca oy geri alınır.',
   'Çekiliş: yetkililer başlatır, üyeler butonla katılır.',
   'Yeni çekilişlerde Çekiliş Bildirimi, yeni anketlerde Anket Bildirimi rolü etiketlenir. Bu roller #roller kanalından alınır.',
-  'Bot güncellemeleri her Pazar 20:00\'de #karia-bot forumundaki "Karia Local Güncellemeleri" başlığında paylaşılır.',
+  'Bot güncellemeleri her Pazar 20:00\'de #karia-local forumundaki "Karia Local Güncellemeleri" başlığında paylaşılır. Minecraft ve website güncellemeleri de aynı saatte #minecraft ve #website forumlarına yazılır.',
 ];
 
 export const STAFF_FEATURES = [

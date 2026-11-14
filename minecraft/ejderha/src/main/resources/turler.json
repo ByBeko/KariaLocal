@@ -1,0 +1,250 @@
+{
+  "_aciklama": "Karia ejderha türleri. Yeni tür eklemek için bir blok kopyala, id'yi değiştir, sonra tools/paket_uret.py ile paketi yeniden üret. Renkler #RRGGBB; boyut 1.0 = ~3 blok boy. desen: duz | serit | benek; aksan: desen rengi.",
+  "turler": [
+    {
+      "id": "kor_kanat",
+      "ad": "Kor Kanat",
+      "renk": "#e8553a",
+      "aciklama": "Çöllerde ve kurak yaylalarda yaşayan ateş soluyan ejderha.",
+      "element": "ATES",
+      "saldirgan": true,
+      "agirlik": 20,
+      "boyut": 1.6,
+      "can": 120,
+      "hasar": 10,
+      "yurume": 0.3,
+      "ucus": 1.05,
+      "yem": "SALMON",
+      "biyomlar": [
+        "desert",
+        "badlands",
+        "savanna",
+        "eroded"
+      ],
+      "renkler": {
+        "ana": "#a8231b",
+        "karin": "#f0a43c",
+        "koyu": "#3a0e0b",
+        "zar": "#c9482a",
+        "goz": "#ffe14d",
+        "boynuz": "#e8d8b0",
+        "aksan": "#f07a2a"
+      },
+      "desen": "serit"
+    },
+    {
+      "id": "ayaz_pence",
+      "ad": "Ayaz Pençe",
+      "renk": "#8fd0ff",
+      "aciklama": "Karlı dağlarda yaşar; nefesi düşmanlarını dondurur.",
+      "element": "BUZ",
+      "saldirgan": true,
+      "agirlik": 18,
+      "boyut": 1.6,
+      "can": 120,
+      "hasar": 9,
+      "yurume": 0.3,
+      "ucus": 1.0,
+      "yem": "COD",
+      "biyomlar": [
+        "snowy",
+        "frozen",
+        "ice_spikes",
+        "grove",
+        "jagged_peaks"
+      ],
+      "renkler": {
+        "ana": "#6fa9dc",
+        "karin": "#e8f4ff",
+        "koyu": "#284f7a",
+        "zar": "#b9dcfa",
+        "goz": "#9ef6ff",
+        "boynuz": "#ffffff",
+        "aksan": "#f2fbff"
+      },
+      "desen": "benek"
+    },
+    {
+      "id": "firtina_sirti",
+      "ad": "Fırtına Sırtı",
+      "renk": "#b49cff",
+      "aciklama": "Rüzgârlı tepelerde dolaşan, şimşek çağıran hızlı ejderha.",
+      "element": "SIMSEK",
+      "saldirgan": true,
+      "agirlik": 12,
+      "boyut": 1.5,
+      "can": 100,
+      "hasar": 11,
+      "yurume": 0.33,
+      "ucus": 1.25,
+      "yem": "RABBIT",
+      "biyomlar": [
+        "windswept",
+        "stony_peaks",
+        "meadow"
+      ],
+      "renkler": {
+        "ana": "#47378a",
+        "karin": "#dccb55",
+        "koyu": "#1b1440",
+        "zar": "#6c58c2",
+        "goz": "#fff27a",
+        "boynuz": "#f4e9a0",
+        "aksan": "#f2e05a"
+      },
+      "desen": "serit"
+    },
+    {
+      "id": "zehir_disi",
+      "ad": "Zehir Dişi",
+      "renk": "#9be05a",
+      "aciklama": "Bataklık ve ormanlarda saklanır; nefesi zehirler.",
+      "element": "ZEHIR",
+      "saldirgan": true,
+      "agirlik": 16,
+      "boyut": 1.4,
+      "can": 90,
+      "hasar": 8,
+      "yurume": 0.32,
+      "ucus": 1.0,
+      "yem": "SPIDER_EYE",
+      "biyomlar": [
+        "swamp",
+        "mangrove",
+        "jungle"
+      ],
+      "renkler": {
+        "ana": "#3b8a35",
+        "karin": "#c4df67",
+        "koyu": "#18361a",
+        "zar": "#66ab45",
+        "goz": "#e4ff3b",
+        "boynuz": "#d6d0a0",
+        "aksan": "#1f4d1c"
+      },
+      "desen": "benek"
+    },
+    {
+      "id": "golge_suzulen",
+      "ad": "Gölge Süzülen",
+      "renk": "#a77bff",
+      "aciklama": "Karanlık ormanların en hızlı avcısı; nefesi kör eder.",
+      "element": "GOLGE",
+      "saldirgan": true,
+      "agirlik": 8,
+      "boyut": 1.4,
+      "can": 90,
+      "hasar": 10,
+      "yurume": 0.36,
+      "ucus": 1.4,
+      "yem": "CHICKEN",
+      "biyomlar": [
+        "dark_forest",
+        "pale_garden",
+        "deep_dark"
+      ],
+      "renkler": {
+        "ana": "#29233a",
+        "karin": "#5d4290",
+        "koyu": "#0d0b14",
+        "zar": "#43325f",
+        "goz": "#b46bff",
+        "boynuz": "#6f6a80",
+        "aksan": "#9a5cff"
+      },
+      "desen": "serit"
+    },
+    {
+      "id": "kaya_govde",
+      "ad": "Kaya Gövde",
+      "renk": "#c2b29a",
+      "aciklama": "Dağ eteklerinde yaşayan iri ve dayanıklı ejderha; yavaş uçar, sert vurur.",
+      "element": "TOPRAK",
+      "saldirgan": false,
+      "agirlik": 12,
+      "boyut": 2.0,
+      "can": 200,
+      "hasar": 13,
+      "yurume": 0.25,
+      "ucus": 0.75,
+      "yem": "MUTTON",
+      "biyomlar": [
+        "stony_shore",
+        "dripstone",
+        "windswept_gravelly",
+        "taiga"
+      ],
+      "renkler": {
+        "ana": "#75695c",
+        "karin": "#ab9d88",
+        "koyu": "#3a332c",
+        "zar": "#8f7f6b",
+        "goz": "#ff8a2a",
+        "boynuz": "#d8cfc0",
+        "aksan": "#c8622a"
+      },
+      "desen": "benek"
+    },
+    {
+      "id": "dalga_kanat",
+      "ad": "Dalga Kanat",
+      "renk": "#5fe0d0",
+      "aciklama": "Kıyılarda ve okyanuslarda yaşar; suda çok hızlı yüzer.",
+      "element": "SU",
+      "saldirgan": false,
+      "agirlik": 14,
+      "boyut": 1.5,
+      "can": 110,
+      "hasar": 9,
+      "yurume": 0.3,
+      "ucus": 1.0,
+      "yem": "TROPICAL_FISH",
+      "biyomlar": [
+        "ocean",
+        "beach",
+        "river"
+      ],
+      "renkler": {
+        "ana": "#1d7b85",
+        "karin": "#86e3d4",
+        "koyu": "#0c3a41",
+        "zar": "#3eb1ae",
+        "goz": "#d8fff8",
+        "boynuz": "#e0f4f0",
+        "aksan": "#b5fff1"
+      },
+      "desen": "serit"
+    },
+    {
+      "id": "altin_pul",
+      "ad": "Altın Pul",
+      "renk": "#ffd24a",
+      "aciklama": "Çok nadir görülür; nefesi binicisini iyileştirir, düşmanları parlatır.",
+      "element": "ALTIN",
+      "saldirgan": false,
+      "agirlik": 3,
+      "boyut": 1.3,
+      "can": 80,
+      "hasar": 7,
+      "yurume": 0.33,
+      "ucus": 1.15,
+      "yem": "GOLDEN_CARROT",
+      "biyomlar": [
+        "plains",
+        "sunflower",
+        "cherry_grove",
+        "flower_forest"
+      ],
+      "renkler": {
+        "ana": "#d19a16",
+        "karin": "#fff0a6",
+        "koyu": "#75540a",
+        "zar": "#efc04a",
+        "goz": "#ffffff",
+        "boynuz": "#fff8dc",
+        "aksan": "#fff6cf"
+      },
+      "desen": "duz"
+    }
+  ]
+}

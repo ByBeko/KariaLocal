@@ -1,6 +1,6 @@
 // Emoji ve rol listeleri: tek embed, boşluksuz, gerekirse sayfalı.
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { brandEmbed } from '../utils/embeds.js';
+import { kariaEmbed } from '../utils/embeds.js';
 import { emojiSlots } from './expressions.js';
 
 const PAGE_CHARS = 3800;
@@ -26,7 +26,7 @@ function emojiEmbed(guild) {
   const limit = emojiSlots(guild);
   return {
     pages: emojiPages(guild),
-    embed: brandEmbed().setAuthor({ name: `${guild.name} • Emojiler`, iconURL: guild.iconURL() ?? undefined }),
+    embed: kariaEmbed(null, 'Emojiler', { icon: guild.iconURL() ?? undefined }).setTitle(guild.name).setThumbnail(guild.iconURL({ size: 256 })),
     head: guild.emojis.cache.size ? `Sabit **${still}/${limit}** • Hareketli **${guild.emojis.cache.size - still}/${limit}**\n` : 'Sunucuda henüz emoji yok.',
   };
 }
@@ -39,7 +39,7 @@ function roleEmbed(guild) {
   }
   return {
     pages: pages.length ? pages : [''],
-    embed: brandEmbed().setAuthor({ name: `${guild.name} • Roller`, iconURL: guild.iconURL() ?? undefined }),
+    embed: kariaEmbed(null, 'Roller', { icon: guild.iconURL() ?? undefined }).setTitle(guild.name).setThumbnail(guild.iconURL({ size: 256 })),
     head: roles.length ? `Toplam **${roles.length}** rol\n` : 'Sunucuda henüz rol yok.',
   };
 }
@@ -52,7 +52,7 @@ export function listView(kind, guild, ownerId, page) {
   embed.setDescription(`${head}${pages[current]}`.trimEnd());
   const components = [];
   if (pages.length > 1) {
-    embed.setFooter({ text: `Sayfa ${current + 1}/${pages.length}` });
+    embed.setFooter({ text: `Karia Local | /yardım • Sayfa ${current + 1}/${pages.length}`, iconURL: embed.data.footer?.icon_url });
     const button = (label, target, disabled) =>
       new ButtonBuilder().setCustomId(`liste:${kind}:${ownerId}:${target}`).setLabel(label).setStyle(ButtonStyle.Secondary).setDisabled(disabled);
     components.push(new ActionRowBuilder().addComponents(button('Önceki', current - 1, current === 0), button('Sonraki', current + 1, current === pages.length - 1)));

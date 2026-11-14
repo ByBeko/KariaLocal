@@ -1,7 +1,7 @@
 import { e } from '../../utils/emojis.js';
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType, MessageFlags } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { kariaEmbed } from '../../utils/embeds.js';
 import { UserError } from '../../utils/errors.js';
 import { addKeyword, setupLinks, setupProfanity, setupSpam } from '../../systems/automod.js';
 
@@ -50,6 +50,6 @@ export default {
       console.error('[AutoMod]', error);
       throw new UserError(`AutoMod kuralı kurulamadı: ${error.message}`);
     }
-    await interaction.editReply({ embeds: [brandEmbed().setDescription(`${e('onayli', '✅')} ${text}`)] });
+    await interaction.editReply({ embeds: [kariaEmbed(null, 'Otomatik Moderasyon').setDescription(`${e('onayli', '✅')} ${text}`)] });
   },
 };

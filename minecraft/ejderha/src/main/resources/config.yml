@@ -1,0 +1,58 @@
+# KariaEjderha ayarları. Türler ayrı dosyada: turler.json
+
+# Yavrunun yetişkin olması için gereken gerçek süre (dakika). %60'ta binilebilir, %100'de uçabilir.
+buyume-dakika: 90
+
+# Bir oyuncunun en fazla kaç ejderhası olabilir (ahırdakiler dahil). karia.ejder.sinirsiz izni sınırı kaldırır.
+oyuncu-basina-en-cok: 4
+
+# Vahşi ejderhaya yemini her verişte evcilleşme şansı (0-1).
+evcillestirme-sansi: 0.2
+
+# Vahşi yetişkin ejderha öldüğünde yumurta düşürme şansı.
+vahsi-yumurta-sansi: 0.08
+
+# İki evcil yetişkinin yeniden yumurta bırakabilmesi için bekleme (dakika).
+ureme-bekleme-dakika: 20
+
+# Nefes saldırısı
+nefes-bekleme-ms: 2500
+nefes-menzil: 12
+nefes-hasar-carpani: 0.8
+
+# Binince yürüme/uçma hızı çarpanı
+hiz-carpani: 1.0
+
+# Taban kurdun ejderha boyuna oranı (binicinin oturma yüksekliğini etkiler)
+kurt-olcek: 1.0
+
+dogal-dogma:
+  # Vahşi ejderhaların kendiliğinden doğacağı dünyalar.
+  dunyalar: [Ejder_Adasi]
+  aralik-saniye: 30
+  sans: 0.35
+  dunya-basina-en-cok: 12
+
+dunya:
+  # /ejder ada komutunun götürdüğü dünya (hub'dan sonraki ejderha dünyası)
+  ad: Ejder_Adasi
+  # Viking kampı ve ejderha yuvası üretilecek dünyalar (yalnızca yeni oluşan chunk'larda)
+  yapilar: [Ejder_Adasi]
+  kamp-sansi: 110        # her chunk için 1/110
+  yuva-sansi: 150
+  yuva-min-yukseklik: 85
+
+gemi:
+  # Gemi kurulabilecek dünyalar (boş = hepsi)
+  dunyalar: [Ejder_Adasi]
+  en-cok-blok: 800
+  oyuncu-basina-en-cok: 2
+  # Her yün bloğu kaç bloğu havada tutar (yün * bu >= toplam blok ise gemi uçar)
+  balon-kaldirma: 8
+  su-hizi: 0.35
+  hava-hizi: 0.5
+  herkes-surebilir: false
+
+bedrock:
+  # Bedrock (Geyser) oyuncularına ayrı model gösterilsin mi
+  acik: true

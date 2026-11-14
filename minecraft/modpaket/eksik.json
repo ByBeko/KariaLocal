@@ -1,0 +1,436 @@
+[
+ {
+  "projectID": 575109,
+  "ad": "Biome Particle Weather",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/biome-particle-weather",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 255105,
+  "ad": "Friendly Fire",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/friendly-fire",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1283480,
+  "ad": "Isle of Berk Xaero's Minimap Icons",
+  "tur": "Resource Packs",
+  "url": "https://www.curseforge.com/minecraft/texture-packs/isle-of-berk-xaeros-minimap-icons",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 629733,
+  "ad": "Alcocraft: Beer & Stuff",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/alcocraft-beer-and-stuff",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1586849,
+  "ad": "IOB Deadlock Fixes",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/isleofberk-deadlockfix",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1312208,
+  "ad": "Dred Dragon's",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/dred-dragons",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 418514,
+  "ad": "Connectible Chains [FORGE]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/connectible-chains-forge",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1402785,
+  "ad": "Dragonfire (AA Expansion)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/dragonfire-aa-expansion",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 840788,
+  "ad": "CullLessLeaves Reforged (Unofficial)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/culllessleaves-reforged",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1205928,
+  "ad": "Isle of Berk HTTYD Berk Island",
+  "tur": "Worlds",
+  "url": "https://www.curseforge.com/minecraft/worlds/isle-of-berk-httyd-berk-island",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 515708,
+  "ad": "Paxi (Forge/NeoForge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/paxi",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 322506,
+  "ad": "BSL Shaders",
+  "tur": "Shaders",
+  "url": "https://www.curseforge.com/minecraft/shaders/bsl-shaders",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 581495,
+  "ad": "Oculus",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/oculus",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 630620,
+  "ad": "Fastload",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/fastload",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 678384,
+  "ad": "Solas Shader",
+  "tur": "Shaders",
+  "url": "https://www.curseforge.com/minecraft/shaders/solas-shader",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 579564,
+  "ad": "Fantasy's Furniture",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/fantasys-furniture",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1424358,
+  "ad": "Leafs Variants - An Isle Of Berk Addon",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/leafsvariants",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1539235,
+  "ad": "Spectre's Assorted Dragons",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/spectres-assorted-dragons",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 585546,
+  "ad": "BisectHosting Server Integration Menu [FORGE]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/bisecthosting-server-integration-menu-forge",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 421850,
+  "ad": "YUNG's API (Forge/NeoForge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/yungs-api",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 1405980,
+  "ad": "Riders of the archipelago",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/riders-of-the-archipelago",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 813369,
+  "ad": "Night Config Fixes [Archived]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/night-config-fixes",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1240104,
+  "ad": "Archipelago Additions - How to Train your Dragon [HTTYD]",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/archipelago-additions",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1332554,
+  "ad": "off the grid dragons",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/off-the-grid-dragons",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 615352,
+  "ad": "Better Villages - Forge",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/better-village-forge",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 526854,
+  "ad": "Starlight (Forge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/starlight-forge",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 492574,
+  "ad": "My Server Is Compatible",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/my-server-is-compatible",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 853424,
+  "ad": "Reforgium",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/reforgium",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1651541,
+  "ad": "Isolated Journey",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/isolated-journey",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 908401,
+  "ad": "Isle of Berk Variant Loader",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/isle-of-berk-variant-loader",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 406081,
+  "ad": "AstraLex Shaders",
+  "tur": "Shaders",
+  "url": "https://www.curseforge.com/minecraft/shaders/astralex-shader-bsl-edit",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1423895,
+  "ad": "Dragon Feed",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/dragon-feed",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1358225,
+  "ad": "Dragon Wars Variants",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/dragon-wars-variants",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 663125,
+  "ad": "TexTrue's Rubidium Options",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/textrues-rubidium-options",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 821790,
+  "ad": "Lightspeed - Launch optimizations",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/lightspeedmod",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 510089,
+  "ad": "YUNG's Better Dungeons (Forge/NeoForge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/yungs-better-dungeons",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 1409544,
+  "ad": "Alpha's Rise",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/alphas-rise",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 536660,
+  "ad": "YUNG's Bridges (Forge/NeoForge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/yungs-bridges",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 233342,
+  "ad": "Fairy Lights",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/fairy-lights",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 853851,
+  "ad": "Enhanced Block Entities Reforged (Unofficial)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/enhanced-block-entities-reforged-unofficial",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 532727,
+  "ad": "Library Ferret - Forge",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/library-ferret-forge",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 419286,
+  "ad": "MixinBooter",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/mixin-booter",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 385587,
+  "ad": "Complementary Shaders - Unbound",
+  "tur": "Shaders",
+  "url": "https://www.curseforge.com/minecraft/shaders/complementary-unbound",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 610844,
+  "ad": "Bliss Shaders",
+  "tur": "Shaders",
+  "url": "https://www.curseforge.com/minecraft/shaders/bliss-shader",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 389665,
+  "ad": "YUNG's Better Mineshafts (Forge/NeoForge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/yungs-better-mineshafts-forge",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 368718,
+  "ad": "JEITweaker",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/jeitweaker",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 465575,
+  "ad": "YUNG's Better Strongholds (Forge/NeoForge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/yungs-better-strongholds",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 1290054,
+  "ad": "HTTYD Franchise Paintings",
+  "tur": "Resource Packs",
+  "url": "https://www.curseforge.com/minecraft/texture-packs/httyd-franchise-paintings",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1429706,
+  "ad": "Dragon Compass",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/dragon-compass",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 245733,
+  "ad": "ToroHealth Damage Indicators",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/torohealth-damage-indicators",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 974401,
+  "ad": "Mobtimizations - Entity Performance Fixes",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/mobtimizations",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 627566,
+  "ad": "MemoryLeakFix",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/memoryleakfix",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 407174,
+  "ad": "Shutup Experimental Settings!",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/shutup-experimental-settings",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1489427,
+  "ad": "Dragons of the Cosmos (Isle of Berk Addon)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/dragons-of-the-cosmos",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 900225,
+  "ad": "Isle of Berk Addons",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/isle-of-berk-addons",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1345292,
+  "ad": "Mystiques of the Wilds (Formerly Hybrids Plus)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/hybrids-plus",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 699722,
+  "ad": "Pet Pass: Trade Your Pets",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/pet-transfer-trade-your-pets",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1290057,
+  "ad": "Isle of Berk Advancement Plaques",
+  "tur": "Resource Packs",
+  "url": "https://www.curseforge.com/minecraft/texture-packs/isle-of-berk-advancement-plaques",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 627557,
+  "ad": "Complementary Shaders - Reimagined",
+  "tur": "Shaders",
+  "url": "https://www.curseforge.com/minecraft/shaders/complementary-reimagined",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 480006,
+  "ad": "YUNG's Extras (Forge/NeoForge)",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/yungs-extras",
+  "neden": "yalnızca Forge 1.21.1"
+ },
+ {
+  "projectID": 1505571,
+  "ad": "Nests Of The Archipelago!",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/nests-of-the-archipelago",
+  "neden": "1.21.1 yok"
+ },
+ {
+  "projectID": 1653362,
+  "ad": "IOB Performance Patches",
+  "tur": "Mods",
+  "url": "https://www.curseforge.com/minecraft/mc-mods/isle-of-berk-performance-patches",
+  "neden": "1.21.1 yok"
+ }
+]

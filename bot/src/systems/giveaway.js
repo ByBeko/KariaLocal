@@ -3,7 +3,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { e } from '../utils/emojis.js';
 import { randomInt } from 'node:crypto';
 import { db } from '../core/database.js';
-import { brandEmbed } from '../utils/embeds.js';
+import { kariaEmbed } from '../utils/embeds.js';
 import { sendLog } from '../utils/logger.js';
 import { notifyRole } from '../utils/notifyRole.js';
 
@@ -34,11 +34,10 @@ function view(g, { ended = false, winnerIds = [] } = {}) {
     `${e('kullanici', '🎙️')} Düzenleyen: <@${g.host_id}>`,
   ];
   if (g.role_id) lines.push(`${e('kilit', '🔒')} Şart: <@&${g.role_id}> rolüne sahip olmak`);
-  const embed = brandEmbed()
+  const embed = kariaEmbed(null, ended ? 'Çekiliş Bitti' : 'Çekiliş', { footer: ended ? 'Çekiliş sona erdi' : 'Bitiş zamanı' })
     .setColor(ended ? 0x95a5a6 : 0xf1c40f)
     .setTitle(`${e('konfeti', '🎉')} ${g.prize}`)
     .setDescription(lines.join('\n'))
-    .setFooter({ text: ended ? 'Çekiliş sona erdi' : 'Bitiş zamanı' })
     .setTimestamp(g.ends_at);
   const button = new ButtonBuilder()
     .setCustomId('cekilis:katil')

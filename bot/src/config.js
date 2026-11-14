@@ -31,11 +31,11 @@ export default {
 
   // Boş olanlar /linkler ve bağlantılar panelinde gösterilmez.
   links: {
-    website: '',
+    website: 'https://karia.live',
     discord: 'https://discord.gg/karia',
-    instagram: '',
-    tiktok: '',
-    youtube: '',
+    instagram: 'https://www.instagram.com/karia.live/',
+    tiktok: 'https://www.tiktok.com/@karia.live',
+    youtube: 'https://www.youtube.com/@karialivemedya',
     x: '',
     github: '',
   },

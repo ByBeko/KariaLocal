@@ -31,7 +31,7 @@ export default {
 
     const count = countActiveWarns(guild.id, member.id);
     const limit = getSetting(guild.id, 'warn_limit');
-    const embed = caseEmbed(c).setFooter({ text: `Aktif uyarı: ${count}${limit ? ` / ${limit}` : ''}` });
+    const embed = caseEmbed(c, { footer: `Aktif uyarı: ${count}${limit ? ` / ${limit}` : ''}` });
     await interaction.reply({ embeds: [embed] });
 
     if (limit > 0 && count % limit === 0 && member.moderatable) {

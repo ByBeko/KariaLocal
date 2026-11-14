@@ -1,0 +1,7 @@
+{
+ "parent": "karia:ejder/kanat_sag",
+ "textures": {
+  "skin": "karia:ejder/golge_suzulen",
+  "particle": "karia:ejder/golge_suzulen"
+ }
+}

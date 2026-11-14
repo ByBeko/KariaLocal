@@ -2,7 +2,7 @@
 // Yetkililer ek olarak sadece kendilerine görünen "Yetkili Paneli"ni açabilir (seviye seviye ayrılmış).
 import { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ApplicationCommandOptionType as T } from 'discord.js';
 import config from '../config.js';
-import { brandEmbed } from '../utils/embeds.js';
+import { brandEmbed, kariaEmbed, linkRow } from '../utils/embeds.js';
 import { e } from '../utils/emojis.js';
 import { checkAccess, getLevel, Level, LevelName } from '../utils/permissions.js';
 import { quote, fit } from '../utils/style.js';
@@ -13,7 +13,7 @@ const P = 'kari'; // örneklerde gösterilen ön ek (kl ve k da çalışır)
 /** Üye kategorileri (görünme sırasıyla) */
 export const CATEGORIES = {
   genel: { label: 'Genel', get emoji() { return e('bilgi', '📌'); }, description: 'Profil, sunucu, roller' },
-  topluluk: { label: 'Topluluk', get emoji() { return e('yildiz', '⭐'); }, description: 'Seviye, sıralama, öneri' },
+  topluluk: { label: 'Topluluk', get emoji() { return e('yildiz', '⭐'); }, description: 'AFK, öneri, rapor' },
   muzik: { label: 'Müzik', get emoji() { return e('muzik', '🎵'); }, description: 'YouTube’dan müzik çal' },
   ekonomi: { label: 'Ekonomi', get emoji() { return e('oyun', '🎰'); }, description: 'Coin ve oyunlar' },
 };
@@ -21,11 +21,10 @@ export const CATEGORIES = {
 /** Kategori sayfalarındaki alt başlıklar. Burada olmayan üye komutu Genel altında "Diğer" başlığında görünür, yani kaybolmaz. */
 const COMMAND_GROUPS = {
   genel: [
-    ['Bilgi', 'bilgi', ['bilgi', 'avatar', 'roller', 'emoji']],
-    ['Karia', 'bot', ['yardim', 'ping', 'bot-bilgi']],
+    ['Bilgi', 'bilgi', ['bilgi']],
+    ['Karia', 'bot', ['yardim', 'bot-bilgi']],
   ],
   topluluk: [
-    ['Seviye', 'yildiz', ['seviye', 'siralama', 'istatistik']],
     ['Sosyal', 'arkadaslar', ['afk', 'oneri', 'rapor']],
   ],
   muzik: [
@@ -38,7 +37,9 @@ const COMMAND_GROUPS = {
     ['Oyunlar', 'oyun', ['coinflip', 'slot', 'blackjack']],
   ],
 };
-const CATEGORY_OF = new Map(Object.entries(COMMAND_GROUPS).flatMap(([category, groups]) => groups.flatMap(([, , names]) => names.map((name) => [name, category]))));
+/** /bilgi butonlarından açılan komutlar: çalışmaya devam eder ama yardım listesinde ayrıca gösterilmez */
+const HIDDEN_IN_HELP = new Set(['avatar', 'roller', 'emoji', 'seviye', 'siralama', 'istatistik']);
+const CATEGORY_OF =new Map(Object.entries(COMMAND_GROUPS).flatMap(([category, groups]) => groups.flatMap(([, , names]) => names.map((name) => [name, category]))));
 
 const SHORT_DESCRIPTIONS = {
   seviye: 'Seviye kartın ve ödüller',
@@ -46,7 +47,7 @@ const SHORT_DESCRIPTIONS = {
   siralama: 'Sunucu sıralamaları',
   sira: 'Müzik sırası',
   avatar: 'Profil fotoğrafı ve afişi',
-  bilgi: 'Üye ve sunucu bilgileri',
+  bilgi: 'Üye/sunucu bilgisi; avatar, seviye, sıralama, roller butonlarda',
   rapor: 'Bir üyeyi yetkililere bildir',
   emoji: 'Sunucunun emojileri',
   roller: 'Sunucunun rolleri',
@@ -137,7 +138,7 @@ export function usageLines(command, style) {
 function userCommands(member, client) {
   const groups = new Map(Object.keys(CATEGORIES).map((k) => [k, []]));
   for (const command of client.commands.values()) {
-    if (isStaffCommand(command) || checkAccess(member, command)) continue;
+    if (isStaffCommand(command) || HIDDEN_IN_HELP.has(command.data.name) || checkAccess(member, command)) continue;
     groups.get(CATEGORY_OF.get(command.data.name) ?? 'genel').push(command);
   }
   for (const [key, list] of groups) if (!list.length) groups.delete(key);
@@ -177,16 +178,13 @@ export function staffButtonRow() {
   );
 }
 
-const helpEmbed = (member, client, title) => {
-  const embed = brandEmbed()
-    .setAuthor({ name: 'Karia - Yardım Merkezi', iconURL: client.user.displayAvatarURL() })
-    .setThumbnail(member.guild.iconURL({ size: 256 }));
-  return title ? embed.setTitle(title) : embed;
+const helpEmbed = (member, client, title, footer) => {
+  const embed = kariaEmbed(client, 'Yardım Merkezi', { footer }).setThumbnail(member.guild.iconURL({ size: 256 }));
+  return embed.setTitle(title ?? client.user.username);
 };
 
 export function homeView(member, client, ownerId, { staffButton = false } = {}) {
   const total = [...userCommands(member, client).values()].reduce((sum, list) => sum + list.length, 0);
-  const heartId = e('kalp', '').match(/:(\d+)>/)?.[1];
   const embed = helpEmbed(member, client)
     .setDescription([
       `Merhaba **${member.displayName}**!`,
@@ -196,17 +194,14 @@ export function homeView(member, client, ownerId, { staffButton = false } = {}) 
       `${e('zincir', '🔗')} **Hızlı Bağlantılar:**`,
       `• Metin Komut Prefix: ${config.prefixes.map((p) => `\`${p}\``).join(' ')} | Slash Komutları: \`/\``,
       `• Toplam Komut: \`${total}\``,
-    ].join('\n'))
-    .setFooter({ text: 'Karia Local | /yardım', iconURL: heartId ? `https://cdn.discordapp.com/emojis/${heartId}.png` : undefined })
-    .setTimestamp();
-  return { content: '', embeds: [embed], components: components(member, client, ownerId, 'ana', staffButton), allowedMentions: { parse: [] } };
+    ].join('\n'));
+  return { content: '', embeds: [embed], components: [...components(member, client, ownerId, 'ana', staffButton), linkRow()], allowedMentions: { parse: [] } };
 }
 
 export function categoryView(member, client, ownerId, category, { staffButton = false } = {}) {
   const list = userCommands(member, client).get(category) ?? [];
-  const embed = helpEmbed(member, client, `${info(category).emoji} ${info(category).label}`)
-    .setDescription(fit(compactSections(groupedSections(category, list)), 4096) || 'Bu kategoride komut yok.')
-    .setFooter({ text: `${list.length} komut • Örnek ve seçenekler için aşağıdaki menüden seç` });
+  const embed = helpEmbed(member, client, `${info(category).emoji} ${info(category).label}`, `${list.length} komut`)
+    .setDescription(fit(compactSections(groupedSections(category, list)), 4096) || 'Bu kategoride komut yok.');
   return { content: '', embeds: [embed], components: components(member, client, ownerId, category, staffButton), allowedMentions: { parse: [] } };
 }
 

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { brandEmbed } from '../../utils/embeds.js';
+import { brandEmbed, kariaEmbed } from '../../utils/embeds.js';
+import { e } from '../../utils/emojis.js';
 
 export default {
   aliases: ['pp', 'av'],
@@ -16,13 +17,20 @@ export default {
     const server = member?.avatar ? member.displayAvatarURL({ size: 1024 }) : null;
     const banner = user.bannerURL({ size: 1024 });
 
-    const embeds = [brandEmbed().setAuthor({ name: `${user.username} • ${server ? 'Sunucu avatarı' : 'Avatar'}` }).setImage(server ?? global)];
-    if (server) embeds.push(brandEmbed().setDescription('Genel profil fotoğrafı').setImage(global));
-    if (banner) embeds.push(brandEmbed().setDescription('Profil afişi').setImage(banner));
+    const embeds = [
+      kariaEmbed(interaction.client, server ? 'Sunucu Avatarı' : 'Avatar', { icon: user.displayAvatarURL() })
+        .setTitle(member?.displayName ?? user.username)
+        .setDescription(`${user} · \`${user.username}\``)
+        .setImage(server ?? global),
+    ];
+    if (server) embeds.push(brandEmbed().setAuthor({ name: 'Genel profil fotoğrafı' }).setImage(global));
+    if (banner) embeds.push(brandEmbed().setAuthor({ name: 'Profil afişi' }).setImage(banner));
 
+    const link = (text, url, key, fallback) => new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel(text).setURL(url).setEmoji(e(key, fallback));
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Tarayıcıda aç').setURL(server ?? global),
-      ...(banner ? [new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Afiş').setURL(banner)] : []),
+      link('Tarayıcıda Aç', server ?? global, 'foto', '🖼️'),
+      ...(server ? [link('Genel Avatar', global, 'kullanici', '👤')] : []),
+      ...(banner ? [link('Afiş', banner, 'parilti', '✨')] : []),
     );
     await interaction.reply({ embeds, components: [row] });
   },
