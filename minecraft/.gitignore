@@ -14,3 +14,7 @@ modpaket/dist/
 # Bu depoya ait olmayan diğer projeler
 ejderha/
 mod-uyumluluk.csv
+
+# KariaEkonomi derleme çıktıları ve indirilen bağımlılıklar
+ekonomi/lib/
+ekonomi/build/
