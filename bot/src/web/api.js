@@ -10,7 +10,8 @@ import { getBalance, richBoard } from '../systems/economy.js';
 import { getProfile, levelBoard } from '../systems/levels.js';
 import { leaderboard, serverStats, userStats } from '../systems/stats.js';
 import { getServerStatus, mcEnabled, mcIp } from '../systems/minecraft.js';
-import { changeBalance, createLinkCode, linkOf, playerView, redeemLinkCode, unlink } from '../systems/mcLink.js';
+import { buyTier, changeBalance, createLinkCode, linkOf, playerView, redeemLinkCode, unlink } from '../systems/mcLink.js';
+import { ensureTierRoles, memberTier } from '../systems/membership.js';
 
 const MAX_BODY = 16 * 1024;
 const BOARD_SIZE = 15;
@@ -146,11 +147,21 @@ async function route(client, guild, req, url, body) {
 }
 
 // Minecraft eklentisinin kapısı: kendi anahtarıyla çalışır ve yalnızca bu uçlara erişir, panel yetkisi taşımaz.
+/** Eklenti oyuncunun üyelik kademesini LuckPerms grubuna eşitler: tier null ise grup alınır. */
+async function mcPlayerView(guild, uuid) {
+  const view = playerView(guild.id, uuid);
+  if (!view.linked) return view;
+  await ensureTierRoles(guild);
+  const tier = memberTier(guild, await guild.members.fetch(view.discordId).catch(() => null));
+  return { ...view, tier: tier?.key ?? null, tierUntil: tier?.until ?? null };
+}
+
 function pluginRoute(guild, req, url, body) {
   const { pathname } = url;
   if (req.method === 'POST' && pathname === '/mc/link-code') return createLinkCode(guild.id, body.uuid, body.name);
-  if (req.method === 'GET' && pathname === '/mc/player') return playerView(guild.id, url.searchParams.get('uuid'));
+  if (req.method === 'GET' && pathname === '/mc/player') return mcPlayerView(guild, url.searchParams.get('uuid'));
   if (req.method === 'POST' && pathname === '/mc/balance') return changeBalance(guild.id, body.uuid, body.amount, body.txId, body.reason);
+  if (req.method === 'POST' && pathname === '/mc/tier') return buyTier(guild, body.uuid, body.tier, body.txId);
   return { __status: 404, error: 'Bulunamadı.' };
 }
 
@@ -184,7 +195,7 @@ export function startWebApi(client, { port = Number(process.env.WEB_API_PORT || 
           return send(400, { error: 'Geçersiz istek.' });
         }
       }
-      const { __status, ...payload } = fromPlugin ? pluginRoute(guild, req, url, body) : await route(client, guild, req, url, body);
+      const { __status, ...payload } = fromPlugin ? await pluginRoute(guild, req, url, body) : await route(client, guild, req, url, body);
       send(__status ?? 200, payload);
     } catch (error) {
       if (error instanceof UserError) return send(400, { error: plain(error.message) });

@@ -5,7 +5,8 @@ api-version: '1.21'
 author: Karia
 description: Karia botunun cüzdanına bağlı Vault ekonomisi
 depend: [Vault]
-loadbefore: [Towny]
+softdepend: [LuckPerms]
+loadbefore: [Towny, AuctionHouse]
 commands:
   bagla:
     description: Minecraft hesabını Karia Discord cüzdanına bağlar
@@ -18,6 +19,13 @@ commands:
     description: Başka bir oyuncuya para gönderir
     usage: /ode <oyuncu> <miktar>
     aliases: [pay]
+  uyelik:
+    description: Üyelik kademeni gösterir
+    usage: /uyelik
+    aliases: [vip, prime]
+  uyelikal:
+    description: Üyelik kademesini coin ile 30 günlüğüne alır
+    usage: /uyelikal <vip|vipplus|kvip|prime>
   ekonomi:
     description: Ekonomi yönetimi
     usage: /ekonomi <ver|al|durum> [oyuncu] [miktar]

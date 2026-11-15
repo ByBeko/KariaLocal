@@ -16,7 +16,7 @@ import { serverStats, formatVoice } from '../systems/stats.js';
 import { CASE_TYPES } from '../systems/moderation.js';
 import { getQueue } from '../systems/music.js';
 import { listReports, openReportCount, resolveReport } from '../systems/reports.js';
-import { primeView, addPrimeFromPanel, removePrimeFromPanel } from '../systems/prime.js';
+import { membershipView, addTierFromPanel, removeTierFromPanel } from '../systems/membership.js';
 import { socialView, startConnect, disconnect, beginUpload, publishVideo, retryPost, tiktokCreator, deletePost } from '../systems/social.js';
 import { mailList, openMail, deleteMail } from '../systems/mailbox.js';
 import { roleProblem, sendButtonRoles } from '../systems/buttonRoles.js';
@@ -26,7 +26,7 @@ import { getOpenTicket, claimTicket, markTicketClosed, finishTicket, approveTick
 export const isPanelAdmin = (member) => getLevel(member) >= Level.ADMIN;
 /** Personel ve üstü paneli açar; komutları seviyesine göre görür */
 export const isPanelStaff = (member) => getLevel(member) >= Level.STAFF;
-/** Yetkililere açık bölümler. Burada olmayan her /admin yolu (ayarlar, sosyal, prime, mail, bot olarak yaz) sadece yöneticiye. */
+/** Yetkililere açık bölümler. Burada olmayan her /admin yolu (ayarlar, sosyal, üyelik, mail, bot olarak yaz) sadece yöneticiye. */
 const STAFF_PATHS = /^\/admin\/(overview|run|dashboard\/\d+|cases|tickets(\/\d{17,20}(\/(reply|claim|close))?)?|reports(\/\d+\/resolve)?|suggestions(\/\d{17,20}\/delete)?)$/;
 
 // Panelde çalışamayanlar: blackjack butonla oynanır (Etkinlikte zaten var), emoji-yukle dosya ister
@@ -471,7 +471,7 @@ export async function adminRoute(client, guild, member, method, path, body) {
     if (path === '/admin/reports') return { reports: reportList(guild) };
     if (path === '/admin/suggestions') return suggestionMessages(guild);
     if (path === '/admin/cases') return { cases: caseList(guild) };
-    if (path === '/admin/prime') return primeView(guild);
+    if (path === '/admin/membership') return membershipView(guild);
     if (path === '/admin/social') return socialView();
     if (path === '/admin/social/tiktok') return tiktokCreator();
     if (path === '/admin/social/mails') return mailList();
@@ -503,8 +503,8 @@ export async function adminRoute(client, guild, member, method, path, body) {
       await sendLog(guild, 'log_staff', { content: `${member} panelden bir paylaşım kaydını sildi: ${title}`, allowedMentions: { parse: [] } });
       return socialView();
     }
-    if (path === '/admin/prime') return addPrimeFromPanel(guild, member, body.userId, body.days);
-    if (path === '/admin/prime/remove') return removePrimeFromPanel(guild, member, body.userId);
+    if (path === '/admin/membership') return addTierFromPanel(guild, member, body.userId, body.tier, body.days);
+    if (path === '/admin/membership/remove') return removeTierFromPanel(guild, member, body.userId);
     const ticket = path.match(/^\/admin\/tickets\/(\d{17,20})\/(reply|claim|close|approve)$/);
     if (ticket) return ticketAction(guild, member, ticket[1], ticket[2], body);
     const report = path.match(/^\/admin\/reports\/(\d+)\/resolve$/);

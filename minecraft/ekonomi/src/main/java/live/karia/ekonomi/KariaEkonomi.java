@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -25,6 +26,7 @@ public final class KariaEkonomi extends JavaPlugin implements Listener {
     private final Ledger ledger = new Ledger();
     private final AtomicBoolean working = new AtomicBoolean(false);
     private BotApi api;
+    private Uyelik uyelik;
     private File dataFile;
     private volatile long backoffUntil = 0;
     private volatile boolean dirty = false;
@@ -42,6 +44,7 @@ public final class KariaEkonomi extends JavaPlugin implements Listener {
 
         getServer().getServicesManager().register(Economy.class, new KariaEconomy(this), this, ServicePriority.Highest);
         getServer().getPluginManager().registerEvents(this, this);
+        uyelik = new Uyelik(this);
 
         // Kuyruk: her saniye bota iletmeyi dene
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, this::drainQueue, 40L, 20L);
@@ -149,7 +152,10 @@ public final class KariaEkonomi extends JavaPlugin implements Listener {
             if (!r.ok()) { lastApiError = "HTTP " + r.status(); return; }
             boolean linked = r.bool("linked");
             Long bal = r.num("balance");
+            String tier = linked ? r.str("tier") : null;
+            Long tierUntil = linked ? r.num("tierUntil") : null;
             Bukkit.getScheduler().runTask(this, () -> {
+                uyelik.esitle(uuid, tier, tierUntil);
                 if (linked && bal != null) {
                     if (!ledger.hasPending(uuid)) ledger.linked.put(uuid, bal);
                     String key = Ledger.key(uuid);
@@ -170,6 +176,9 @@ public final class KariaEkonomi extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) { onJoin(e.getPlayer()); }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent e) { uyelik.cikis(e.getPlayer().getUniqueId()); }
 
     private void onJoin(Player p) {
         UUID uuid = p.getUniqueId();
@@ -267,6 +276,17 @@ public final class KariaEkonomi extends JavaPlugin implements Listener {
                 if (tp != null) msg(tp, "&a" + p.getName() + " sana " + a + " " + currency(a) + " gönderdi.");
                 return true;
             }
+            case "uyelik" -> {
+                if (!(sender instanceof Player p)) { msg(sender, "&cBu komut oyunda kullanılır."); return true; }
+                uyelik.durum(p);
+                return true;
+            }
+            case "uyelikal" -> {
+                if (!(sender instanceof Player p)) { msg(sender, "&cBu komut oyunda kullanılır."); return true; }
+                if (args.length < 1) { msg(p, "&cKullanım: /uyelikal <" + String.join("|", uyelik.kademeler()) + ">"); return true; }
+                uyelik.satinAl(p, args[0], api);
+                return true;
+            }
             case "ekonomi" -> {
                 if (args.length >= 1 && args[0].equalsIgnoreCase("durum")) {
                     msg(sender, "&fBot bağlantısı: " + (!api.configured() ? "&ckapalı (api.secret boş)" : lastApiError == null ? "&atamam" : "&chata (" + lastApiError + ")"));
@@ -294,6 +314,7 @@ public final class KariaEkonomi extends JavaPlugin implements Listener {
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
         String c = cmd.getName().toLowerCase(Locale.ROOT);
         List<String> out = new ArrayList<>();
+        if (c.equals("uyelikal") && args.length == 1) return uyelik.tamamla(args[0]);
         if (c.equals("ekonomi") && args.length == 1) { for (String s : new String[]{"ver", "al", "durum"}) if (s.startsWith(args[0].toLowerCase(Locale.ROOT))) out.add(s); return out; }
         int nameArg = c.equals("ekonomi") ? 2 : 1;
         if ((c.equals("ode") || c.equals("bakiye") || c.equals("ekonomi")) && args.length == nameArg) {

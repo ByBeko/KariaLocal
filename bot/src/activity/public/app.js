@@ -1243,29 +1243,35 @@ for (const b of document.querySelectorAll('[data-board]')) {
   });
 }
 
-// ── Prime üyelikleri ──
-function drawPrime(data) {
-  const picker = memberPicker(data.members, 'Prime verilecek üye');
-  const days = el('select', { className: 'field prime-days', ariaLabel: 'Süre' }, ...data.days.map((d) => el('option', { value: String(d), textContent: `${d} gün`, selected: d === 30 })));
-  const add = el('button', { type: 'button', className: 'primary', textContent: 'Prime Ver' });
+// ── Üyelik (VIP, VIP+, KVIP, Prime) ──
+function drawMembership(data) {
+  const tierName = (key) => data.tiers.find((t) => t.key === key)?.name ?? key;
+  const tierBadge = (key) => el('b', { className: 'tier-badge', textContent: tierName(key), style: `--tier:${data.tiers.find((t) => t.key === key)?.color ?? '#9b59b6'}` });
+  const picker = memberPicker(data.members, 'Üyelik verilecek üye');
+  const tier = el('select', { className: 'field tier-select', ariaLabel: 'Kademe' }, ...data.tiers.map((t) => el('option', { value: t.key, textContent: t.name })));
+  const days = el('select', { className: 'field tier-days', ariaLabel: 'Süre' }, ...data.days.map((d) => el('option', { value: String(d), textContent: `${d} gün`, selected: d === 30 })));
+  const add = el('button', { type: 'button', className: 'primary', textContent: 'Üyelik Ver' });
   add.addEventListener('click', () => guarded(async () => {
     if (!picker.value) throw new Error('Önce üye seç.');
-    drawPrime(await api('/admin/prime', { userId: picker.value, days: Number(days.value) }));
-    say('Prime verildi.', 'win');
+    drawMembership(await api('/admin/membership', { userId: picker.value, tier: tier.value, days: Number(days.value) }));
+    say(`${tierName(tier.value)} verildi.`, 'win');
   }));
-  $('prime-form').replaceChildren(
-    el('div', { className: 'prime-row' }, picker.root, days, add),
-    el('p', { className: 'hint left', textContent: `Rol seçilen süre kadar verilir ve süre bitince kendiliğinden alınır. Üyenin ilk Prime'ında ${fmt(data.coin)} coin hediye edilir, üyeye Discord'dan bilgi gider.` }));
-  $('prime-list').replaceChildren(...(data.prime.length ? data.prime.map((p) => {
+  const gifts = data.tiers.map((t) => `${t.name} ${fmt(t.coins)}`).join(', ');
+  const prices = data.tiers.map((t) => `${t.name} ${fmt(t.price)}`).join(', ');
+  $('tier-form').replaceChildren(
+    el('div', { className: 'tier-row' }, picker.root, tier, days, add),
+    el('p', { className: 'hint left', textContent: `Üyede tek kademe olur: yeni kademe verilince eskisi alınır. Rol seçilen süre kadar verilir, süre bitince kendiliğinden alınır. Kademe ilk kez alınınca bir kez coin hediye edilir (${gifts}); üyeye Discord'dan bilgi gider. Oyuncular Minecraft'ta /uyelikal ile ${data.shopDays} günlüğüne coinle de alabilir (${prices}).` }));
+  $('tier-list').replaceChildren(...(data.list.length ? data.list.map((p) => {
     const extend = el('button', { type: 'button', textContent: '+30 gün' });
-    extend.addEventListener('click', () => guarded(async () => { drawPrime(await api('/admin/prime', { userId: p.id, days: 30 })); say('Süre uzatıldı.', 'win'); }));
-    return el('article', { className: 'item prime-item' },
+    extend.addEventListener('click', () => guarded(async () => { drawMembership(await api('/admin/membership', { userId: p.id, tier: p.tier, days: 30 })); say('Süre uzatıldı.', 'win'); }));
+    return el('article', { className: 'item tier-item' },
       avatarImg(p.id, 'picker-avatar'),
       el('div', {}, el('strong', { textContent: p.name }), el('small', { textContent: p.until ? `Bitiş: ${when(p.until)}` : 'Süresiz' })),
-      el('div', { className: 'item-actions' }, extend, confirmButton('Kaldır', async () => { drawPrime(await api('/admin/prime/remove', { userId: p.id })); say('Prime kaldırıldı.', 'win'); })));
-  }) : [empty('Henüz Prime üye yok.')]));
+      tierBadge(p.tier),
+      el('div', { className: 'item-actions' }, extend, confirmButton('Kaldır', async () => { drawMembership(await api('/admin/membership/remove', { userId: p.id })); say('Üyelik kaldırıldı.', 'win'); })));
+  }) : [empty('Henüz üyeliği olan kimse yok.')]));
 }
-const loadPrime = () => guarded(async () => drawPrime(await api('/admin/prime')));
+const loadMembership = () => guarded(async () => drawMembership(await api('/admin/membership')));
 
 // ── Sosyal paylaşım ──
 const SOCIAL_STATUS = { pending: 'Sırada', running: 'Paylaşılıyor', done: 'Paylaşıldı', failed: 'Başarısız' };
@@ -1595,7 +1601,7 @@ setInterval(() => {
   if (!document.hidden && !document.querySelector('[data-panel="social"]').hidden) refreshSocial();
 }, 5000);
 
-const DASH = { mail: loadMails, social: refreshSocial, prime: loadPrime, home: loadHome,  leaderboard: loadBoard, overview: loadOverview, tickets: loadTickets, reports: loadReports, suggestions: loadSuggestions, cases: loadCases, modules: loadAdmin, settings: loadAdmin, commands: loadAdmin };
+const DASH = { mail: loadMails, social: refreshSocial, membership: loadMembership, home: loadHome,  leaderboard: loadBoard, overview: loadOverview, tickets: loadTickets, reports: loadReports, suggestions: loadSuggestions, cases: loadCases, modules: loadAdmin, settings: loadAdmin, commands: loadAdmin };
 
 tables = initTables({
   api, $, el, fmt, say, setBalance, sfx, cardEl, avatarImg, betValue, guarded,

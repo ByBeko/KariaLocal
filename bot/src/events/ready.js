@@ -12,6 +12,7 @@ import { warmUpAI } from '../systems/ai.js';
 import { cacheInvites } from '../systems/invites.js';
 import { setLevelClient, seedFromStats } from '../systems/levels.js';
 import { startTimers } from '../systems/timers.js';
+import { ensureTierRoles } from '../systems/membership.js';
 import { loadAppEmojis, e } from '../utils/emojis.js';
 import { setEmbedClient } from '../utils/embeds.js';
 import { setupLogs, LOG_CHANNELS } from '../commands/yonetim/kurulum.js';
@@ -79,6 +80,8 @@ export default {
         console.log(`✔ ${await setupLogs(guild).catch((e) => `Log kanalları tamamlanamadı: ${e.message}`)}`);
       }
       startServerCheck(guild);
+      // Üyelik kademe rolleri (VIP, VIP+, KVIP, Prime): yoksa oluşturulur, coin ödülleri bağlanır
+      await ensureTierRoles(guild).catch((err) => console.warn(`⚠ Üyelik rolleri hazırlanamadı: ${err.message}`));
       startActivityServer(client);
       startWebApi(client);
     } else {

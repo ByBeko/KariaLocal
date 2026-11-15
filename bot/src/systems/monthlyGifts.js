@@ -3,7 +3,7 @@ import { db } from '../core/database.js';
 import { getSetting, setSetting } from '../core/settings.js';
 import { grantOnce, skipRoleCoinOnce } from './coinRewards.js';
 import { findGuideChannel } from './guide.js';
-import { grantPrime, PRIME_ROLE } from './prime.js';
+import { grantTier, PRIME_ROLE } from './membership.js';
 import { sendLog } from '../utils/logger.js';
 import { e } from '../utils/emojis.js';
 
@@ -32,7 +32,7 @@ export function recordVote(guildId, userId, now = Date.now()) {
   return true;
 }
 
-const givePrime = (guild, member) => grantPrime(guild, member, GIFT_DAYS, guild.client.user.id);
+const givePrime = (guild, member) => grantTier(guild, member, 'prime', GIFT_DAYS, guild.client.user.id);
 
 async function announce(guild, key, content, userIds) {
   const channel = findGuideChannel(guild, key);

@@ -59,6 +59,10 @@ final class BotApi {
                 + ",\"txId\":" + q(txId) + ",\"reason\":" + q(reason) + "}");
     }
 
+    Result tier(UUID uuid, String tier, String txId) {
+        return send("POST", "/tier", "{\"uuid\":" + q(uuid.toString()) + ",\"tier\":" + q(tier) + ",\"txId\":" + q(txId) + "}");
+    }
+
     private Result send(String method, String path, String json) {
         try {
             HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(base + path))

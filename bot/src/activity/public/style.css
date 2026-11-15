@@ -588,15 +588,16 @@ textarea::-webkit-scrollbar{display:none}
   .content.game .hand,.content.game .table .actions{flex:none}
 }
 
-/* Prime paneli */
-.prime-form{margin-bottom:14px}
-.prime-row{display:flex;align-items:center;gap:10px}
-.prime-row .picker{flex:1;min-width:0}
-.prime-days{width:110px;flex:none}
-.prime-form .hint{margin-top:10px}
-.prime-item{display:flex;align-items:center;gap:12px}
-.prime-item>div:nth-child(2){flex:1;min-width:0}
-.prime-item small{display:block;color:var(--muted);font-size:12px}
+/* Üyelik paneli */
+.tier-form{margin-bottom:14px}
+.tier-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tier-row .picker{flex:1 1 220px;min-width:0}
+.tier-select,.tier-days{width:110px;flex:none}
+.tier-form .hint{margin-top:10px}
+.tier-item{display:flex;align-items:center;gap:12px}
+.tier-item>div:nth-child(2){flex:1;min-width:0}
+.tier-item small{display:block;color:var(--muted);font-size:12px}
+.tier-badge{flex:none;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;color:var(--tier);background:color-mix(in srgb,var(--tier) 16%,transparent);border:1px solid color-mix(in srgb,var(--tier) 45%,transparent)}
 
 /* Destek masası */
 .content.fill [data-panel="tickets"]:not([hidden]){display:flex;flex-direction:column;min-height:0}

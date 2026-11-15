@@ -15,10 +15,26 @@ para-birimi:
   cogul: "coin"
 
 # Yeni (bağlı olmayan) oyuncuya ilk girişte verilecek yerel başlangıç parası
-baslangic-parasi: 0
+baslangic-parasi: 250
 
 # Bağlı oyuncuların bakiyesi bu aralıkla bottan yenilenir (saniye)
 yenileme-saniye: 60
 
 mesaj-oneki: "&#5BE0F0&lKARIA &8» &f"
 bagla-adresi: "karia.live/minecraft"
+
+# Üyelik kademeleri: Discord'daki süreli rol esas alınır, LuckPerms grubu buna eşitlenir.
+# Fiyatlar yalnızca oyunda gösterim/ön kontrol içindir; asıl ücreti bot alır (bot/src/systems/membership.js).
+uyelik:
+  aktif: true
+  gruplar: [vip, vipplus, kvip, prime]
+  adlar:
+    vip: "VIP"
+    vipplus: "VIP+"
+    kvip: "KVIP"
+    prime: "Prime"
+  fiyatlar:
+    vip: 5000
+    vipplus: 10000
+    kvip: 20000
+    prime: 40000

@@ -23,9 +23,16 @@ export const ROLE_COINS = [
   { id: '1568323512693821650', name: 'Hata Avcısı', coins: 1_000 },
   { id: '1568323512693821649', name: 'Erken Destekçi', coins: 1_500 },
   { id: BOOST_ROLE, name: 'Takviye', coins: 2_500 },
-  { id: '1569468546713526443', name: 'Prime', coins: 3_000 },
+  // Üyelik kademeleri (VIP, VIP+, KVIP, Prime) rolleri çözülünce membership.js ekler
 ];
 export const roleCoinAmount = (roleId) => ROLE_COINS.find((r) => r.id === roleId)?.coins ?? 0;
+
+/** Rol ödülünü ekler ya da günceller (ID'si çalışırken belli olan roller için). */
+export function setRoleCoins(id, name, coins) {
+  const found = ROLE_COINS.find((r) => r.id === id);
+  if (found) Object.assign(found, { name, coins });
+  else ROLE_COINS.push({ id, name, coins });
+}
 
 const skipped = new Set(); // Yalnızca rol hediye edilen durumlarda bir sonraki rol coini atlanır
 export const skipRoleCoinOnce = (guildId, userId, roleId) => skipped.add(`${guildId}:${userId}:${roleId}`);
