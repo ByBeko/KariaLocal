@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Karia</title>
 <link rel="icon" href="logo.png">
-<link rel="stylesheet" href="style.css?v=3">
-<link rel="stylesheet" href="tables.css?v=22">
+<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="games.css?v=1">
 </head>
 <body>
 <div id="boot" class="boot"><img src="logo.png" alt="Karia"><p id="boot-text">Karia açılıyor...</p></div>
@@ -16,7 +16,7 @@
     <div class="side-brand"><span class="logo"><img src="logo.png" alt=""></span><strong>Karia</strong><button type="button" id="sfx-toggle" class="sfx-toggle"></button></div>
     <div class="balance" title="Botla aynı bakiye">
       <img src="emojis/coin.png" alt="">
-      <div><small>Bakiye</small><strong id="balance">0</strong></div>
+      <div><small>Bakiye</small><strong id="balance" data-balance>0</strong></div>
     </div>
     <nav class="tabs" role="tablist">
       <button class="tab active" data-tab="home" role="tab"><img src="emojis/ev.png" alt="">Ana Sayfa</button>
@@ -63,128 +63,168 @@
       <div id="board-list" class="board"></div>
     </section>
 
-    <div id="game-switch" class="period" role="tablist" hidden>
-      <button data-game="blackjack" class="active"><img src="emojis/kart.png" alt="">Blackjack</button>
-      <button data-game="poker"><img src="emojis/maca.png" alt="">Poker</button>
-      <button data-game="tayyare"><img src="emojis/tayyare.svg" alt="">Tayyare</button>
-      <button data-game="roulette"><img src="emojis/oyun.png" alt="">Rulet</button>
-      <button data-game="zar"><img src="emojis/zar.svg" alt="">Zar</button>
-      <button data-game="slot"><img src="emojis/slot_yedi.png" alt="">Slot</button>
-      <button data-game="satranc"><img src="emojis/satranc.svg" alt="">Satranç</button>
-      <button data-game="okey"><img src="emojis/okey.svg" alt="">Okey 101</button>
-      <button data-game="labirent"><img src="emojis/labirent.svg" alt="">Labirent</button>
+    <!-- Oyunlar: dokuz oyun da aynı kabukta (gs): üst satır, oyun alanı, durum şeridi, aksiyon çubuğu -->
+    <div id="game-switch" class="gtabs" role="tablist" hidden>
+      <div class="gtabs-list">
+        <button type="button" data-game="blackjack" class="active"><img src="emojis/kart.png" alt=""><span>Blackjack</span></button>
+        <button type="button" data-game="poker"><img src="emojis/maca.png" alt=""><span>Poker</span></button>
+        <button type="button" data-game="tayyare"><img src="emojis/tayyare.svg" alt=""><span>Tayyare</span></button>
+        <button type="button" data-game="roulette"><img src="emojis/oyun.png" alt=""><span>Rulet</span></button>
+        <button type="button" data-game="zar"><img src="emojis/zar.svg" alt=""><span>Zar</span></button>
+        <button type="button" data-game="slot"><img src="emojis/slot_yedi.png" alt=""><span>Slot</span></button>
+        <button type="button" data-game="satranc"><img src="emojis/satranc.svg" alt=""><span>Satranç</span></button>
+        <button type="button" data-game="okey"><img src="emojis/okey.svg" alt=""><span>Okey 101</span></button>
+        <button type="button" data-game="labirent"><img src="emojis/labirent.svg" alt=""><span>Labirent</span></button>
+      </div>
+      <div class="gbal" title="Bakiyen (botla aynı)"><img src="emojis/coin.png" alt=""><strong data-balance>0</strong></div>
     </div>
 
+    <!-- Ortak parçalar: açık oyunun kabuğuna taşınır -->
     <div id="mode-switch" class="mode-switch" role="tablist" hidden>
       <button type="button" data-mode="solo"><img src="emojis/bot.png" alt="">Solo</button>
       <button type="button" data-mode="online"><img src="emojis/arkadaslar.png" alt="">Online</button>
     </div>
-
-    <section id="betbar" class="betbar" hidden>
-      <div class="bet-input">
-        <label for="bet">Bahis</label>
-        <input id="bet" inputmode="numeric" value="100" autocomplete="off">
-      </div>
-      <div class="chips">
-        <span class="chip-wrap"><button class="chip" data-add="10">+10</button><button class="chip-minus" data-sub="10" aria-label="10 azalt" title="10 azalt">−</button></span>
-        <span class="chip-wrap"><button class="chip" data-add="100">+100</button><button class="chip-minus" data-sub="100" aria-label="100 azalt" title="100 azalt">−</button></span>
-        <span class="chip-wrap"><button class="chip" data-add="1000">+1K</button><button class="chip-minus" data-sub="1000" aria-label="1K azalt" title="1K azalt">−</button></span>
-        <span class="chip-wrap"><button class="chip" data-add="5000">+5K</button><button class="chip-minus" data-sub="5000" aria-label="5K azalt" title="5K azalt">−</button></span>
+    <div id="betbar" class="betbar" hidden>
+      <span class="bet-label">Bahis</span>
+      <div class="bet-step">
+        <button type="button" data-step="-1" aria-label="Bahsi azalt">−</button>
+        <input id="bet" inputmode="numeric" value="100" autocomplete="off" aria-label="Bahis tutarı">
+        <button type="button" data-step="1" aria-label="Bahsi artır">+</button>
       </div>
       <div class="bet-tools">
-        <button data-bet="half">½</button>
-        <button data-bet="double">2×</button>
-        <button data-bet="all">Hepsi</button>
+        <button type="button" data-bet="half" title="Yarıya indir">½</button>
+        <button type="button" data-bet="double" title="İki katına çıkar">2×</button>
+        <button type="button" data-bet="all" title="Bütün bakiye">Hepsi</button>
       </div>
-      <div id="game-info" class="game-info"></div>
-    </section>
+    </div>
 
-    <section class="panel casino" data-panel="blackjack" hidden>
-      <div id="bjm-root" class="room-root" hidden></div>
-      <div id="bj-solo" class="table">
-        <div class="hand"><h3>Krupiye <span id="dealer-total" class="total"></span></h3><div id="dealer" class="cards"></div></div>
-        <svg class="felt-art" viewBox="0 0 600 170" aria-hidden="true">
-          <defs><path id="felt-arc" d="M30 96 Q300 196 570 96"/></defs>
-          <text class="felt-title" x="300" y="50" text-anchor="middle">BLACKJACK</text>
-          <text class="felt-sub" x="300" y="80" text-anchor="middle">3:2 ÖDER</text>
-          <path class="felt-band" d="M-140 84 Q300 206 740 84"/>
-          <text class="felt-band-text"><textPath href="#felt-arc" startOffset="50%" text-anchor="middle">KRUPİYE 17'DE DURUR</textPath></text>
-        </svg>
-        <div class="hand"><h3>Sen <span id="player-total" class="total"></span></h3><div id="player" class="cards"></div></div>
-        <div class="actions">
-          <button id="bj-start" class="deal"><img src="emojis/kart.png" alt="">Dağıt</button>
-          <button id="bj-split" hidden><img src="emojis/kart.png" alt="">İkiye Ayır</button>
-          <button id="bj-double" hidden><img src="emojis/dolar2.png" alt="">İkiye Katla</button>
-          <button id="bj-hit" hidden><img src="emojis/arti_rozet.png" alt="">Kart Çek</button>
-          <button id="bj-stand" hidden><img src="emojis/onayli.png" alt="">Dur</button>
-          <button id="bj-surrender" hidden><img src="emojis/bayrak.png" alt="">Teslim Ol</button>
-          <button id="bj-insure" hidden><img src="emojis/kalkan.png" alt="">Sigorta Al</button>
-          <button id="bj-noinsure" hidden><img src="emojis/onayli.png" alt="">Sigortasız Devam</button>
+    <section class="panel game-panel" data-panel="blackjack" hidden>
+      <div id="bjm-root" class="gs" hidden></div>
+      <div id="bj-solo" class="gs">
+        <header class="gs-head">
+          <div class="gs-title"><img src="emojis/kart.png" alt=""><strong>Blackjack</strong><span class="gs-meta">3:2 öder • Krupiye 17'de durur</span></div>
+          <div class="gs-right"><div class="gs-tools"></div><span class="gs-mode"></span><button type="button" class="gs-icon" data-rules title="Nasıl oynanır?">?</button></div>
+        </header>
+        <div class="gs-stage bj-stage">
+          <div class="hand"><h3>Krupiye <span id="dealer-total" class="total"></span></h3><div id="dealer" class="cards"></div></div>
+          <div class="hand"><h3>Sen <span id="player-total" class="total"></span></h3><div id="player" class="cards"></div></div>
+        </div>
+        <div id="bj-status" class="gs-status"></div>
+        <div class="gs-bar">
+          <div class="gs-bet"></div>
+          <div class="gs-main">
+            <button id="bj-start" class="pk gold">Dağıt</button>
+            <button id="bj-insure" class="pk gold" hidden>Sigorta Al</button>
+            <button id="bj-noinsure" class="pk soft" hidden>Sigortasız Devam</button>
+            <button id="bj-hit" class="pk go" hidden>Kart Çek</button>
+            <button id="bj-stand" class="pk gold" hidden>Dur</button>
+          </div>
+          <div class="gs-side">
+            <button id="bj-double" class="pk soft" hidden>İkiye Katla</button>
+            <button id="bj-split" class="pk soft" hidden>İkiye Ayır</button>
+            <button id="bj-surrender" class="pk no" hidden>Teslim Ol</button>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="panel casino slot-room" data-panel="slot" hidden>
-      <div class="cabinet">
-        <div class="marquee"><span class="bulbs"></span><strong>KARIA JACKPOT</strong><em><img src="emojis/alev.png" alt="">777<img src="emojis/alev.png" alt=""></em><span class="bulbs"></span></div>
-        <div class="machine idle">
-          <div class="reel"><img id="reel0" src="emojis/slot_yedi.png" alt=""></div>
-          <div class="reel"><img id="reel1" src="emojis/slot_yedi.png" alt=""></div>
-          <div class="reel"><img id="reel2" src="emojis/slot_yedi.png" alt=""></div>
+    <section class="panel game-panel" data-panel="slot" hidden>
+      <div class="gs">
+        <header class="gs-head">
+          <div class="gs-title"><img src="emojis/slot_yedi.png" alt=""><strong>Slot</strong><span class="gs-meta">3 makara • En çok 50×</span></div>
+          <div class="gs-right"><div class="gs-tools"></div><span class="gs-mode"></span><button type="button" class="gs-icon" data-rules title="Nasıl oynanır?">?</button></div>
+        </header>
+        <div class="gs-stage slot-stage">
+          <div class="machine idle">
+            <div class="reel"><img id="reel0" src="emojis/slot_yedi.png" alt=""></div>
+            <div class="reel"><img id="reel1" src="emojis/slot_yedi.png" alt=""></div>
+            <div class="reel"><img id="reel2" src="emojis/slot_yedi.png" alt=""></div>
+          </div>
+          <div id="slot-feed" class="slot-feed"></div>
         </div>
-        <div class="cabinet-base"><button id="slot-spin" class="spin-btn"><img src="emojis/slot_yedi.png" alt="">Çevir</button></div>
-        <div class="lever" aria-hidden="true"><i></i></div>
-      </div>
-      <div id="slot-feed" class="slot-feed"></div>
-    </section>
-
-    <section class="panel casino roulette-room" data-panel="roulette" hidden>
-      <div class="roulette">
-        <div class="wheel-box"><div id="wheel" class="wheel"></div><div class="wheel-pin"></div><div id="roulette-result" class="roulette-result"></div></div>
-        <div id="roulette-history" class="roulette-history"></div>
-        <div id="roulette-status" class="roulette-status"></div>
-        <div id="roulette-kind" class="roulette-kind" role="tablist" aria-label="Bahis türü">
-          <button type="button" data-kind="tek" class="active">Tek <small>36×</small></button>
-          <button type="button" data-kind="ayrik">Ayrık <small>18×</small></button>
-          <button type="button" data-kind="sokak">Sokak <small>12×</small></button>
-          <button type="button" data-kind="kose">Köşe <small>9×</small></button>
-          <button type="button" data-kind="altili">Altılı <small>6×</small></button>
+        <div id="slot-status" class="gs-status"></div>
+        <div class="gs-bar">
+          <div class="gs-bet"></div>
+          <div class="gs-main"><button id="slot-spin" class="pk gold">Çevir</button></div>
+          <div class="gs-side"></div>
         </div>
-        <div id="roulette-board" class="roulette-board"></div>
-        <div id="roulette-groups" class="roulette-groups"></div>
-        <div class="roulette-tools">
-          <button id="roulette-undo" type="button">Geri al</button>
-          <button id="roulette-clear" type="button">Temizle</button>
-          <button id="roulette-repeat" type="button">Tekrarla</button>
-          <span id="roulette-total" class="roulette-total">Masa boş</span>
-          <button id="roulette-spin" class="spin-btn" type="button"><img src="emojis/oyun.png" alt="">Çevir</button>
-        </div>
-        <div id="roulette-players" class="roulette-players"></div>
       </div>
     </section>
 
-    <section class="panel casino karia-room" data-panel="poker" hidden><div id="poker-root" class="room-root"></div></section>
-    <section class="panel casino karia-room" data-panel="zar" hidden><div id="zar-root" class="room-root"></div></section>
-    <section class="panel casino karia-room" data-panel="satranc" hidden><div id="satranc-root" class="room-root"></div></section>
-    <section class="panel casino karia-room" data-panel="okey" hidden><div id="okey-root" class="room-root"></div></section>
-    <section class="panel casino karia-room" data-panel="labirent" hidden><div id="labirent-root" class="room-root"></div></section>
-
-    <section class="panel casino tay-room" data-panel="tayyare" hidden>
-      <div class="tay-sky">
-        <div id="tay-history" class="tay-history"></div>
-        <canvas id="tay-canvas"></canvas>
-        <div class="tay-brand"><img src="logo.png" alt="">SÜPER TAYYARE</div>
-        <div id="tay-mult" class="tay-mult"></div>
-        <div id="tay-status" class="tay-status"></div>
-      </div>
-      <div class="tay-bottom">
-        <div class="tay-controls">
-          <label class="tay-auto"><span>Otomatik çek</span><input id="tay-auto" inputmode="decimal" placeholder="Örn. 2,00" autocomplete="off"><b>×</b></label>
-          <button id="tay-btn" class="tay-btn" type="button">Bahis Koy</button>
+    <section class="panel game-panel" data-panel="roulette" hidden>
+      <div class="gs">
+        <header class="gs-head">
+          <div class="gs-title"><img src="emojis/oyun.png" alt=""><strong>Rulet</strong><span class="gs-meta">Tek sıfır • En çok 36×</span></div>
+          <div class="gs-right"><div class="gs-tools"></div><span class="gs-mode"></span><button type="button" class="gs-icon" data-rules title="Nasıl oynanır?">?</button></div>
+        </header>
+        <div class="gs-stage roulette">
+          <div class="rl-left">
+            <div class="wheel-box"><div id="wheel" class="wheel"></div><div class="wheel-pin"></div><div id="roulette-result" class="roulette-result"></div></div>
+            <div id="roulette-history" class="roulette-history"></div>
+            <div id="roulette-players" class="roulette-players"></div>
+          </div>
+          <div class="rl-right">
+            <div id="roulette-kind" class="roulette-kind" role="tablist" aria-label="Bahis türü">
+              <button type="button" data-kind="tek" class="active">Tek sayı <small>36×</small></button>
+              <button type="button" data-kind="ayrik">Ayrık <small>18×</small></button>
+              <button type="button" data-kind="sokak">Sokak <small>12×</small></button>
+              <button type="button" data-kind="kose">Köşe <small>9×</small></button>
+              <button type="button" data-kind="altili">Altılı <small>6×</small></button>
+            </div>
+            <div id="roulette-board" class="roulette-board"></div>
+            <div id="roulette-groups" class="roulette-groups"></div>
+          </div>
         </div>
-        <div id="tay-bets" class="tay-bets"></div>
+        <div id="roulette-status" class="gs-status"></div>
+        <div class="gs-bar">
+          <div class="gs-bet"></div>
+          <div class="gs-main"><button id="roulette-spin" class="pk gold" type="button">Çevir</button></div>
+          <div class="gs-side">
+            <span id="roulette-total" class="gs-chip">Masa boş</span>
+            <button id="roulette-undo" class="pk soft sm" type="button">Geri Al</button>
+            <button id="roulette-clear" class="pk soft sm" type="button">Temizle</button>
+            <button id="roulette-repeat" class="pk soft sm" type="button">Tekrarla</button>
+          </div>
+        </div>
       </div>
     </section>
+
+    <section class="panel game-panel" data-panel="tayyare" hidden>
+      <div class="gs">
+        <header class="gs-head">
+          <div class="gs-title"><img src="emojis/tayyare.svg" alt=""><strong>Tayyare</strong><span class="gs-meta">Uçak düşmeden çek • En çok 1000×</span></div>
+          <div class="gs-right"><div class="gs-tools"></div><span class="gs-mode"></span><button type="button" class="gs-icon" data-rules title="Nasıl oynanır?">?</button></div>
+        </header>
+        <div class="gs-stage tay-stage">
+          <div class="tay-sky">
+            <div id="tay-history" class="tay-history"></div>
+            <canvas id="tay-canvas"></canvas>
+            <div id="tay-mult" class="tay-mult"></div>
+            <div id="tay-status" class="tay-status"></div>
+          </div>
+          <div id="tay-bets" class="tay-bets"></div>
+        </div>
+        <div id="tay-line" class="gs-status"></div>
+        <div class="gs-bar">
+          <div class="gs-bet"></div>
+          <div class="gs-main"><button id="tay-btn" class="pk gold" type="button">Bahis Koy</button></div>
+          <div class="gs-side">
+            <label class="tay-auto"><span>Otomatik çek</span><input id="tay-auto" inputmode="decimal" placeholder="2,00" autocomplete="off"><b>×</b></label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel game-panel" data-panel="poker" hidden><div id="poker-root" class="gs"></div></section>
+    <section class="panel game-panel" data-panel="zar" hidden><div id="zar-root" class="gs"></div></section>
+    <section class="panel game-panel" data-panel="satranc" hidden><div id="satranc-root" class="gs"></div></section>
+    <section class="panel game-panel" data-panel="okey" hidden><div id="okey-root" class="gs"></div></section>
+    <section class="panel game-panel" data-panel="labirent" hidden><div id="labirent-root" class="gs"></div></section>
+
+    <dialog id="rules" class="rules">
+      <form method="dialog"><button class="rules-x" aria-label="Kapat">×</button></form>
+      <div id="rules-body"></div>
+    </dialog>
 
     <section class="panel music-room" data-panel="music" hidden>
       <div class="music-layout">
@@ -356,6 +396,6 @@
   </main>
   </div>
 </div>
-<script type="module" src="app.js?v=14"></script>
+<script type="module" src="app.js?v=17"></script>
 </body>
 </html>

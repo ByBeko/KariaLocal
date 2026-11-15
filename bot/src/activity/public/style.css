@@ -50,26 +50,6 @@ button:disabled{opacity:.45;cursor:default}
 #home .grid2{flex:1}
 #home .grid2 .box{display:flex;flex-direction:column}
 .content.fill [data-panel="music"]:not([hidden]),.content.fill [data-panel="leaderboard"]:not([hidden]){display:flex;flex-direction:column}
-@media (min-width:901px){
-  .content.game main{display:grid;grid-template-columns:260px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:14px}
-  .content.game #game-switch{grid-column:1;grid-row:1;width:100%;margin:0}
-  .content.game #game-switch button{flex:1;flex-direction:column;gap:2px;padding:8px 2px;font-size:12px}
-  .content.game .betbar{grid-column:1;grid-row:2;display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:14px;margin:0;padding:18px 16px}
-  .content.game .game-info{display:block;margin-top:auto}
-  .content.game .bet-input{flex:none;flex-direction:column;align-items:stretch}
-  .content.game .bet-input input{padding:11px 12px;font-size:18px}
-  .content.game .chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .content.game .chip{width:100%;height:46px;font-size:15px}
-  .content.game .bet-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .content.game .bet-tools button{height:42px;background:var(--panel2);color:var(--fg)}
-  .content.game .panel:not([hidden]){grid-column:2;grid-row:1 / span 2;display:flex;flex-direction:column;justify-content:center}
-  .content.game .table{min-height:0}
-  .content.game .card{width:76px;height:108px;font-size:24px}
-  .content.game .cards{min-height:108px}
-  .content.game .machine{gap:14px;padding:20px}
-  .content.game .reel{width:min(136px,11vw);height:min(136px,11vw)}
-  .content.game .reel img{width:62%;height:62%}
-}
 .page-title{width:100%;max-width:1320px;margin:8px auto 18px;font-size:24px;font-weight:700;letter-spacing:-.01em}
 main{width:100%;max-width:1320px;margin:0 auto;padding-top:4px}
 
@@ -78,7 +58,6 @@ main{width:100%;max-width:1320px;margin:0 auto;padding-top:4px}
 .panel.plain{background:transparent;border:0;padding:0}
 .dash-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .period{display:flex;gap:2px;margin-left:auto;width:fit-content;background:var(--panel);border-radius:12px;padding:3px}
-#game-switch{margin:0 0 14px}
 .period button{display:flex;align-items:center;gap:6px;background:transparent;border:0;border-radius:9px;padding:7px 14px;cursor:pointer;color:var(--muted);font-weight:600}
 .period button img{width:18px;height:18px}
 .period button.active{color:var(--fg);background:var(--panel2)}
@@ -148,35 +127,6 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
 .suggest button{align-self:flex-end;border:0;border-radius:10px;padding:10px 24px;cursor:pointer}
 .board{flex:1;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;min-height:0}
 
-/* Oyunlar */
-.game-info{display:none}
-.game-info h4{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:600}
-.game-row{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px;color:var(--muted)}
-.game-row img{width:20px;height:20px}
-.game-row b{margin-left:auto;color:var(--fg)}
-.betbar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;background:var(--panel);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px}
-.bet-input{display:flex;align-items:center;gap:8px;flex:1 1 150px}
-.bet-input label{color:var(--muted);font-size:13px}
-.bet-input input{flex:1;min-width:60px;background:var(--panel2);border:0;border-radius:10px;padding:8px 12px;font-weight:700;font-variant-numeric:tabular-nums}
-.chips,.bet-tools{display:flex;gap:6px;align-items:center}
-.bet-tools button{background:transparent;border:0;border-radius:10px;padding:8px 10px;cursor:pointer;font-weight:600;color:var(--muted)}
-.bet-tools button:hover{color:var(--fg)}
-.chip{height:36px;min-width:50px;padding:0 10px;border-radius:10px;font-size:13px;font-weight:700;color:var(--fg);background:var(--panel2);border:0;cursor:pointer}
-.chip:hover{filter:brightness(1.25)}
-.table{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;min-height:440px;padding:14px 18px 0;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,#2fa35f 0,#1d7f46 55%,#115a31 100%)}
-.hand h3{margin:0 0 6px;font-size:13px;color:#cfe7e1;font-weight:600;text-align:center}
-.total{color:#ffe08a;font-weight:800;margin-left:4px}
-.cards{display:flex;justify-content:center;gap:6px;min-height:88px;flex-wrap:wrap}
-.card{position:relative;width:62px;height:88px;border-radius:9px;background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 3px 8px rgba(0,0,0,.4);animation:deal .25s ease both}
-.card img{width:30px;height:30px;filter:brightness(.42) saturate(1.5)}
-.card.red img{filter:hue-rotate(155deg) saturate(3) brightness(.8)}
-.card.red{color:#c8323f}
-.card.back{background:url(logo.png) center/62% no-repeat,repeating-linear-gradient(45deg,#16524a 0 7px,#0f3f39 7px 14px);border:3px solid var(--card)}
-.machine{display:flex;justify-content:center;gap:10px;padding:16px;background:linear-gradient(180deg,#3a0d0d,#190505);border:4px solid #e7b04a;border-radius:14px;box-shadow:inset 0 0 22px rgba(0,0,0,.8)}
-.reel{width:96px;height:96px;background:linear-gradient(180deg,#a9a9a9,#fff 28%,#fff 72%,#a9a9a9);border:2px solid #b8862f;border-radius:10px;display:flex;align-items:center;justify-content:center}
-.reel img{width:60px;height:60px}
-.reel.spin img{animation:spin .16s linear infinite}
-.reel.hit{border-color:#ffd479;box-shadow:0 0 22px #ffd479}
 .music-form{display:flex;gap:6px}
 .music-form input{flex:1;min-width:0;background:var(--panel2);border:0;border-radius:12px;padding:11px 14px}
 .music-form button{border:0;border-radius:12px;padding:10px 20px;cursor:pointer}
@@ -247,40 +197,6 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
 .opt span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
 .output{margin:12px 0 0;background:var(--panel2);border-radius:14px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.5 system-ui,sans-serif;max-height:320px;overflow:auto}
 
-/* Casino */
-.panel.casino{padding:0;overflow:hidden}
-.casino .hand h3{color:#fff;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-.total{display:inline-block;min-width:26px;margin-left:4px;padding:0 7px;border-radius:9px;background:rgba(0,0,0,.45);color:#ffe08a;font-weight:800}
-.total:empty{display:none}
-.card>img{width:50%;height:auto}
-.corner{position:absolute;left:5px;top:4px;display:flex;flex-direction:column;align-items:center;font-size:14px;line-height:1.05}
-.corner img{width:12px;height:12px}
-.corner.b{left:auto;top:auto;right:5px;bottom:4px;transform:rotate(180deg)}
-.felt-art{width:min(100%,520px);height:auto;flex-shrink:0}
-.felt-title{font:italic 700 46px Georgia,'Times New Roman',serif;fill:#fff;letter-spacing:1px}
-.felt-sub{font:700 17px system-ui,sans-serif;fill:#f4e6b8;letter-spacing:3px}
-.felt-band{fill:none;stroke:#f2a72e;stroke-width:30}
-.felt-band-text{font:800 15px system-ui,sans-serif;fill:#fff;letter-spacing:3px}
-.casino .table .actions{width:calc(100% + 36px);margin:auto -18px 0;padding:12px;display:flex;justify-content:center;align-items:center;gap:16px;background:linear-gradient(180deg,#f5b53d 0 5px,#7a4a22 5px,#4b2b12)}
-.casino .table .actions button{width:82px;height:82px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:50%;border:3px solid #ffd479;background:radial-gradient(circle at 35% 30%,#2c3f78,#121a3c);box-shadow:0 4px 0 #070c20;color:#fff;font-size:12px;font-weight:800;line-height:1.05}
-.casino .table .actions button img{width:26px;height:26px}
-.casino .table .actions .deal{width:150px;height:66px;flex-direction:row;gap:8px;border-radius:34px;background:linear-gradient(180deg,#ffd479,#e89a1c);box-shadow:0 4px 0 #8c5a0c;color:#3a2200;font-size:20px}
-.slot-room{background:radial-gradient(circle at 18% 25%,rgba(255,120,60,.4),transparent 32%),radial-gradient(circle at 85% 20%,rgba(190,70,255,.4),transparent 34%),radial-gradient(circle at 70% 90%,rgba(50,150,255,.32),transparent 36%),#0d0812;padding:20px!important;align-items:center}
-.cabinet{position:relative;width:min(560px,calc(100% - 40px));margin:0 auto;padding:12px 18px 18px;border-radius:26px 26px 14px 14px;background:linear-gradient(180deg,#5b1414,#2a0808 70%,#150404);border:4px solid #e7b04a;box-shadow:0 18px 44px rgba(0,0,0,.65)}
-.marquee{display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:12px;padding:8px 10px;border-radius:14px;background:linear-gradient(180deg,#14163f,#07081f)}
-.marquee strong{font:italic 800 26px Georgia,serif;letter-spacing:2px;color:#ffd479;text-shadow:0 0 12px #ff9b2e}
-.marquee em{display:flex;align-items:center;gap:8px;font:800 30px Georgia,serif;font-style:normal;color:#ff5a5a;text-shadow:0 0 10px #ff2a2a;line-height:1}
-.marquee em img{width:26px;height:26px}
-.bulbs{width:100%;height:8px;background:radial-gradient(circle,#ffe9a8 0 3px,transparent 4px) 0 0/18px 8px repeat-x;animation:bulbs 1s steps(2) infinite}
-.cabinet-base{display:flex;justify-content:center;margin-top:14px}
-.spin-btn{display:flex;align-items:center;gap:8px;padding:12px 44px;border:3px solid #ffd479;border-radius:34px;background:linear-gradient(180deg,#ff5a4f,#c01717);box-shadow:0 5px 0 #6d0b0b;color:#fff;font-size:20px;font-weight:800;cursor:pointer}
-.spin-btn img{width:26px;height:26px}
-.spin-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #6d0b0b}
-.lever{position:absolute;right:-30px;top:120px;width:12px;height:110px;border-radius:6px;background:linear-gradient(90deg,#8a8a8a,#eee,#777);transform-origin:50% 100%}
-.lever i{position:absolute;left:-10px;top:-24px;width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a7a,#b30f0f)}
-.cabinet:has(.reel.spin) .lever{transform:scaleY(-.55) translateY(-90%)}
-.chip{border:3px dashed rgba(255,255,255,.75)!important;color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.45)}
-.chips .chip:nth-child(1){background:#2f6fc4}.chips .chip:nth-child(2){background:#1f9a7f}.chips .chip:nth-child(3){background:#8e44c7}.chips .chip:nth-child(4){background:#cf5a2a}
 /* Sıralama */
 .podium{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:10px;min-height:440px;padding:20px 18px 0;overflow:hidden;border-radius:18px;background:radial-gradient(ellipse at 50% 15%,#1f7a69,#0d3a33 70%)}
 .confetti{position:absolute;inset:0;pointer-events:none}
@@ -309,7 +225,6 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
 .runner-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--panel)}
 .avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
 .hero-avatar{width:38px;height:38px;margin-right:10px;border-radius:50%;object-fit:cover;vertical-align:-9px}
-@keyframes bulbs{50%{background-position:9px 0;opacity:.65}}
 @keyframes confetti{to{transform:translateY(520px) rotate(540deg)}}
 @keyframes pulse{50%{transform:scale(1.08);opacity:.75}}
 @keyframes bump{40%{transform:scale(1.07)}}
@@ -338,71 +253,15 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
   .runners{max-height:320px}
   .podium{min-height:380px;gap:6px;padding:20px 8px 0}
   .p1 .podium-block{height:220px}.p2 .podium-block{height:180px}.p3 .podium-block{height:150px}
-  .lever{display:none}
-  .cabinet{width:100%}
-  .casino .table .actions button{width:70px;height:70px;font-size:11px}
-  .felt-title{font-size:42px}
   .hero{display:block;padding:18px}
   .hero-cover{width:calc(100% + 36px);height:auto;max-width:none;margin:-18px -18px 16px;aspect-ratio:16/7}
   .grid2,.modules{grid-template-columns:minmax(0,1fr)}
   .setting{grid-template-columns:minmax(0,1fr)}
   .setting .switch{justify-self:start}
   .item{flex-direction:column;align-items:stretch}
-  .bet-input{flex-basis:100%}
-  .reel{width:78px;height:78px}
-  .reel img{width:48px;height:48px}
-  .card{width:54px;height:78px;font-size:17px}
-  .cards{min-height:78px}
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important}}
 
-/* Oyun sayfası: bahis sağda */
-@media (min-width:901px){
-  .content.game main{grid-template-columns:minmax(0,1fr) 260px}
-  .content.game #game-switch{grid-column:2}
-  .content.game #game-switch button{font-size:11px;padding:8px 1px}
-  .content.game .betbar{grid-column:2}
-  .content.game .panel:not([hidden]){grid-column:1}
-}
-/* Blackjack şeridi masanın iki kenarına uzanır */
-.felt-art{width:calc(100% + 36px);max-width:none;margin:0 -18px;overflow:visible}
-.subhand{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px;border:2px solid transparent;border-radius:12px}
-.subhand.current{border-color:#ffd479;background:rgba(0,0,0,.18)}
-#player.multi{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;min-height:0}
-#player.multi .card{width:52px;height:74px}
-#player.multi .corner{font-size:12px}
-/* Slot: Karia turkuazı */
-.slot-room{background:radial-gradient(circle at 18% 25%,rgba(79,207,180,.34),transparent 34%),radial-gradient(circle at 85% 20%,rgba(63,224,197,.26),transparent 36%),radial-gradient(circle at 70% 90%,rgba(45,140,200,.28),transparent 38%),#04100f}
-.cabinet{background:linear-gradient(180deg,#0f5a52,#073832 70%,#04211e);border-color:#4fcfb4;box-shadow:0 18px 44px rgba(0,0,0,.65),0 0 40px rgba(79,207,180,.22)}
-.marquee{background:linear-gradient(180deg,#06302b,#021a17)}
-.marquee strong{color:#bff7ec;text-shadow:0 0 12px #3fe0c5}
-.marquee em{color:#7ff0da;text-shadow:0 0 10px #3fe0c5}
-.bulbs{background:radial-gradient(circle,#c8fff3 0 3px,transparent 4px) 0 0/18px 8px repeat-x}
-.machine{background:linear-gradient(180deg,#02302b,#011512);border-color:#4fcfb4}
-.reel{border-color:#2f9e87}
-.reel.hit{border-color:#7ff0da;box-shadow:0 0 22px #7ff0da}
-.spin-btn{border-color:#bff7ec;background:linear-gradient(180deg,#4fcfb4,#1f8f7b);box-shadow:0 5px 0 #0d4a40;color:#04211e}
-.spin-btn:active{box-shadow:0 2px 0 #0d4a40}
-.lever i{background:radial-gradient(circle at 35% 30%,#9ff5e4,#1f8f7b)}
-/* Rulet */
-.roulette-room{background:radial-gradient(ellipse at 50% 30%,#1d7f46,#0e4a2b 72%);padding:14px!important;justify-content:center}
-.roulette{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
-.wheel-box{position:relative;width:168px;height:168px;flex-shrink:0}
-.wheel{position:relative;width:100%;height:100%;border-radius:50%;border:5px solid #4fcfb4;box-shadow:0 0 0 3px #0a2e2a,0 8px 22px rgba(0,0,0,.5);will-change:transform}
-.wheel::after{content:'';position:absolute;inset:27%;border-radius:50%;background:radial-gradient(circle,#10312b,#08201c);border:3px solid #4fcfb4}
-.wheel-pin{position:absolute;left:50%;top:-12px;width:0;height:0;border:10px solid transparent;border-top:16px solid #ffd479;transform:translateX(-50%);z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
-.roulette-result{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 38px system-ui,sans-serif;color:#fff;z-index:1;pointer-events:none;text-shadow:0 2px 6px rgba(0,0,0,.7)}
-.roulette-result.red{color:#ff7a84}.roulette-result.green{color:#6df0b8}
-.roulette-board{display:grid;grid-template-columns:1.1fr repeat(12,1fr) 1.2fr;grid-template-rows:repeat(3,40px) 34px 34px;gap:3px;width:100%;max-width:660px}
-.rc{position:relative;padding:0;border:1px solid rgba(255,255,255,.35);border-radius:6px;background:transparent;color:#fff;font-weight:700;font-size:13px;cursor:pointer}
-.rc.red{background:#b3262f}.rc.black{background:#14181b}.rc.green{background:#1f9a6a}.rc.out{background:rgba(0,0,0,.28)}
-.rc:hover{filter:brightness(1.3)}
-.rc[data-bet]::after{content:attr(data-bet);position:absolute;right:-3px;top:-7px;min-width:20px;padding:0 4px;border-radius:10px;background:#ffd479;color:#3a2200;font-size:10px;line-height:17px;font-weight:800;box-shadow:0 2px 4px rgba(0,0,0,.5);pointer-events:none}
-.roulette-tools{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px}
-.roulette-tools button:not(.spin-btn){padding:9px 16px;border:0;border-radius:10px;background:rgba(0,0,0,.35);color:#fff;font-weight:600;cursor:pointer}
-.roulette-tools button:not(.spin-btn):hover{background:rgba(0,0,0,.55)}
-.roulette-tools .spin-btn{padding:10px 30px;font-size:17px}
-.roulette-total{min-width:110px;text-align:center;color:#fff;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 /* Ana sayfa */
 .suggest.compact{flex:none;flex-direction:row;align-items:stretch}
 .suggest.compact textarea{flex:1;height:46px;min-height:46px}
@@ -423,7 +282,6 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
 .cmd-side{display:grid;gap:8px}
 #cmd-select{height:420px}
 @media (max-width:900px){.cmd-layout{grid-template-columns:minmax(0,1fr)}#cmd-select{height:220px}.say-row{grid-template-columns:minmax(0,1fr)}}
-@media (max-width:720px){.rc{font-size:10px}.roulette-board{grid-template-rows:repeat(3,32px) 30px 30px}.wheel-box{width:130px;height:130px}.roulette-result{font-size:30px}}
 /* Ana sayfa tek ekrana sığsın */
 @media (min-width:901px){
   .hero{grid-template-columns:minmax(0,290px) minmax(0,1fr)}
@@ -442,11 +300,6 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
 .message.win{background:linear-gradient(135deg,#065f46,#0f766e);border-color:rgba(52,211,153,.55);color:#eafff6;box-shadow:0 10px 34px rgba(16,185,129,.35)}
 .message.lose{background:#2a1218;border-color:rgba(251,113,133,.45);color:#ffd9de}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,-14px)}to{opacity:1;transform:translate(-50%,0)}}
-/* Rulet çarkı: sayılar */
-.wheel{--wr:70px}
-.wheel-box{width:192px;height:192px}
-.wn{position:absolute;left:50%;top:50%;width:22px;height:12px;margin:-6px 0 0 -11px;text-align:center;font:700 9px/12px system-ui,sans-serif;color:#fff;pointer-events:none;text-shadow:0 1px 1px rgba(0,0,0,.6)}
-@media (max-width:720px){.wheel{--wr:49px}.wheel-box{width:136px;height:136px}.wn{font-size:7px}}
 /* Ana sayfa: şikayet ve öneri alt alta */
 .stack{display:flex;flex-direction:column;gap:10px;min-width:0}
 .stack .box{flex:1}
@@ -574,20 +427,6 @@ textarea::-webkit-scrollbar{display:none}
 .md-spoiler{border-radius:3px;background:#1e1f22;color:transparent;cursor:pointer}
 .md-spoiler.open{background:rgba(255,255,255,.1);color:inherit}
 
-/* Oyunlar ekrana sığar, sayfa kaymaz */
-@media (min-width:901px){
-  html:has(.content.game),body:has(.content.game){overflow:hidden}
-  .app:has(.content.game){height:100vh;min-height:0}
-  .content.game{height:calc(100vh - 32px);min-height:0;display:flex;flex-direction:column}
-  .content.game .page-title{margin:0 auto 10px;flex:none}
-  .content.game main{flex:1;min-height:0}
-  .content.game .panel:not([hidden]),.content.game .betbar{min-height:0;overflow-y:auto;scrollbar-width:none}
-  .content.game .panel:not([hidden])::-webkit-scrollbar,.content.game .betbar::-webkit-scrollbar{display:none}
-  .content.game .table{flex:1;min-height:0}
-  .content.game .felt-art{flex:1 1 0;min-height:0;height:auto}
-  .content.game .hand,.content.game .table .actions{flex:none}
-}
-
 /* Üyelik paneli */
 .tier-form{margin-bottom:14px}
 .tier-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -687,3 +526,106 @@ textarea::-webkit-scrollbar{display:none}
 .brole-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) auto;gap:8px;align-items:stretch;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .brole-row button{grid-column:3;grid-row:1 / span 2;background:rgba(255,255,255,.07);border:0;border-radius:9px;padding:8px 11px;cursor:pointer;color:var(--lose)}
 @media (max-width:900px){.cmd-layout{grid-template-columns:minmax(0,1fr)}}
+
+/* ───────── Müzik: sıradakiler, çalma listeleri, şimdi çalıyor ───────── */
+/* Müzik: sıradakiler / çalma listelerim */
+.music-tabs{display:flex;gap:4px;margin:16px 0 8px}
+.music-tabs button{border:0;border-radius:10px;padding:7px 14px;background:transparent;color:var(--muted);font-weight:700;font-size:13px;cursor:pointer}
+.music-tabs button.active{background:rgba(79,207,180,.13);color:var(--accent)}
+.plbox{display:flex;flex-direction:column;gap:10px;padding:10px}
+.plbox:has(> .queue-empty:only-child){justify-content:center}
+.plbox .queue-empty{margin:auto;color:var(--muted);text-align:center;font-size:13px;padding:20px}
+.pl-new{display:flex;gap:6px}
+.pl-new input{flex:1;min-width:0;background:var(--panel2);border:0;border-radius:10px;padding:9px 12px}
+.pl-new button{border:0;border-radius:10px;padding:8px 14px;cursor:pointer}
+.pl-list,.pl-songs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.pl-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;cursor:pointer}
+.pl-row:hover{background:var(--panel2)}
+.pl-row img{width:24px;height:24px}
+.pl-row span,.pl-songs span{min-width:0}
+.pl-row strong,.pl-songs strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-row small,.pl-songs small{color:var(--muted);font-size:12px}
+.pl-icon{width:34px;height:34px;border:0;border-radius:50%;background:var(--panel2);color:var(--accent);font-size:15px;cursor:pointer}
+.pl-icon:hover{background:var(--accent);color:#04211e}
+.pl-head{display:flex;align-items:center;gap:8px}
+.pl-head small{color:var(--muted);white-space:nowrap}
+.pl-back{border:0;border-radius:9px;width:32px;height:32px;background:var(--panel2);font-size:18px;cursor:pointer}
+.pl-title{flex:1;min-width:0;background:transparent;border:1px solid transparent;border-radius:9px;padding:5px 8px;font-size:17px;font-weight:700}
+.pl-title:hover,.pl-title:focus{border-color:var(--line);background:var(--panel2)}
+.pl-actions{display:flex;flex-wrap:wrap;gap:6px}
+.pl-actions button{border:0;border-radius:10px;padding:8px 12px;background:var(--panel2);font-weight:700;font-size:13px;cursor:pointer}
+.pl-actions .pl-danger{margin-left:auto;color:var(--lose)}
+.pl-songs li{display:grid;grid-template-columns:24px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:6px 10px;border-radius:10px}
+.pl-songs li:hover{background:var(--panel2)}
+.pl-songs b{color:var(--muted);text-align:center;font-weight:600}
+.pl-songs em{font-style:normal;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.pl-tools{display:flex;gap:2px;opacity:.35}
+.pl-songs li:hover .pl-tools{opacity:1}
+.pl-tools button{width:26px;height:26px;border:0;border-radius:7px;background:transparent;cursor:pointer;color:var(--fg)}
+.pl-tools button:hover{background:var(--line)}
+.pl-tools .x:hover{color:var(--lose)}
+.player-right{position:relative}
+.pl-menu{position:absolute;right:0;bottom:calc(100% + 10px);z-index:10;width:240px;display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:14px;background:var(--panel2);box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.pl-menu h5{margin:0 0 4px;color:var(--accent);font-size:12px}
+.pl-menu>button{border:0;border-radius:9px;padding:8px 10px;background:transparent;text-align:left;font-weight:600;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-menu>button:hover{background:var(--line)}
+.pl-menu .pl-new input{background:var(--bg)}
+@media (max-width:720px){.pl-tools{opacity:1}.pl-songs li{grid-template-columns:20px minmax(0,1fr) auto}.pl-songs em{display:none}}
+.pl-actions .primary{background:var(--accent);color:#07211c}
+/* Müzik: şimdi çalıyor kartı + sıra */
+.music-room{padding:18px}
+.music-layout{display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:18px;flex:1;min-height:0}
+.now-card.player{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:stretch;gap:14px;margin:0;padding:20px;border-radius:22px;overflow:hidden;background:linear-gradient(180deg,#0d3d37,#071816)}
+.now-backdrop{position:absolute;inset:-30px;z-index:-1;background:center/cover no-repeat;filter:blur(38px) saturate(1.4);opacity:.5;transform:scale(1.2);transition:background-image .4s}
+.now-backdrop::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,16,15,.2),rgba(4,16,15,.85))}
+.now-cover{aspect-ratio:1;border-radius:18px;overflow:hidden;background:rgba(0,0,0,.35);display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.now-cover img{width:100%;height:100%;object-fit:cover}
+.now-cover img[src$="kulaklik.png"]{width:72%;height:72%;object-fit:contain;opacity:.95;filter:drop-shadow(0 6px 18px rgba(79,207,180,.45))}
+.now-text{min-width:0;text-align:center}
+.now-text strong{display:block;font-size:18px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.now-text small{display:block;color:#cfe7e1;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-label{display:inline-flex!important;align-items:center;gap:6px;margin-bottom:4px;color:var(--accent)!important;font-size:11px!important;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+.eq{display:inline-flex;align-items:flex-end;gap:2px;height:12px}
+.eq b{width:3px;height:30%;border-radius:2px;background:var(--accent)}
+.now-card.live .eq b{animation:eq .9s ease-in-out infinite}
+.now-card.live .eq b:nth-child(2){animation-delay:-.3s}.now-card.live .eq b:nth-child(3){animation-delay:-.6s}
+@keyframes eq{0%,100%{height:25%}50%{height:100%}}
+.now-card .player-time{margin:0;color:#cfe7e1}
+.now-card .player-bar{background:rgba(255,255,255,.15)}
+.now-card .player-buttons{gap:14px}
+.now-card.player button.play{width:58px;height:58px;background:var(--accent);box-shadow:0 6px 18px rgba(79,207,180,.35)}
+.now-card.player button.play img{width:24px;height:24px}
+.now-card .player-right{position:relative;justify-content:center}
+.music-side{display:flex;flex-direction:column;min-width:0;min-height:0}
+.music-side .music-tabs{margin:14px 0 8px}
+.music-side .queue{max-height:none;flex:1;min-height:260px}
+.music-side .hint{margin-top:10px}
+.queue li{transition:background .12s}
+.queue li b{font-variant-numeric:tabular-nums}
+@media (max-width:900px){
+  .music-layout{grid-template-columns:minmax(0,1fr)}
+  .now-card.player{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px 14px;padding:14px}
+  .now-cover{grid-row:1/3}
+  .now-text{text-align:left;align-self:end}
+  .now-card .player-time{align-self:start}
+  .now-card .player-buttons,.now-card .player-right{grid-column:1/-1}
+  .music-side .queue{min-height:200px}
+}
+/* Müzik sayfası ekrana sığar */
+@media (min-width:901px){
+  html:has(.content.fit),body:has(.content.fit){overflow:hidden}
+  .app:has(.content.fit){height:100vh;min-height:0}
+  .content.fit{height:calc(100vh - 32px);min-height:0;display:flex;flex-direction:column}
+  .content.fit .page-title{margin:0 auto 10px;flex:none}
+  .content.fit main{flex:1;min-height:0;display:flex;flex-direction:column}
+  .content.fit .panel:not([hidden]){flex:1;min-height:0;overflow:hidden}
+  .content.fit .music-layout{height:100%}
+  .content.fit .now-card.player{min-height:0;overflow-y:auto;scrollbar-width:none}
+  .content.fit .now-cover{flex:0 1 auto;min-height:90px;max-height:38vh;aspect-ratio:1;align-self:center;height:100%}
+  .content.fit .music-side{min-height:0}
+  .content.fit .music-side .queue{min-height:0;overflow-y:auto}
+}
+/* Kapak: eski çaların 56px'lik kuralı yeni kartta geçersiz */
+.now-cover #music-cover{width:100%;height:100%;border-radius:0;object-fit:cover}
+.now-cover #music-cover[src$="kulaklik.png"]{width:72%;height:72%;object-fit:contain;opacity:.95;filter:drop-shadow(0 6px 18px rgba(79,207,180,.45))}
+@media (max-width:900px){.now-cover #music-cover[src$="kulaklik.png"]{width:80%;height:80%}}

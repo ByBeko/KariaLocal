@@ -1,57 +1,64 @@
 // Sıra tabanlı masa oyunlarının çizimi: satranç, Karia Labirent, Okey 101. Kararlar sunucudadır.
+// Hepsi tables.js'teki ortak kabuğa (paint) çizilir: üst satır, oyun alanı, durum şeridi, aksiyon çubuğu.
 export function initBoards(ctx) {
-  const { el, fmt, say, sfx, act, avatar, btn, roomHead, roomLog, pastBox, countdown, myId } = ctx;
+  const { el, fmt, sfx, act, avatar, timed, btn, paint, headFor, lastLog, countdown, myId } = ctx;
 
-  /** Oyuncu şeridi: koltuklar, hazır olma, sıra süresi; altında hazır/otur düğmeleri */
-  function players(room, extra = () => null) {
+  /** Koltuk kartları: kim oturuyor, hazır mı, sıra kimde; boş koltukta Otur */
+  function seatList(room, { col = false, extra = () => null } = {}) {
     const seated = room.mySeat >= 0;
-    return el('div', { className: 'tt-players' }, ...room.seats.map((s, i) => {
-      if (!s) return el('div', { className: 'tt-seat empty' }, ...(seated ? [el('small', { textContent: 'Boş' })] : [btn('Otur', () => act(room.id, 'join', { seat: i }), 'sit')]));
-      const turn = room.turn === i;
-      const ring = avatar(s.id, turn ? 'timer' : s.ready && room.phase === 'waiting' ? 'ready' : '');
-      if (turn) {
-        ring.dataset.deadline = String(room.deadline);
-        ring.dataset.total = String(room.turnMs);
-      }
+    const waiting = room.phase === 'waiting';
+    return el('div', { className: `seats${col ? ' col' : ''}` }, ...room.seats.map((s, i) => {
+      if (!s) return el('div', { className: 'seat empty' }, seated ? 'Boş koltuk' : btn('Otur', () => act(room.id, 'join', { seat: i }), 'pk go sm'));
+      const turn = room.phase === 'playing' && room.turn === i;
+      const ring = avatar(s.id, turn ? 'timer' : s.ready && waiting ? 'ready' : '');
+      if (turn) timed(ring, room);
       const won = room.result?.winners.some((w) => w.seat === i);
-      return el('div', { className: `tt-seat${turn ? ' turn' : ''}${s.id === myId() ? ' me' : ''}${won ? ' winner' : ''}` },
-        ring, el('div', { className: 'seat-plate' }, el('strong', { textContent: s.name }), el('span', { textContent: won ? `+${fmt(room.result.amount)}` : room.phase === 'waiting' ? (s.ready ? 'Hazır' : 'Bekliyor') : '' })),
+      const sub = won ? `Kazandı +${fmt(room.result.amount)}` : waiting ? (s.ready ? 'Hazır' : 'Bekliyor') : turn ? 'Sırada' : '';
+      return el('div', { className: `seat${turn ? ' turn' : ''}${s.id === myId() ? ' me' : ''}${won ? ' winner' : ''}${s.ready && waiting ? ' ready' : ''}` },
+        ring,
+        el('div', { className: 'seat-text' }, el('strong', { textContent: s.id === myId() ? `${s.name} (sen)` : s.name }), el('small', { textContent: sub })),
         ...[extra(s, i)].filter(Boolean));
     }));
   }
 
-  function waitingBar(room) {
-    const bar = el('div', { className: 'pcontrols' });
-    if (room.mySeat < 0) bar.append(el('p', { className: 'hint', textContent: `Giriş ${fmt(room.stake)} coin. Boş bir koltuğa otur.` }));
-    else if (room.phase === 'waiting') {
-      bar.append(room.ready ? btn('Vazgeç', () => act(room.id, 'unready'), 'ghost') : btn(`Hazırım • ${fmt(room.stake)}`, () => act(room.id, 'ready'), 'primary big'));
-      const solo = room.id.startsWith('solo-');
-      bar.append(el('p', { className: 'hint' }, room.startsAt ? countdown('Oyun {s} sn sonra başlıyor', room.startsAt) : solo ? 'Botlar hazır; Hazırım’a basınca oyun başlar.' : `Herkes hazır olunca başlar (en az ${room.game === 'okey' ? 4 : 2} kişi; boş yere + Bot ekleyebilirsin)`));
-    } else if (room.phase === 'result') {
+  /**
+   * Oyun dışındaki anlar her masada aynıdır: oturmadıysan Otur, beklerken Hazırım, bitince sonuç.
+   * Oyun sürerken o oyunun kendi durum ve butonları kullanılır.
+   */
+  function flow(room, playing) {
+    const log = lastLog(room);
+    if (room.phase === 'playing') return playing;
+    if (room.mySeat < 0) return { status: { text: room.seats.some((s) => !s) ? `Giriş ${fmt(room.stake)} coin. Boş bir koltuğa tıklayıp otur.` : 'Masa dolu, izliyorsun.', tone: 'go', log } };
+    if (room.phase === 'result' && room.result) {
       const r = room.result;
-      bar.append(el('p', { className: 'hint big-result', textContent: r.winners.length ? `${r.winners.map((w) => w.name).join(', ')} kazandı • ${r.reason}` : `Berabere • ${r.reason}` }));
+      const mine = r.winners.some((w) => w.id === myId());
+      return { status: {
+        text: mine ? `Kazandın! +${fmt(r.amount)} • ${r.reason}` : r.winners.length ? `${r.winners.map((w) => w.name).join(', ')} kazandı • ${r.reason}` : `Berabere, girişin geri döndü • ${r.reason}`,
+        tone: mine ? 'win' : r.winners.length ? 'lose' : 'go', log } };
     }
-    return bar;
+    const solo = room.id.startsWith('solo-');
+    const need = room.game === 'okey' ? 4 : 2;
+    const main = room.ready ? [btn('Hazır Değilim', () => act(room.id, 'unready'), 'pk soft')] : [btn(`Hazırım • ${fmt(room.stake)}`, () => act(room.id, 'ready'), 'pk gold big')];
+    const status = room.startsAt ? { text: countdown('Oyun {s} sn sonra başlıyor', room.startsAt), tone: 'turn', log }
+      : room.ready ? { text: solo ? 'Hazırsın, oyun başlıyor...' : `Hazırsın. Diğer oyuncular bekleniyor (en az ${need} kişi).`, tone: 'go', log }
+        : { text: solo ? 'Hazırım’a bas, oyun başlasın.' : `Hazırım’a bas. Herkes hazır olunca başlar (en az ${need} kişi; boş yere + Bot ekleyebilirsin).`, tone: 'turn', log };
+    return { status, main, myTurn: !room.ready };
   }
 
+  /** Bitişte ses (sonuç yazısı durum şeridinde) */
   function resultSound(room, root) {
     const key = room.phase === 'result' ? JSON.stringify(room.result) : '';
     if (key && root.dataset.done !== key) {
       root.dataset.done = key;
-      const mine = room.result.winners.some((w) => w.id === myId());
-      const played = room.mySeat >= 0;
-      if (played) {
-        sfx.result(mine ? 1 : room.result.winners.length ? -1 : 0);
-        say(mine ? `Kazandın! +${fmt(room.result.amount)}` : room.result.winners.length ? `${room.result.winners.map((w) => w.name).join(', ')} kazandı.` : 'Berabere, girişin geri döndü.', mine ? 'win' : room.result.winners.length ? 'lose' : 'info');
-      }
+      if (room.mySeat >= 0) sfx.result(room.result.winners.some((w) => w.id === myId()) ? 1 : room.result.winners.length ? -1 : 0);
     }
     if (!key) delete root.dataset.done;
   }
 
-  const stakeTag = (room) => el('span', { className: 'room-stake', textContent: `Giriş ${fmt(room.stake)}` });
-  const resign = (room) => (room.phase === 'playing' && room.mySeat >= 0 ? [btn('Pes Et', () => act(room.id, 'resign'), 'ghost danger')] : []);
+  const resign = (room) => (room.phase === 'playing' && room.mySeat >= 0 ? [btn('Pes Et', () => act(room.id, 'resign'), 'pk no sm')] : []);
+  const turnName = (room) => room.seats[room.turn]?.name ?? '';
 
-  // ── Satranç ──
+  // ───────────────────────── Satranç ─────────────────────────
   const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
   let chessPick = -1;
   let chessKey = '';
@@ -101,9 +108,8 @@ export function initBoards(ctx) {
       board.append(cell);
     }
     const colorName = (seat) => ({ w: 'Beyaz', b: 'Siyah' })[room.colors?.[seat]] ?? '';
-    const status = room.phase === 'playing'
-      ? el('p', { className: `hint${room.myColor && room.toMove === room.myColor ? ' turn-strip' : ''}`, textContent: room.myColor ? (room.toMove === room.myColor ? `Sıra sende (${room.myColor === 'w' ? 'beyaz' : 'siyah'})${room.check ? ' • ŞAH!' : ''}` : `Rakibin düşünüyor${room.check ? ' • ŞAH!' : ''}`) : `Sıra: ${room.toMove === 'w' ? 'beyaz' : 'siyah'}` })
-      : null;
+    const myTurn = Boolean(room.myColor && room.toMove === room.myColor);
+    const check = room.check ? ' • ŞAH!' : '';
     // Terfi seçimi tahtanın üstünde açılır
     const promoPick = chessPromo
       ? el('div', { className: 'promo-pick' },
@@ -117,27 +123,33 @@ export function initBoards(ctx) {
           });
           return b;
         })),
-        btn('Vazgeç', () => { chessPromo = null; drawChess(room, data, root); }, 'ghost'))
+        btn('Vazgeç', () => { chessPromo = null; drawChess(room, data, root); }, 'pk soft sm'))
       : null;
     // Beraberlik: teklif et, rakibin teklifini kabul et ya da reddet
-    const opponentOffered = room.drawOffer != null && room.drawOffer !== room.mySeat;
+    const offered = room.drawOffer != null && room.drawOffer !== room.mySeat;
     const drawButtons = room.phase !== 'playing' || room.mySeat < 0 ? []
-      : opponentOffered ? [btn('Kabul Et', () => act(room.id, 'draw'), 'primary'), btn('Reddet', () => act(room.id, 'decline'), 'ghost')]
-        : room.canOfferDraw ? [btn('Berabere Teklif', () => act(room.id, 'draw'), 'ghost')] : [];
-    const offerNote = opponentOffered ? el('p', { className: 'hint big-result', textContent: 'Rakibin beraberlik teklif ediyor.' })
-      : room.drawOffer === room.mySeat ? el('p', { className: 'hint', textContent: 'Beraberlik teklifin rakibinde.' }) : null;
-    root.replaceChildren(
-      roomHead(room, data, root, [...drawButtons, ...resign(room), stakeTag(room)]),
-      el('div', { className: 'tt-layout' },
-        el('div', { className: 'chess-wrap' }, board, ...(promoPick ? [promoPick] : [])),
-        el('div', { className: 'tt-side' }, players(room, (s) => (room.colors?.[s.seat] ? el('em', { className: `seat-tag chip-${room.colors[s.seat]}`, textContent: colorName(s.seat) }) : null)),
-          ...(status ? [status] : []), ...(offerNote ? [offerNote] : []),
-          el('div', { className: 'chess-moves' }, ...(room.moves ?? []).map((m, k) => el('span', { textContent: m, className: k === room.moves.length - 1 ? 'new' : '' }))))),
-      waitingBar(room), roomLog(room.log), pastBox('turn', room.past));
+      : offered ? [btn('Beraberliği Kabul Et', () => act(room.id, 'draw'), 'pk go'), btn('Reddet', () => act(room.id, 'decline'), 'pk soft')]
+        : room.canOfferDraw ? [btn('Berabere Teklif Et', () => act(room.id, 'draw'), 'pk soft sm')] : [];
+    const note = offered ? ' • Rakibin beraberlik teklif ediyor.' : room.drawOffer === room.mySeat ? ' • Beraberlik teklifin rakibinde.' : '';
+    const status = !room.myColor
+      ? { text: `Sıra: ${room.toMove === 'w' ? 'beyaz' : 'siyah'}${check}`, deadline: room.deadline, total: room.turnMs, log: lastLog(room) }
+      : myTurn
+        ? { text: `Sıra sende (${room.myColor === 'w' ? 'beyaz' : 'siyah'})${check}: taşına tıkla, sonra işaretli kareye.${note}`, tone: 'turn', deadline: room.deadline, total: room.turnMs }
+        : { text: `Rakibin düşünüyor...${check}${note}`, tone: offered ? 'turn' : '', deadline: room.deadline, total: room.turnMs };
+    const playing = { status, main: offered ? drawButtons : [], side: [...(offered ? [] : drawButtons), ...resign(room)], myTurn: myTurn || offered };
+    paint(root, 'satranc', {
+      ...headFor(room, root, `Giriş ${fmt(room.stake)}`),
+      stage: [el('div', { className: 'board-layout' },
+        el('div', { className: 'board-wrap' }, board, ...(promoPick ? [promoPick] : [])),
+        el('div', { className: 'board-side' },
+          seatList(room, { col: true, extra: (s) => (room.colors?.[s.seat] ? el('em', { className: `seat-tag chip-${room.colors[s.seat]}`, textContent: colorName(s.seat) }) : null) }),
+          el('div', { className: 'chess-moves' }, ...(room.moves ?? []).map((m, k) => el('span', { textContent: m, className: k === room.moves.length - 1 ? 'new' : '' })))))],
+      ...flow(room, playing),
+    });
     resultSound(room, root);
   }
 
-  // ── Karia Labirent (koridor yarışı) ──
+  // ───────────────────────── Karia Labirent (koridor yarışı) ─────────────────────────
   // Tahta 2N-1 izlik bir ızgaradır: tek izler kare, çift izler karelerin arasındaki oluk (engel yeri).
   let labKey = '';
   function drawLabirent(room, data, root) {
@@ -207,7 +219,7 @@ export function initBoards(ctx) {
         node.addEventListener('mouseenter', () => preview(true));
         node.addEventListener('mouseleave', () => preview(false));
         node.addEventListener('click', () => {
-          if (!ok) return say('Oraya engel konmaz: başka engelle çakışıyor ya da yolu tamamen kapatıyor.', 'lose');
+          if (!ok) return ctx.say('Oraya engel konmaz: başka engelle çakışıyor ya da yolu tamamen kapatıyor.', 'lose');
           const [mo, mr, mc] = target.split('-');
           act(room.id, 'wall', { o: mo, r: Number(mr), c: Number(mc) });
         });
@@ -215,32 +227,33 @@ export function initBoards(ctx) {
     }
 
     const wallDots = (count) => el('span', { className: 'lab-walls' }, el('span', {}, ...Array.from({ length: room.wallsMax ?? 10 }, (_, k) => el('i', { className: k < count ? 'on' : '' }))), el('small', { textContent: `${count}/${room.wallsMax ?? 10}` }));
-    const info = el('div', { className: 'lab-help' },
-      ...room.pawns.map((p) => el('div', { className: `lab-pl${room.turn === p.seat ? ' turn' : ''}` },
-        el('span', { className: `pawn p${p.color}` }),
-        el('div', {}, el('b', { textContent: p.seat === room.mySeat ? 'Sen' : p.name }), el('small', { textContent: `Hedefe ${p.dist} adım` })),
-        wallDots(p.walls))),
-      el('p', { textContent: 'Karşı kenara ilk varan kazanır. Sıranda parlayan kareye yürü ya da iki kare arasındaki oluğa engel koy.' }));
-    const status = room.phase === 'playing'
-      ? el('p', { className: `hint${myTurn ? ' turn-strip' : ''}`, textContent: myTurn ? (me.walls ? 'Sıra sende: yürü ya da engel koy.' : 'Sıra sende: engelin kalmadı, yürü.') : room.lastAction ?? 'Rakibin düşünüyor...' })
-      : null;
-    root.replaceChildren(
-      roomHead(room, data, root, [...resign(room), stakeTag(room)]),
-      el('div', { className: 'tt-layout' },
-        el('div', { className: 'lab-wrap' }, grid),
-        // Oyun sürerken oyuncular zaten bilgi kutusunda (kalan adım ve engel); koltuk listesi tekrar etmesin
-        el('div', { className: 'tt-side' }, ...(room.phase === 'playing' ? [] : [players(room)]), ...(status ? [status] : []), info)),
-      waitingBar(room), roomLog(room.log), pastBox('turn', room.past));
+    const info = room.pawns.map((p) => el('div', { className: `lab-pl${room.phase === 'playing' && room.turn === p.seat ? ' turn' : ''}` },
+      el('span', { className: `pawn p${p.color}` }),
+      el('div', {}, el('b', { textContent: p.seat === room.mySeat ? 'Sen' : p.name }), el('small', { textContent: `Hedefe ${p.dist} adım` })),
+      wallDots(p.walls)));
+    const status = myTurn
+      ? { text: me.walls ? 'Sıra sende: parlayan karelere yürü ya da iki kare arasına engel koy.' : 'Sıra sende: engelin kalmadı, parlayan karelere yürü.', tone: 'turn', deadline: room.deadline, total: room.turnMs, log: room.lastAction ?? '' }
+      : { text: room.mySeat >= 0 ? 'Rakibin düşünüyor...' : `Sıra: ${turnName(room)}`, deadline: room.deadline, total: room.turnMs, log: room.lastAction ?? '' };
+    paint(root, 'labirent', {
+      ...headFor(room, root, `Giriş ${fmt(room.stake)}`),
+      stage: [el('div', { className: 'board-layout' },
+        el('div', { className: 'board-wrap' }, grid),
+        // Oyun sürerken oyuncular bilgi kutusunda (kalan adım ve engel); koltuk listesi tekrar etmesin
+        el('div', { className: 'board-side' }, ...(room.phase === 'playing' ? [] : [seatList(room, { col: true })]), ...info))],
+      ...flow(room, { status, side: resign(room), myTurn }),
+    });
     resultSound(room, root);
   }
 
-  // ── Okey 101 ──
+  // ───────────────────────── Okey 101 ─────────────────────────
   // Istaka 2×15 yuvadır; taşlar sürüklenerek dizilir. Aralarında boşluk olmayan taşlar bir per sayılır.
   const TILE_COLOR = ['kirmizi', 'sari', 'mavi', 'siyah'];
   const COLOR_TR = ['Kırmızı', 'Sarı', 'Mavi', 'Siyah'];
   const ROW = 15;
   const ok = { slots: Array(ROW * 2).fill(null), selected: new Set(), gameKey: '', pendingSlot: -1 };
-  const tileEl = (t, extra = '') => el('span', { className: `tile ${t.f ? 'fake' : TILE_COLOR[t.c]}${t.w ? ' wild' : ''} ${extra}` }, el('b', { textContent: t.f ? '★' : String(t.n) }), ...(t.w ? [el('i', { textContent: 'OKEY' })] : []));
+  const tileEl = (t, extra = '') => el('span', { className: `tile ${t.f ? 'fake' : TILE_COLOR[t.c]}${t.w ? ' wild' : ''}${extra ? ` ${extra}` : ''}`, title: t.f ? 'Sahte okey' : `${COLOR_TR[t.c]} ${t.n}${t.w ? ' (okey)' : ''}` },
+    ...(t.w ? [el('i', { textContent: 'OKEY' })] : []), el('b', { textContent: t.f ? '★' : String(t.n) }));
+  const emptyTile = () => el('span', { className: 'tile empty' });
 
   /** Sunucudaki per kurallarının istemci kopyası (yalnızca ıstakadaki toplamı göstermek için; karar sunucuda) */
   function okeyRules(okey) {
@@ -382,8 +395,16 @@ export function initBoards(ctx) {
     const move = (e) => {
       if (!ghost) {
         if (Math.hypot(e.clientX - sx, e.clientY - sy) < 6) return;
+        // Kopya gövdeye eklenir; taş boyu ıstakadaki boyla aynı kalsın
+        const r = node.getBoundingClientRect();
         ghost = node.cloneNode(true);
+        ghost.classList.remove('sel', 'takeable');
         ghost.classList.add('drag-ghost');
+        ghost.style.setProperty('--tw', `${r.width}px`);
+        ghost.style.setProperty('--th', `${r.height}px`);
+        ghost.style.setProperty('--k', '1');
+        ghost.style.width = `${r.width}px`;
+        ghost.style.height = `${r.height}px`;
         document.body.append(ghost);
         node.classList.add('dragging');
       }
@@ -418,76 +439,76 @@ export function initBoards(ctx) {
   });
 
   function drawOkey(room, data, root) {
+    const head = headFor(room, root, `Giriş ${fmt(room.stake)}`);
     const playing = room.phase !== 'waiting' && room.players.length > 0;
     if (!playing) {
       ok.gameKey = '';
-      root.replaceChildren(roomHead(room, data, root, [stakeTag(room)]), players(room), waitingBar(room), roomLog(room.log), pastBox('turn', room.past));
+      paint(root, 'okey', { ...head, stage: [seatList(room)], ...flow(room, {}) });
       return resultSound(room, root);
     }
-    syncRack(room);
+    if (room.mySeat >= 0) syncRack(room);
     const hand = new Map(room.hand.map((t) => [t.id, t]));
     const redraw = () => drawOkey(room, data, root);
-    const myTurn = room.myTurn;
+    const myTurn = Boolean(room.myTurn);
     const canDraw = myTurn && !room.drawn;
     const canDiscard = myTurn && room.drawn;
     const rules = room.okey ? okeyRules(room.okey) : null;
 
-    // Oyuncular masanın etrafında; sıra sağa geçer (sen → sağ → üst → sol)
+    // Oyuncular masanın etrafında; sıra sağa geçer (sen → sağ → üst → sol). Soldakinin attığı taşı alabilirsin.
     const base = room.mySeat >= 0 ? room.mySeat : 0;
     const at = (rel) => room.players.find((p) => (p.seat - base + 4) % 4 === rel);
     const me = room.mySeat >= 0 ? at(0) : null;
-    const plate = (p, side) => {
-      if (!p) return el('div', { className: `okp ${side} empty` });
-      const turn = room.turn === p.seat;
+    const leftP = at(3);
+    const subOf = (p) => (room.phase === 'result' && p.penalty != null ? `ceza ${p.penalty}` : `${p.tiles} taş${p.opened ? (p.opened === 'pairs' ? ' • çift açtı' : ' • açtı') : ''}${p.gone ? ' • bot' : ''}`);
+    const opp = (p, side) => {
+      if (!p) return el('div', { className: `ok-opp ${side} empty` });
+      const turn = room.phase === 'playing' && room.turn === p.seat;
       const ring = avatar(room.seats[p.seat]?.id ?? 'bot-x', turn ? 'timer' : '');
-      if (turn) {
-        ring.dataset.deadline = String(room.deadline);
-        ring.dataset.total = String(room.turnMs);
-      }
+      if (turn) timed(ring, room);
       const won = room.result?.winners.some((w) => w.seat === p.seat);
-      const sub = room.phase === 'result' && p.penalty != null ? `ceza ${p.penalty}` : `${p.tiles} taş${p.opened ? ` • ${p.opened === 'pairs' ? 'çift açtı' : 'açtı'}` : ''}${p.gone ? ' • bot' : ''}`;
-      return el('div', { className: `okp ${side}${turn ? ' turn' : ''}${won ? ' winner' : ''}` }, ring, el('div', { className: 'okp-text' }, el('strong', { textContent: p.seat === room.mySeat ? 'Sen' : p.name }), el('small', { textContent: won ? `+${fmt(room.result.amount)}` : sub })));
-    };
-    // Köşeler: her oyuncunun attığı taş sağındakinin önüne düşer; sol alttaki senin alabileceğin taştır
-    const corner = (p, pos, mine = false) => {
-      const takeable = Boolean(p && p.seat === room.leftSeat && canDraw && p.discard);
-      const box = el('div', { className: `okc ${pos}${takeable ? ' can' : ''}${mine && canDiscard ? ' drop' : ''}`, title: takeable ? 'Al: tıkla ya da ıstakaya sürükle' : mine ? 'Atmak için taşı buraya sürükle' : '' });
-      if (mine) box.dataset.drop = 'discard';
-      const t = p?.discard ? tileEl(p.discard, takeable ? 'takeable' : '') : el('span', { className: 'tile empty' });
-      if (takeable) t.addEventListener('pointerdown', (e) => startDrag(e, drawFrom(room, 'discard'), t));
-      box.append(t);
-      return box;
+      const takeable = Boolean(p.seat === room.leftSeat && canDraw && p.discard);
+      const tile = p.discard ? tileEl(p.discard, takeable ? 'takeable' : '') : emptyTile();
+      if (takeable) {
+        tile.title = 'Al: tıkla ya da ıstakana sürükle';
+        tile.addEventListener('pointerdown', (e) => startDrag(e, drawFrom(room, 'discard'), tile));
+      }
+      return el('div', { className: `ok-opp ${side}${turn ? ' turn' : ''}${won ? ' winner' : ''}` },
+        ring,
+        el('div', { className: 'ok-who' }, el('strong', { textContent: p.seat === room.mySeat ? 'Sen' : p.name }), el('small', { textContent: won ? `Kazandı +${fmt(room.result.amount)}` : subOf(p) })),
+        el('div', { className: `ok-disc${takeable ? ' take' : ''}` }, tile, el('small', { textContent: takeable ? '↓ Al' : 'Attığı' })));
     };
 
-    const deck = el('div', { className: `ok-deck${canDraw ? ' can' : ''}`, title: canDraw ? 'Desteden çek: tıkla ya da ıstakaya sürükle' : 'Deste' }, el('b', { textContent: String(room.deck) }), el('small', { textContent: 'deste' }));
+    // Orta: deste, gösterge ve okey taşı; yanında açılan perler
+    const deck = el('div', { className: `ok-deck${canDraw ? ' can' : ''}`, title: canDraw ? 'Desteden çek: tıkla ya da ıstakana sürükle' : 'Deste' }, el('span', { textContent: String(room.deck) }));
     if (canDraw) deck.addEventListener('pointerdown', (e) => startDrag(e, drawFrom(room, 'deck'), deck));
+    const pile = (node, label) => el('div', { className: 'ok-pile' }, node, el('small', { textContent: label }));
     const canAdd = room.opened === 'melds' && canDiscard;
     const melds = el('div', { className: 'ok-melds' }, ...(room.melds.length ? room.melds.map((m, i) => {
-      const box = el('div', { className: `ok-meld${canAdd ? ' can' : ''}`, title: 'Taşı bu pere sürükle ya da seçip tıkla' },
-        el('i', { textContent: room.seats[m.owner]?.name ?? '' }), ...m.tiles.map((t) => tileEl(t, 'sm')));
+      const box = el('div', { className: `ok-meld${canAdd ? ' can' : ''}`, title: canAdd ? 'Taşı bu pere sürükle ya da seçip tıkla' : '' },
+        el('i', { textContent: room.seats[m.owner]?.name ?? '' }), ...m.tiles.map((t) => tileEl(t)));
       box.dataset.drop = `meld-${i}`;
       box.addEventListener('click', () => {
-        if (!ok.selected.size) return say('İşlemek istediğin taşı bu pere sürükle.');
+        if (!canAdd) return;
+        if (!ok.selected.size) return ctx.say('İşlemek istediğin taşı seç ya da bu pere sürükle.');
         act(room.id, 'add', { meld: i, tiles: [...ok.selected] });
         ok.selected.clear();
       });
       return box;
     }) : [el('p', { className: 'hint', textContent: 'Açılan perler burada görünür.' })]));
-    const felt = el('div', { className: 'okf' },
-      el('div', { className: 'okf-mid' },
-        deck,
-        el('div', { className: 'ok-pile' }, room.indicator ? tileEl(room.indicator) : el('span', { className: 'tile empty' }), el('small', { textContent: 'gösterge' })),
-        el('div', { className: 'ok-info' },
-          el('strong', { textContent: room.okey ? `Okey: ${COLOR_TR[room.okey.color]} ${room.okey.num}` : 'Okey 101' }),
-          el('small', { textContent: me?.penalty != null ? `Senin cezan: ${me.penalty}` : room.opened ? (room.opened === 'pairs' ? 'Çiftle açtın' : 'Açtın: perlere taş işleyebilirsin') : '101 sayı ya da 5 çiftle açılır' }))),
+    const felt = el('div', { className: 'ok-felt felt' },
+      el('div', { className: 'ok-center' },
+        pile(deck, canDraw ? '↓ Çek' : 'Deste'),
+        pile(room.indicator ? tileEl(room.indicator) : emptyTile(), 'Gösterge'),
+        pile(room.okey ? tileEl({ c: room.okey.color, n: room.okey.num, w: true }) : emptyTile(), 'Okey')),
       melds);
+    const table = el('div', { className: 'ok-table' }, opp(at(2), 'top'), opp(at(3), 'left'), felt, opp(at(1), 'right'));
 
     // Istaka: bitişik grupların geçerliliği ve toplamı
     let meldPoints = 0;
     const meldSegs = [];
     const pairSegs = [];
     const inMeld = new Set();
-    for (const ids of segments()) {
+    for (const ids of me ? segments() : []) {
       const tiles = ids.map((id) => hand.get(id));
       const m = rules && tiles.length >= 3 ? rules.meld(tiles) : null;
       const pairOk = Boolean(rules && tiles.length === 2 && rules.pair(tiles));
@@ -498,94 +519,110 @@ export function initBoards(ctx) {
       if (pairOk) pairSegs.push(ids);
       if (m || pairOk) for (const id of ids) inMeld.add(id);
     }
-    const rack = el('div', { className: 'ok-rack' });
-    rack.dataset.drop = 'rack';
-    for (let i = 0; i < ROW * 2; i++) {
-      const slot = el('div', { className: 'ok-slot' });
-      slot.dataset.drop = `slot-${i}`;
-      const id = ok.slots[i];
-      if (id != null && hand.has(id)) {
-        const node = tileEl(hand.get(id), `${ok.selected.has(id) ? 'sel' : ''}${room.took === id ? ' took' : ''}${inMeld.has(id) ? ' inmeld' : ''}`);
-        node.addEventListener('pointerdown', (e) => startDrag(e, {
-          click: () => {
-            // Aynı taşa hızlı iki dokunuş: taş çekildiyse o taşı atar
-            const double = ok.lastTap?.id === id && Date.now() - ok.lastTap.at < 380;
-            ok.lastTap = { id, at: Date.now() };
-            if (double && canDiscard) {
-              ok.selected.clear();
-              return act(room.id, 'discard', { tile: id });
-            }
-            if (ok.selected.has(id)) ok.selected.delete(id);
-            else ok.selected.add(id);
-            sfx.chip();
-            redraw();
-          },
-          drop: (where) => {
-            if (where.startsWith('slot-')) {
-              const to = Number(where.slice(5));
-              const from = ok.slots.indexOf(id);
-              [ok.slots[from], ok.slots[to]] = [ok.slots[to], ok.slots[from]];
+    let mine;
+    if (me) {
+      const rack = el('div', { className: 'ok-rack' });
+      rack.dataset.drop = 'rack';
+      for (let i = 0; i < ROW * 2; i++) {
+        const slot = el('div', { className: 'ok-slot' });
+        slot.dataset.drop = `slot-${i}`;
+        const id = ok.slots[i];
+        if (id != null && hand.has(id)) {
+          const node = tileEl(hand.get(id), `${ok.selected.has(id) ? 'sel' : ''}${room.took === id ? ' took' : ''}${inMeld.has(id) ? ' inmeld' : ''}`.trim());
+          node.addEventListener('pointerdown', (e) => startDrag(e, {
+            click: () => {
+              // Aynı taşa hızlı iki dokunuş: taş çekildiyse o taşı atar
+              const double = ok.lastTap?.id === id && Date.now() - ok.lastTap.at < 380;
+              ok.lastTap = { id, at: Date.now() };
+              if (double && canDiscard) {
+                ok.selected.clear();
+                return act(room.id, 'discard', { tile: id });
+              }
+              if (ok.selected.has(id)) ok.selected.delete(id);
+              else ok.selected.add(id);
               sfx.chip();
               redraw();
-            } else if (where === 'discard') {
-              if (!canDiscard) return say(myTurn ? 'Önce taş çek.' : 'Sıra sende değil.', 'lose');
-              ok.selected.clear();
-              act(room.id, 'discard', { tile: id });
-            } else if (where.startsWith('meld-')) {
-              act(room.id, 'add', { meld: Number(where.slice(5)), tiles: ok.selected.has(id) ? [...ok.selected] : [id] });
-              ok.selected.clear();
-            }
-          },
-        }, node));
-        slot.append(node);
+            },
+            drop: (where) => {
+              if (where.startsWith('slot-')) {
+                const to = Number(where.slice(5));
+                const from = ok.slots.indexOf(id);
+                [ok.slots[from], ok.slots[to]] = [ok.slots[to], ok.slots[from]];
+                sfx.chip();
+                redraw();
+              } else if (where === 'discard') {
+                if (!canDiscard) return ctx.say(myTurn ? 'Önce bir taş çek.' : 'Sıra sende değil.', 'lose');
+                ok.selected.clear();
+                act(room.id, 'discard', { tile: id });
+              } else if (where.startsWith('meld-')) {
+                act(room.id, 'add', { meld: Number(where.slice(5)), tiles: ok.selected.has(id) ? [...ok.selected] : [id] });
+                ok.selected.clear();
+              }
+            },
+          }, node));
+          slot.append(node);
+        }
+        rack.append(slot);
       }
-      rack.append(slot);
+      // Atma kutusu: senin attığın taş burada durur (sağındaki oyuncu alabilir)
+      const throwBox = el('div', { className: `ok-throw${canDiscard ? ' on' : ''}`, title: canDiscard ? 'Atmak istediğin taşı buraya sürükle' : '' },
+        ...(me.discard ? [tileEl(me.discard)] : []),
+        el('span', { textContent: canDiscard ? 'Taşı buraya at' : me.discard ? 'Attığın' : 'Atılacak taş' }));
+      throwBox.dataset.drop = 'discard';
+      mine = el('div', { className: 'ok-mine' }, rack, throwBox);
+    } else {
+      mine = el('div', { className: 'ok-mine' }, opp(at(0), 'bottom'));
     }
 
     const pairCount = pairSegs.length;
     const usePairs = room.opened === 'pairs' || (!room.opened && meldPoints < 101 && pairCount >= 5);
     const openGroups = usePairs ? pairSegs : meldSegs;
-    const badge = el('div', { className: `ok-score${meldPoints >= 101 || pairCount >= 5 ? ' ready' : ''}`, title: 'Istakadaki geçerli perlerin toplamı' },
-      el('b', { textContent: usePairs ? String(pairCount) : String(meldPoints) }), el('small', { textContent: usePairs ? 'çift' : 'sayı' }));
+    const canOpen = meldPoints >= 101 || pairCount >= 5;
+    const badge = el('div', { className: `ok-score${canOpen ? ' ready' : ''}`, title: 'Istakadaki geçerli perlerin toplamı (101 olunca açabilirsin)' },
+      el('b', { textContent: usePairs ? String(pairCount) : String(meldPoints) }), el('small', { textContent: usePairs ? 'çift / 5' : 'sayı / 101' }));
 
-    const controls = el('div', { className: `pcontrols ok-controls${me && room.phase === 'playing' && myTurn ? ' my-turn' : ''}` });
+    // Butonlar: ortada sıradaki zorunlu hamle, yanda dizme ve diğerleri
+    const main = [];
+    const side = [];
     if (me && room.phase === 'playing') {
-      if (myTurn) {
-        const timer = el('div', { className: 'turn-bar' });
-        timer.dataset.deadline = String(room.deadline);
-        timer.dataset.total = String(room.turnMs);
-        controls.append(timer);
+      if (canDraw) {
+        main.push(btn('Desteden Çek', () => act(room.id, 'draw', { from: 'deck' }), 'pk go big'));
+        if (leftP?.discard) main.push(btn('Soldakini Al', () => act(room.id, 'draw', { from: 'discard' }), 'pk soft'));
       }
-      controls.append(
-        btn('Seri Diz', () => { arrange(room, 'melds'); sfx.chip(); redraw(); }, 'ghost mini'),
-        btn('Çift Diz', () => { arrange(room, 'pairs'); sfx.chip(); redraw(); }, 'ghost mini'));
-      if (canDraw) controls.append(btn('Taş Çek', () => act(room.id, 'draw', { from: 'deck' }), 'pk call'));
       if (canDiscard) {
-        if (openGroups.length) {
+        if (openGroups.length && (room.opened || canOpen)) {
           const label = room.opened ? `Per Aç (${openGroups.length})` : usePairs ? `Çiftle Aç (${pairCount})` : `Elini Aç • ${meldPoints}`;
-          controls.append(btn(label, () => act(room.id, 'open', { groups: openGroups }), 'pk raise'));
+          main.push(btn(label, () => act(room.id, 'open', { groups: openGroups }), 'pk gold'));
         }
-        if (room.took != null) controls.append(btn('Geri Bırak', () => act(room.id, 'untake'), 'ghost'));
-        controls.append(btn('Taş At', () => {
-          if (ok.selected.size !== 1) return say('Atmak için tek bir taş seç ya da taşı sağ alt köşeye sürükle.');
+        main.push(btn('Taş At', () => {
+          if (ok.selected.size !== 1) return ctx.say('Atmak için tek bir taş seç ya da taşı sağdaki kutuya sürükle.');
           act(room.id, 'discard', { tile: [...ok.selected][0] });
           ok.selected.clear();
-        }, 'pk fold'));
+        }, 'pk go big'));
+        if (room.took != null) main.push(btn('Geri Bırak', () => act(room.id, 'untake'), 'pk soft'));
       }
-      controls.append(el('p', { className: 'hint', textContent: !myTurn
-        ? `Sıra: ${room.players.find((p) => p.seat === room.turn)?.name ?? ''}`
-        : canDraw ? 'Desteden ya da sol alttaki taştan çek: tıkla ya da ıstakaya sürükle.'
-          : room.opened ? 'Taş işlemek için taşı masadaki pere sürükle; sonra bir taşı sağ alt köşeye at.'
-            : 'Taşları sürükleyerek diz: boşluksuz yan yana taşlar bir per sayılır. 101 olunca Elini Aç, sonra bir taş at.' }));
+      side.push(btn('Seri Diz', () => { arrange(room, 'melds'); sfx.chip(); redraw(); }, 'pk soft sm'),
+        btn('Çift Diz', () => { arrange(room, 'pairs'); sfx.chip(); redraw(); }, 'pk soft sm'),
+        ...resign(room));
     }
 
-    const table = el('div', { className: 'okt' },
-      corner(at(2), 'tl'), plate(at(2), 'top'), corner(at(1), 'tr'),
-      plate(at(3), 'left'), felt, plate(at(1), 'right'),
-      corner(at(3), 'bl'), el('div', { className: 'okt-me' }, plate(me, 'me'), ...(me ? [badge] : [])), corner(me, 'br', Boolean(me)));
-    root.replaceChildren(
-      roomHead(room, data, root, [...resign(room), stakeTag(room)]),
-      table, ...(me ? [rack] : []), ...(controls.childElementCount ? [controls] : []), waitingBar(room), roomLog(room.log), pastBox('turn', room.past));
+    const timer = { deadline: room.deadline, total: room.turnMs };
+    let status;
+    if (!me) status = { text: `Sıra: ${turnName(room)}`, ...timer, log: lastLog(room) };
+    else if (!myTurn) status = { text: `Sıra: ${turnName(room)}. Bu arada taşlarını dizebilirsin.`, ...timer, log: lastLog(room) };
+    else if (canDraw) status = { text: `Sıra sende: desteden çek ya da soldaki oyuncunun${leftP ? ` (${leftP.name})` : ''} attığı taşı al.`, tone: 'turn', ...timer };
+    else if (room.took != null) status = { text: 'Yerden aldığın taşı bu el açarken ya da pere işlerken kullanmalısın. Kullanmayacaksan Geri Bırak’a bas.', tone: 'turn', ...timer };
+    else if (room.opened) status = { text: 'Perlere taş işleyebilirsin. Sonra bir taşı sağdaki kutuya at ya da seçip Taş At’a bas.', tone: 'turn', ...timer };
+    else if (canOpen) status = { text: `Açabilirsin! Önce ${usePairs ? 'Çiftle Aç' : 'Elini Aç'}’a bas, sonra bir taş at.`, tone: 'turn', ...timer };
+    else status = { text: 'Bir taş at: taşı sağdaki kutuya sürükle ya da seçip Taş At’a bas.', tone: 'turn', ...timer };
+
+    paint(root, 'okey', {
+      ...head,
+      stage: [table, mine],
+      stageClass: 'okey',
+      left: me ? [badge] : [],
+      ...flow(room, { status, main, side, myTurn }),
+    });
     resultSound(room, root);
   }
 
