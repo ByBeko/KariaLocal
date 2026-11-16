@@ -1,22 +1,26 @@
 import {
-  ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, MessageFlags,
+  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, MessageFlags,
 } from 'discord.js';
-import { e } from '../utils/emojis.js';
+import { fileURLToPath } from 'node:url';
+import { e, logo } from '../utils/emojis.js';
 import { db } from '../core/database.js';
 import config from '../config.js';
 import { ruleText, fit } from '../utils/style.js';
-import { mcEnabled, mcIp } from './minecraft.js';
+import { commandRef } from '../utils/commandRefs.js';
 import { UserError } from '../utils/errors.js';
 
-const LINK_INFO = {
-  website: { label: 'Website', get emoji() { return e('baglanti', '🌐'); } },
-  discord: { label: 'Discord', get emoji() { return e('discord', '💬'); } },
-  instagram: { label: 'Instagram', get emoji() { return e('instagram', '📸'); } },
-  tiktok: { label: 'TikTok', get emoji() { return e('kisa_video', '🎵'); } },
-  youtube: { label: 'YouTube', get emoji() { return e('video_oynat', '▶️'); } },
-  x: { label: 'X (Twitter)', get emoji() { return e('x', '🐦'); } },
-  github: { label: 'GitHub', get emoji() { return e('kod', '💻'); } },
-};
+// Kanal banner'ları (bot/assets/banners). Panel mesajından hemen önce ayrı mesaj olarak gönderilir.
+const BANNER_DIR = fileURLToPath(new URL('../../assets/banners/', import.meta.url));
+export const bannerMessage = (key) => ({ files: [new AttachmentBuilder(`${BANNER_DIR}${key}.png`, { name: `${key}.png` })] });
+
+// Bağlantılar kanalındaki sıra; link "ziyaret et" gibi yazıya bağlanır
+const LINKS = [
+  { key: 'website', label: 'Website', icon: 'baglanti', emoji: '🌐', cta: 'ziyaret et' },
+  { key: 'instagram', label: 'Instagram', icon: 'instagram', emoji: '📸', cta: 'takip et' },
+  { key: 'tiktok', label: 'TikTok', icon: 'kisa_video', emoji: '🎵', cta: 'takip et' },
+  { key: 'youtube', label: 'YouTube', icon: 'video_oynat', emoji: '▶️', cta: 'abone ol' },
+  { key: 'minecraft', label: 'Minecraft', icon: 'kazma', emoji: '⛏️', cta: 'ziyaret et' },
+];
 
 // Bu metinler rol etiketi içerebilir; panel gönderilince kimseye bildirim gitmemeli
 const panel = (content, components) => ({ content: fit(content), embeds: [], components, allowedMentions: { parse: [] } });
@@ -27,7 +31,7 @@ export function verifyPanel() {
   );
   return panel(
     ruleText({
-      icon: e('onayli', '✅'),
+      icon: logo(),
       title: 'Doğrulama',
       intro: 'Kuralları okuduysan aşağıdaki butona basarak sunucunun geri kalanına erişebilirsin.',
       note: 'Butona basarak kuralları kabul etmiş sayılırsın.',
@@ -37,40 +41,25 @@ export function verifyPanel() {
 }
 
 export function linksPanel() {
-  const entries = Object.entries(config.links).filter(([, url]) => url);
-  // Maskeli bağlantı ve boş satırsız düzen; önizlemeler mesajı uzatmasın diye kapalı
-  const lines = [`# ${e('baglanti', '🌍')}  Karia — Bağlantılar`, `### ${e('zincir', '🔗')}  Resmi Bağlantılar`];
-  if (entries.length) for (const [k, url] of entries) lines.push(`> ${LINK_INFO[k]?.emoji ?? e('baglanti', '🔗')} [${LINK_INFO[k]?.label ?? k}](${url})`);
+  const links = LINKS.filter((l) => config.links[l.key]);
+  // Banner başlık işini görür; önizlemeler mesajı uzatmasın diye kapalı
+  const lines = [`### ${e('zincir', '🔗')}  Resmi Bağlantılar`];
+  if (links.length) for (const l of links) lines.push(`> ${e(l.icon, l.emoji)} ${l.label} [${l.cta}](${config.links[l.key]})`);
   else lines.push('> Henüz link eklenmedi.');
-  if (mcEnabled) lines.push(`### ${e('kazma', '⛏️')}  Minecraft IP`, `> \`${mcIp}\``);
-  const content = lines.join('\n');
-
-  const buttons = entries.map(([k, url]) =>
-    new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(url).setLabel(LINK_INFO[k]?.label ?? k).setEmoji(LINK_INFO[k]?.emoji ?? e('baglanti', '🔗')),
-  );
-  const rows = [];
-  for (let i = 0; i < buttons.length; i += 5) rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
-  return { ...panel(content, rows), flags: MessageFlags.SuppressEmbeds };
+  return { ...panel(lines.join('\n'), []), flags: MessageFlags.SuppressEmbeds };
 }
 
-export function ticketPanel() {
+export function ticketPanel(guild) {
   const content = ruleText({
-    icon: e('cankurtaran', '🎫'),
+    icon: logo(),
     title: 'Destek Talebi',
-    intro: 'Bir sorunun mu var? Aşağıdaki menüden konuyu seç, sana özel bir kanal açılsın.',
-    sections: [
-      {
-        icon: e('bilgi', '📌'),
-        title: 'Talep Konuları',
-        body: config.ticketCategories.map((c) => `${e(c.icon, c.emoji)} **${c.label}** — ${c.description}`).join('\n'),
-      },
-    ],
+    intro: `Bir sorunun mu var? Aşağıdaki menüden konuyu seç, sana özel bir kanal açılsın.\nBir üyeyi şikayet etmek için ${commandRef(guild.client, 'rapor')} komutunu kullan.`,
     note: 'Gereksiz talep açanlar ceza alabilir.',
   });
   const menu = new StringSelectMenuBuilder()
     .setCustomId('ticket:ac')
     .setPlaceholder('Talep konusunu seç')
-    .addOptions(config.ticketCategories.map((c) => ({ label: c.label, value: c.value, emoji: e(c.icon, c.emoji), description: c.description.slice(0, 100) })));
+    .addOptions(config.ticketCategories.filter((c) => !c.hidden).map((c) => ({ label: c.label, value: c.value, description: c.description.slice(0, 100) })));
   return panel(content, [new ActionRowBuilder().addComponents(menu)]);
 }
 
@@ -82,7 +71,7 @@ export function rolePanel(guild) {
   if (!items.length) throw new UserError('Rol menüsü boş. Önce `/rol-menu ekle` ile rol ekle.');
 
   const content = ruleText({
-    icon: e('rozet', '🎭'),
+    icon: logo(),
     title: 'Rollerini Seç',
     intro: 'Aşağıdaki menüden istediğin rolleri seç. Seçmediklerin üzerinden alınır.',
     sections: [

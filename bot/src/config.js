@@ -36,15 +36,16 @@ export default {
     instagram: 'https://www.instagram.com/karia.live/',
     tiktok: 'https://www.tiktok.com/@karia.live',
     youtube: 'https://www.youtube.com/@karialivemedya',
+    minecraft: 'https://karia.live/minecraft',
     x: '',
     github: '',
   },
 
-  // Destek talebi kategorileri (en fazla 25)
+  // Destek talebi kategorileri (en fazla 25). hidden: menüde çıkmaz, eski talepler için durur.
   ticketCategories: [
     { value: 'minecraft', label: 'Minecraft Sorunu', emoji: '⛏️', icon: 'kazma', description: 'Oyun içi sorunlar, bağlantı, eşya kaybı' },
     { value: 'hata', label: 'Hata Bildirimi', emoji: '🐛', icon: 'kod', description: 'Bot, website veya sunucuda bulduğun hatalar' },
-    { value: 'sikayet', label: 'Şikayet', emoji: '⚠️', icon: 'unlem', description: 'Bir oyuncu ya da üye hakkında şikayet' },
+    { value: 'sikayet', label: 'Şikayet', emoji: '⚠️', icon: 'unlem', description: 'Bir oyuncu ya da üye hakkında şikayet', hidden: true }, // şikayet /rapor ile yapılır
     { value: 'sponsor', label: 'Sponsorluk / İş Birliği', emoji: '🤝', icon: 'roket', description: 'Sponsorluk ve iş birliği teklifleri' },
     { value: 'diger', label: 'Diğer', emoji: '❓', icon: 'soru', description: 'Diğer konular' },
   ],

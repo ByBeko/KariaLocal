@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType, ChannelType } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
-import { verifyPanel, rolePanel, ticketPanel, linksPanel } from '../../systems/panels.js';
+import { verifyPanel, rolePanel, ticketPanel, linksPanel, bannerMessage } from '../../systems/panels.js';
 import { replySuccess } from '../../utils/embeds.js';
 
 const PANELS = {
@@ -9,6 +9,8 @@ const PANELS = {
   talep: ticketPanel,
   baglantilar: linksPanel,
 };
+// Panelden önce gönderilen kanal banner'ı (bot/assets/banners)
+const BANNERS = { roller: 'roller', talep: 'destek-talebi', baglantilar: 'baglantilar' };
 
 export default {
   level: Level.ADMIN,
@@ -26,6 +28,7 @@ export default {
     .addChannelOption((o) =>
       o.setName('kanal').setDescription('Hangi kanala? (boş = bu kanal)').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement),
     )
+    .addBooleanOption((o) => o.setName('banner').setDescription('Panelden önce kanal banner\'ı gönderilsin mi? (varsayılan: evet)'))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setContexts(InteractionContextType.Guild),
 
@@ -33,6 +36,7 @@ export default {
     const type = interaction.options.getString('tur', true);
     const channel = interaction.options.getChannel('kanal') ?? interaction.channel;
     const payload = PANELS[type](interaction.guild);
+    if (BANNERS[type] && interaction.options.getBoolean('banner') !== false) await channel.send(bannerMessage(BANNERS[type]));
     await channel.send(payload);
     await replySuccess(interaction, `Panel ${channel} kanalına gönderildi.`);
   },

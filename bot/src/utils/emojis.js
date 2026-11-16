@@ -13,6 +13,9 @@ export async function loadAppEmojis(client) {
 /** Karia emojisi; yüklü değilse yedek (unicode) emoji döner. Örn: e('alev', '🔥') */
 export const e = (key, fallback = '') => map.get(key) ?? fallback;
 
+/** Kanal mesajlarının başlığındaki şeffaf Karia logosu (sunucu emojisi; aynı adla uygulama emojisi eklenirse o kullanılır). */
+export const logo = () => e('sadece_logo_seffaf', '<:Karia_sadece_logo_seffaf:1571848623665447022>');
+
 /** Panel seçimleri için yüklü Karia emojileri */
 export const emojiList = () => [...map].map(([name, value]) => ({ name, value })).sort((a, b) => a.name.localeCompare(b.name, 'tr'));
 

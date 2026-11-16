@@ -24,7 +24,7 @@ import { guildCommandData, setupGuestGuild } from '../core/guildSetup.js';
 // bu yüzden açılışta emojiler yüklendikten sonra kurulur. Discord sınırı 400 karakter.
 const DESCRIPTION_LIMIT = 400;
 const describe = (icon) => [
-  `${icon('icon_turkuaz', '💠')} Karia'nın resmi botuyum`,
+  `${icon('sadece_logo_seffaf', '💠')} Karia'nın resmi botuyum`,
   `${icon('baglanti', '🌐')} https://karia.live/`,
   `${icon('asagi', '⬇️')} Komutlar aşağıda`,
 ].join('\n');
