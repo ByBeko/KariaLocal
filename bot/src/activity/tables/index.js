@@ -194,17 +194,17 @@ export async function tablesRoute(method, path, body, query, user) {
   const action = match[2];
 
   if (method === 'GET' && !action) {
-    room.seen(user.id);
+    room.seen(user.id, user.name);
     room.wake?.();
     const since = Number(query.get('v'));
     const waiting = room.wait(Number.isInteger(since) ? since : -1);
     if (waiting) await waiting;
-    room.seen(user.id);
+    room.seen(user.id, user.name);
     return { v: room.v, now: Date.now(), room: room.view(user.id), balance: getBalance(guildId, user.id), seatedAt: seatOf(user.id) };
   }
   if (method !== 'POST' || !action) return { __status: 405, error: 'Geçersiz istek.' };
 
-  room.seen(user.id);
+  room.seen(user.id, user.name);
   try {
     if (action === 'away') {
       room.away(user.id);

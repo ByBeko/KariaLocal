@@ -101,7 +101,8 @@ export class Room {
     });
   }
 
-  seen(userId) {
+  seen(userId, name) {
+    if (name) (this.names ??= new Map()).set(userId, name);
     this.viewers.set(userId, Date.now());
   }
 

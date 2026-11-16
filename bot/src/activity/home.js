@@ -7,6 +7,8 @@ import { getBalance, richBoard, claimDaily, nextDaily, ensureEnabled } from '../
 import { getProfile, levelBoard } from '../systems/levels.js';
 import { userStats, leaderboard, formatVoice } from '../systems/stats.js';
 import { inviteLeaderboard } from '../systems/invites.js';
+import { monthKey } from '../systems/monthlyGifts.js';
+import { db } from '../core/database.js';
 import { findGuideChannel } from '../systems/guide.js';
 import { cleanText, runPanelCommand } from './admin.js';
 import { submitReport } from '../commands/topluluk/rapor.js';
@@ -76,6 +78,9 @@ export async function homeView(guild, member) {
 
 const memberName = (guild, id) => guild.members.cache.get(id)?.displayName ?? 'ayrılmış üye';
 
+// Bu ayın Top.gg oyları (aylık ödüllerle aynı tablo)
+const voteTop = db.prepare('SELECT user_id, count FROM votes WHERE guild_id=? AND month=? ORDER BY count DESC, last_at ASC LIMIT ?');
+
 export function leaderboardView(guild, memberId, type) {
   const LIMIT = 200; // seviyesi olan herkes listede görünür
   const rows = {
@@ -83,6 +88,7 @@ export function leaderboardView(guild, memberId, type) {
     para: () => richBoard(guild.id, LIMIT).map((r) => ({ id: r.userId, value: r.value.toLocaleString('tr-TR') })),
     mesaj: () => leaderboard(guild.id, 'mesaj', 30, LIMIT).map((r) => ({ id: r.userId, value: r.value.toLocaleString('tr-TR') })),
     ses: () => leaderboard(guild.id, 'ses', 30, LIMIT).map((r) => ({ id: r.userId, value: formatVoice(r.value) })),
+    oy: () => voteTop.all(guild.id, monthKey(), LIMIT).map((r) => ({ id: r.user_id, value: `${r.count.toLocaleString('tr-TR')} oy` })),
     davet: () => inviteLeaderboard(guild.id).slice(0, LIMIT).map((r) => ({ id: r.inviterId, value: r.uses.toLocaleString('tr-TR') })),
   }[type];
   if (!rows) throw new UserError('Böyle bir sıralama yok.');

@@ -127,10 +127,25 @@ export class RouletteRoom extends Room {
     }, SPIN_MS);
   }
 
+  // Masaya gelen herkes oturmuş sayılır: bahis koymadan da oyuncu listesinde görünür
+  seen(userId, name) {
+    const isNew = !this.present().includes(userId);
+    super.seen(userId, name);
+    if (isNew) this.bump();
+  }
+
+  away(userId) {
+    super.away(userId);
+    this.bump();
+  }
+
   view(userId) {
     const mine = this.bets.get(userId);
     const reveal = this.phase === 'spinning' || this.phase === 'result';
     const players = [...this.bets].map(([id, b]) => ({ id, name: b.name, total: b.total, payout: this.phase === 'result' ? b.payout ?? 0 : null }));
+    for (const id of this.present()) {
+      if (!this.bets.has(id)) players.push({ id, name: this.names?.get(id) ?? 'Oyuncu', total: 0, payout: null });
+    }
     // Herkesin kutulara koyduğu toplam: masada kimin nereye oynadığı görünür
     const table = {};
     for (const b of this.bets.values()) for (const [key, amount] of b.cells) table[key] = (table[key] ?? 0) + amount;

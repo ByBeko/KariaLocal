@@ -34,34 +34,13 @@ async function api(path, body) {
 function setBalance(value) {
   if (value === undefined) return;
   if (value !== balance) {
-    for (const box of document.querySelectorAll('.balance, .gbal')) {
-      box.classList.remove('bump');
-      void box.offsetWidth;
-      box.classList.add('bump');
-    }
+    const el = document.querySelector('.balance');
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
   }
   balance = value;
-  for (const n of document.querySelectorAll('[data-balance]')) n.textContent = fmt(value);
-}
-
-/** Oyunların ortak durum şeridi: tek satır yazı, renk (turn/win/lose/go) ve isteğe bağlı süre çubuğu */
-function setStatus(node, s) {
-  if (!node) return;
-  const o = s == null ? {} : typeof s === 'string' || s instanceof Node ? { text: s } : s;
-  node.className = `gs-status${o.tone ? ` ${o.tone}` : ''}`;
-  const text = document.createElement('span');
-  text.className = 'gs-text';
-  if (o.text instanceof Node) text.append(o.text);
-  else text.textContent = o.text ?? '';
-  const parts = [Object.assign(document.createElement('i'), { className: 'gs-dot' }), text];
-  if (o.log) parts.push(Object.assign(document.createElement('small'), { className: 'gs-log', textContent: o.log }));
-  if (o.deadline) {
-    const bar = Object.assign(document.createElement('b'), { className: 'gs-timer' });
-    bar.dataset.deadline = String(o.deadline);
-    bar.dataset.total = String(o.total || 1);
-    parts.push(bar);
-  }
-  node.replaceChildren(...parts);
+  $('balance').textContent = fmt(value);
 }
 
 let sayTimer = 0;
@@ -92,7 +71,27 @@ async function guarded(action) {
 
 // ── Sekmeler ──
 const GAMES = ['blackjack', 'poker', 'tayyare', 'roulette', 'zar', 'slot', 'satranc', 'okey', 'labirent'];
+const NO_BET = ['poker', 'zar', 'satranc', 'okey', 'labirent']; // fiş ve giriş masada seçilir
 let tables = null;
+
+const GAME_INFO = {
+  blackjack: [['kupa', 'Kazanç', '2×'], ['kart', 'Blackjack', '2,5×'], ['yenile', 'Beraberlik', 'İade'], ['kalkan', 'Sigorta (krupiye As)', '2:1'], ['bayrak', 'Teslim', 'Yarısı döner']],
+  slot: [['slot_yedi', 'Üçlü', '50×'], ['elmas', 'Üçlü', '20×'], ['zil', 'Üçlü', '10×'], ['kalp', 'Üçlü', '5×'], ['hediye', 'Üçlü', '4×'], ['kurabiye', 'Üçlü', '3×'], ['coin', 'Herhangi ikili', '1,5×']],
+  roulette: [['elmas', 'Tek sayı', '36×'], ['yildiz', 'Ayrık / Sokak', '18× / 12×'], ['madalya', 'Köşe / Altılı', '9× / 6×'], ['kalp', 'Kırmızı / Siyah / Tek / Çift', '2×'], ['zil', 'Düzine / Sütun', '3×']],
+  poker: [['tac', 'Floş Royal / Kent Renk', 'Pot'], ['kupa', 'Kare / Full / Renk', 'Pot'], ['arkadaslar', 'Masa', '2-6 oyuncu'], ['coin', 'Kalkınca', 'Fişin cüzdana döner']],
+  tayyare: [['roket', 'Düşmeden çek', 'Bahis × çarpan'], ['yildiz', 'En yüksek', '1000×'], ['ayarlar', 'Otomatik çek', 'Hedefte öder']],
+  zar: [['kupa', 'En yüksek zar', 'Potun hepsi'], ['yenile', 'Beraberlik', 'Yeniden atış'], ['arkadaslar', 'Masa', '2-6 oyuncu']],
+  satranc: [['kupa', 'Kazanırsan', 'Potun hepsi (2×)'], ['yenile', 'Berabere', 'Giriş geri'], ['arkadaslar', 'Masa', '2 oyuncu']],
+  okey: [['kupa', 'Elini bitiren', 'Potun hepsi (4×)'], ['kart', 'Açma', '101 ya da 5 çift'], ['arkadaslar', 'Masa', '4 oyuncu']],
+  labirent: [['kupa', 'Karşıya ilk varan', 'Potun hepsi (2×)'], ['kalkan', 'Hamle', 'Yürü ya da engel koy'], ['arkadaslar', 'Masa', '2 oyuncu']],
+};
+
+function drawGameInfo(name) {
+  $('game-info').replaceChildren(
+    el('h4', { textContent: 'Ödüller' }),
+    ...GAME_INFO[name].map(([icon, label, value]) => el('div', { className: 'game-row' }, el('img', { src: `emojis/${icon}.png`, alt: '' }), el('span', { textContent: label }), el('b', { textContent: value }))),
+  );
+}
 
 function setAdminOpen(open) {
   $('admin-links').hidden = !open;
@@ -100,14 +99,34 @@ function setAdminOpen(open) {
 }
 $('admin-toggle').addEventListener('click', () => setAdminOpen($('admin-links').hidden));
 
+// ── Sağ panel (oyun seçici + bahis): masada yer açmak için kapanır, köşedeki düğmeyle açılır ──
+let sideKey = '';
+function setSide(closed) {
+  document.querySelector('.content').classList.toggle('side-closed', closed);
+  const t = $('side-toggle');
+  t.title = closed ? 'Sağ paneli aç' : 'Sağ paneli kapat';
+  t.setAttribute('aria-label', t.title);
+  t.setAttribute('aria-expanded', String(!closed));
+}
+/** Yeni bir ekrana geçince panelin varsayılan hali; aynı ekranda kullanıcının seçimi korunur */
+function autoSide(key, closed) {
+  if (key === sideKey) return;
+  sideKey = key;
+  setSide(closed);
+}
+$('side-toggle').addEventListener('click', () => setSide(!document.querySelector('.content').classList.contains('side-closed')));
+
 function openTab(name) {
   const isGame = GAMES.includes(name);
+  autoSide(`tab-${name}`, false);
   const sideName = isGame ? 'blackjack' : name;
   for (const t of document.querySelectorAll('.tab')) t.classList.toggle('active', t.dataset.tab === sideName);
   for (const p of document.querySelectorAll('.panel')) p.hidden = p.dataset.panel !== name;
   for (const b of document.querySelectorAll('[data-game]')) b.classList.toggle('active', b.dataset.game === name);
+  $('betbar').hidden = !isGame;
+  $('betbar').classList.toggle('no-bet', NO_BET.includes(name));
   $('game-switch').hidden = !isGame;
-  document.querySelector('.app').classList.toggle('compact', isGame); // oyundayken sol menü ikonlara daralır
+  if (isGame) drawGameInfo(name);
   document.querySelector('.content').classList.toggle('fill', isGame || ['home', 'music', 'leaderboard', 'tickets'].includes(name));
   document.querySelector('.content').classList.toggle('game', isGame);
   document.querySelector('.content').classList.toggle('fit', name === 'music'); // müzik de ekrana sığar, sayfa kaymaz
@@ -120,16 +139,8 @@ function openTab(name) {
   if (name === 'music') refreshMusic();
   DASH[name]?.();
 }
-for (const b of document.querySelectorAll('[data-game]')) {
-  b.addEventListener('click', () => openTab(b.dataset.game));
-  b.title = b.textContent.trim(); // alçak ekranda yalnız ikon görünür; ad fareyle ve ekran okuyucuyla kalır
-  b.setAttribute('aria-label', b.title);
-}
-for (const t of document.querySelectorAll('.tab')) {
-  t.addEventListener('click', () => openTab(t.dataset.tab));
-  // Menü ikonlara daralınca adı fareyle üstüne gelince görünür
-  if (!t.title) t.title = [...t.childNodes].find((n) => n.nodeType === 3)?.textContent.trim() ?? '';
-}
+for (const b of document.querySelectorAll('[data-game]')) b.addEventListener('click', () => openTab(b.dataset.game));
+for (const t of document.querySelectorAll('.tab')) t.addEventListener('click', () => openTab(t.dataset.tab));
 
 // ── Ses açma/kapama ──
 function drawSfxToggle() {
@@ -147,30 +158,28 @@ drawSfxToggle();
 
 // ── Bahis ──
 const betValue = () => Math.floor(Number($('bet').value.replace(/\D/g, '')) || 0);
-// Bahis değişince açık masa (Tayyare düğmesi, blackjack masası) yeni tutarı göstersin
-const betChanged = () => document.dispatchEvent(new Event('betchange'));
-function setBet(value) {
-  $('bet').value = String(Math.max(limits.minBet, Math.min(Math.floor(value), limits.maxBet)));
-  sfx.chip();
-  betChanged();
-}
 for (const b of document.querySelectorAll('[data-bet]')) {
   b.addEventListener('click', () => {
     const now = betValue();
-    setBet({ half: Math.floor(now / 2), double: now * 2, min: limits.minBet, all: balance }[b.dataset.bet]);
+    const next = { half: Math.floor(now / 2), double: now * 2, min: limits.minBet, all: balance }[b.dataset.bet];
+    $('bet').value = Math.max(limits.minBet, Math.min(next, limits.maxBet));
+    sfx.chip();
   });
 }
-// − / + yuvarlak tutarlar arasında gezer: 10, 25, 50, 100, 250, 500, 1.000 ...
-const BET_STEPS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000];
-for (const b of document.querySelectorAll('[data-step]')) {
-  b.addEventListener('click', () => {
-    const now = betValue();
-    const up = Number(b.dataset.step) > 0;
-    const next = up ? BET_STEPS.find((v) => v > now) ?? limits.maxBet : [...BET_STEPS].reverse().find((v) => v < now) ?? limits.minBet;
-    setBet(next);
+
+for (const chip of document.querySelectorAll('[data-add]')) {
+  chip.addEventListener('click', () => {
+    $('bet').value = Math.min(betValue() + Number(chip.dataset.add), limits.maxBet);
+    sfx.chip();
   });
 }
-$('bet').addEventListener('input', betChanged);
+// Çipin köşesindeki kırmızı − aynı tutarı bahisten düşer
+for (const minus of document.querySelectorAll('[data-sub]')) {
+  minus.addEventListener('click', () => {
+    $('bet').value = Math.max(limits.minBet, betValue() - Number(minus.dataset.sub));
+    sfx.chip();
+  });
+}
 
 // ── Blackjack ──
 const RED = new Set(['kupa_kart', 'karo']);
@@ -228,20 +237,15 @@ function drawBlackjack(g, fresh = false) {
   $('bj-insure').disabled = !g.canInsure;
   $('bj-noinsure').hidden = !(g.active && g.insurancePending);
   setBalance(g.balance);
-  document.querySelector('#bj-solo .gs-bet')?.classList.toggle('off', g.active); // el sürerken bahis değişmez
-  const stake = `Bahis ${fmt(g.bet)}${g.insured ? ` • Sigorta ${fmt(g.insured)}` : ''}`;
-  if (g.active && g.insurancePending) {
-    setStatus($('bj-status'), { text: `Krupiyenin açık kartı As. Sigorta alır mısın? (${fmt(g.insuranceCost)} coin, krupiye blackjack yaparsa 2'ye 1 öder)`, tone: 'turn', log: stake });
-  } else if (g.active) {
-    setStatus($('bj-status'), { text: multi ? `Sıra sende: ${g.current + 1}. el için Kart Çek ya da Dur.` : `Sıra sende: Kart Çek ya da Dur. (Elin ${g.playerTotal})`, tone: 'turn', log: stake });
-  } else {
+  if (g.active && g.insurancePending) say(`Krupiyenin açık kartı As. Sigorta: ${fmt(g.insuranceCost)} (krupiye blackjack yaparsa 2'ye 1 öder)`);
+  else if (g.active) say(`Bahis: ${fmt(g.bet)}${g.insured ? ` • Sigorta ${fmt(g.insured)}` : ''}`);
+  else {
     const insurance = g.insured ? ` • Sigorta ${g.insuranceWon ? 'ödedi' : 'kaybetti'}` : '';
-    const result = (multi ? g.hands.map((h, i) => `${i + 1}. el: ${OUTCOME[h.outcome]}`).join(' • ') : OUTCOME[g.outcome]) + insurance;
-    setStatus($('bj-status'), { text: `${result} ${g.net ? netText(g.net) : ''}`.trim(), tone: g.net > 0 ? 'win' : g.net < 0 ? 'lose' : 'go', log: 'Yeni el için Dağıt’a bas.' });
+    const result = (multi ? g.hands.map((h, i) => `El ${i + 1}: ${OUTCOME[h.outcome]}`).join(' • ') : OUTCOME[g.outcome]) + insurance;
+    say(`${result} ${g.net ? netText(g.net) : ''}`.trim(), g.net > 0 ? 'win' : g.net < 0 ? 'lose' : 'info');
     setTimeout(() => sfx.result(g.net), 420);
   }
 }
-setStatus($('bj-status'), { text: 'Bahsini seç ve Dağıt’a bas.', tone: 'go', log: 'Amaç: 21’i geçmeden krupiyeden yüksek el' });
 
 $('bj-start').addEventListener('click', () => guarded(async () => drawBlackjack(await api('/blackjack/start', { bet: String(betValue()) }), true)));
 for (const [id, move] of [['bj-hit', 'hit'], ['bj-stand', 'stand'], ['bj-double', 'double'], ['bj-split', 'split'], ['bj-surrender', 'surrender'], ['bj-insure', 'insure'], ['bj-noinsure', 'noinsure']]) {
@@ -254,7 +258,7 @@ $('slot-spin').addEventListener('click', () => guarded(async () => {
   document.querySelector('.machine')?.classList.remove('idle');
   const boxes = reels.map((r) => r.parentElement);
   boxes.forEach((b) => { b.classList.remove('hit'); b.classList.add('spin'); });
-  setStatus($('slot-status'), { text: 'Makaralar dönüyor...', tone: 'turn' });
+  say('');
   const stopSpin = sfx.spinLoop();
   try {
     const result = await api('/slot', { bet: String(betValue()) });
@@ -273,17 +277,13 @@ $('slot-spin').addEventListener('click', () => guarded(async () => {
       boxes.forEach((b, i) => b.classList.toggle('hit', result.reels[i] === top));
     }
     setBalance(result.balance);
-    if (result.net > 0) setStatus($('slot-status'), { text: `${result.matches === 3 ? 'ÜÇLÜ' : 'İkili'}! ${String(result.multiplier).replace('.', ',')}× • ${netText(result.net)}`, tone: 'win' });
-    else setStatus($('slot-status'), { text: `Olmadı. ${netText(result.net)}`, tone: 'lose', log: 'Tekrar denemek için Çevir’e bas.' });
-  } catch (error) {
-    setStatus($('slot-status'), { text: 'Bahsini seç ve Çevir’e bas.', tone: 'go' });
-    throw error;
+    if (result.net > 0) say(`${result.matches === 3 ? 'ÜÇLÜ' : 'İkili'}! ${result.multiplier}× ${netText(result.net)}`, 'win');
+    else say(`Olmadı. ${netText(result.net)}`, 'lose');
   } finally {
     stopSpin();
     boxes.forEach((b) => b.classList.remove('spin'));
   }
 }));
-setStatus($('slot-status'), { text: 'Bahsini seç ve Çevir’e bas.', tone: 'go', log: 'Aynı simgeden üç tane: en çok 50×' });
 
 // ── Müzik ──
 const LOOP_LABEL = { off: 'kapalı', track: 'şarkı', queue: 'sıra' };
@@ -1241,14 +1241,15 @@ function boardView(rows) {
     el('b', { textContent: String(i + 4) }), avatarImg(r.id, 'runner-avatar'), el('span', { textContent: r.name }), el('em', { textContent: r.value })));
   return [
     el('div', { className: 'podium' }, el('div', { className: 'confetti' }, ...confetti), ...order.map(([r, place]) => column(r, place))),
-    el('div', { className: 'runners-box' }, el('h4', { textContent: `Tüm Sıralama (${rows.length})` }), el('ol', { className: 'runners', start: 4 }, ...(runners.length ? runners : [el('li', { className: 'queue-empty', textContent: 'Listede başka üye yok.' })]))),
+    // Seçim şeridi üye listesine bağlı durur: sol taraf podyuma kalır
+    el('div', { className: 'runners-box' }, $('board-types'), el('h4', { textContent: `Tüm Sıralama (${rows.length})` }), el('ol', { className: 'runners', start: 4 }, ...(runners.length ? runners : [el('li', { className: 'queue-empty', textContent: 'Listede başka üye yok.' })]))),
   ];
 }
 
 async function loadBoard() {
   try {
     const { rows } = await api(`/leaderboard/${boardType}`);
-    $('board-list').replaceChildren(...(rows.length ? boardView(rows) : [empty('Henüz veri yok.')]));
+    $('board-list').replaceChildren(...(rows.length ? boardView(rows) : [el('div', { className: 'runners-box board-empty' }, $('board-types'), empty('Henüz veri yok.'))]));
   } catch (error) {
     say(error.message, 'lose');
   }
@@ -1622,8 +1623,8 @@ setInterval(() => {
 const DASH = { mail: loadMails, social: refreshSocial, membership: loadMembership, home: loadHome,  leaderboard: loadBoard, overview: loadOverview, tickets: loadTickets, reports: loadReports, suggestions: loadSuggestions, cases: loadCases, modules: loadAdmin, settings: loadAdmin, commands: loadAdmin };
 
 tables = initTables({
-  api, $, el, fmt, say, setBalance, setStatus, sfx, cardEl, avatarImg, betValue, guarded,
-  limits: () => limits, balance: () => balance, myId: () => myId,
+  api, $, el, fmt, say, setBalance, sfx, cardEl, avatarImg, betValue, guarded,
+  limits: () => limits, balance: () => balance, myId: () => myId, autoSide,
 });
 initPlaylists({ api, $, el, fmt, say, guarded, mmss, refreshMusic });
 $('set-search').addEventListener('input', drawSettings);
@@ -1712,7 +1713,7 @@ async function start() {
     await login();
     const state = await api('/state');
     balance = state.balance;
-    for (const n of document.querySelectorAll('[data-balance]')) n.textContent = fmt(state.balance);
+    $('balance').textContent = fmt(state.balance);
     $('username').textContent = state.user.username;
     adminUser = state.isAdmin;
     staffUser = state.isAdmin || state.isStaff;
