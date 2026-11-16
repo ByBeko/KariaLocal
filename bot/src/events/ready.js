@@ -20,13 +20,13 @@ import { getSetting } from '../core/settings.js';
 import { isAllowedGuild } from '../core/allowedGuilds.js';
 import { guildCommandData, setupGuestGuild } from '../core/guildSetup.js';
 
-// Bot profilindeki "Hakkında" yazısı ve etiketler. Emojiler Karia'nın turkuaz uygulama emojileridir,
-// bu yüzden açılışta emojiler yüklendikten sonra kurulur. Discord sınırı 400 karakter.
+// Bot profilindeki "Hakkında" yazısı ve etiketler. Bot her açılışta bu metni profile yazar; açıklama
+// buradan değiştirilir. Emojiler beyaz uygulama emojileridir (Karia_beyaz_*). Discord sınırı 400 karakter.
 const DESCRIPTION_LIMIT = 400;
 const describe = (icon) => [
-  `${icon('sadece_logo_seffaf', '💠')} Karia'nın resmi botuyum`,
-  `${icon('baglanti', '🌐')} https://karia.live/`,
-  `${icon('asagi', '⬇️')} Komutlar aşağıda`,
+  `${icon('beyaz_logo', '💠')} Karia'nın resmi botuyum`,
+  `${icon('beyaz_kod', '⌨️')} Komutlar: /yardım`,
+  `${icon('beyaz_baglanti', '🌐')} https://karia.live/`,
 ].join('\n');
 // Özel emojilerle sınırı aşarsa normal emojilerle yazılır
 const botDescription = () => {
