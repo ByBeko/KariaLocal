@@ -205,8 +205,8 @@ export function initTables(ctx) {
     const draw = { poker: drawPoker, blackjack: drawBlackjackTable, zar: drawDice, satranc: boards.drawChess, okey: boards.drawOkey, labirent: boards.drawLabirent }[game];
     const solo = id.startsWith('solo-');
     // Online masada (bahisli blackjack hariç) ve solo Okey'de sağ panel kapanır; köşedeki düğmeyle açılır
-    // Satranç ve labirentte de kapanır: tahta ortada büyük durur
-    autoSide(id, ['okey', 'satranc', 'labirent'].includes(game) || (!solo && game !== 'blackjack'));
+    // Satranç ve labirentte panel açık kalır (tahta yine ortada)
+    autoSide(id, game === 'okey' || (!solo && !['blackjack', 'satranc', 'labirent'].includes(game)));
     let restaking = false;
     watch(id, (room, data) => {
       setLeave(room);

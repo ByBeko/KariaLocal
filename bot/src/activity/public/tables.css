@@ -796,7 +796,13 @@
   .tt-layout>.chess-wrap,.tt-layout>.lab-wrap{grid-column:2;grid-row:1;height:100%;width:auto;aspect-ratio:1;max-width:calc(100cqw - 470px);max-height:660px;flex:none}
   .tt-layout>.tt-side{grid-column:3;grid-row:1;justify-self:start;width:100%;max-width:220px}
   .chess-wrap .chess,.lab-wrap .lab{width:min(100cqw,100cqh,660px)!important;max-height:660px}
+  /* Sağ panel açıkken (dar oda): yan kutu daralır, tahta yine tam ortada */
   @container room (max-width:860px){
+    .tt-layout{gap:10px}
+    .tt-layout>.chess-wrap,.tt-layout>.lab-wrap{max-width:calc(100cqw - 340px)}
+    .tt-layout>.tt-side{max-width:160px;font-size:13px}
+  }
+  @container room (max-width:600px){
     .tt-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
     .tt-layout>.chess-wrap,.tt-layout>.lab-wrap{grid-column:1;max-width:none;width:auto;aspect-ratio:auto}
     .tt-layout>.tt-side{grid-column:1;grid-row:2;justify-self:stretch;max-width:none}
@@ -834,3 +840,7 @@
 .stake-btns button.active{background:linear-gradient(180deg,#ffd479,#e0a93a);color:#2a1a02;box-shadow:none}
 .stake-note{color:var(--muted);font-size:12px}
 @media (max-width:900px){.betbar.no-bet:has(#stake-pick:not([hidden])){display:flex!important}.stake-btns{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* Okey beklerken masa: boş koltuk çerçevesi ve Otur */
+.okp.wait-empty{justify-content:center;border:1px dashed rgba(79,207,180,.35);background:rgba(0,0,0,.18);min-height:46px}
+.okp.wait-empty small{color:var(--muted)}
+.okp.ready{border-color:rgba(88,214,141,.55)}

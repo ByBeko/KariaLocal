@@ -420,8 +420,26 @@ export function initBoards(ctx) {
   function drawOkey(room, data, root) {
     const playing = room.phase !== 'waiting' && room.players.length > 0;
     if (!playing) {
+      // Beklerken de masa görünür: koltuklar yerinde, ortada deste; boş koltukta Otur
       ok.gameKey = '';
-      root.replaceChildren(roomHead(room, data, root, [stakeTag(room)]), players(room), waitingBar(room), roomLog(room.log), pastBox('turn', room.past));
+      const base = room.mySeat >= 0 ? room.mySeat : 0;
+      const seatAt = (rel) => (room.seats[(base + rel) % 4] ? room.seats[(base + rel) % 4] : { empty: (base + rel) % 4 });
+      const wplate = (s, side) => {
+        if (s.empty !== undefined) {
+          return el('div', { className: `okp ${side} wait-empty` }, ...(room.mySeat >= 0 ? [el('small', { textContent: 'Boş' })] : [btn('Otur', () => act(room.id, 'join', { seat: s.empty }), 'sit')]));
+        }
+        return el('div', { className: `okp ${side}${s.ready ? ' ready' : ''}` }, avatar(s.id, s.ready ? 'ready' : ''),
+          el('div', { className: 'okp-text' }, el('strong', { textContent: s.seat === room.mySeat ? 'Sen' : s.name }), el('small', { textContent: s.ready ? 'Hazır' : 'Bekliyor' })));
+      };
+      const felt = el('div', { className: 'okf okf-101' },
+        el('div', { className: 'okf-mid' },
+          el('div', { className: 'ok-deck' }, el('b', { textContent: '106' }), el('small', { textContent: 'deste' })),
+          el('div', { className: 'ok-info' }, el('strong', { textContent: 'Okey 101' }), el('small', { textContent: 'Herkes hazır olunca taşlar dağıtılır' }))));
+      const table = el('div', { className: 'okt' },
+        el('div', { className: 'okc tl' }), wplate(seatAt(2), 'top'), el('div', { className: 'okc tr' }),
+        wplate(seatAt(3), 'left'), felt, wplate(seatAt(1), 'right'),
+        el('div', { className: 'okc bl' }), el('div', { className: 'okt-me' }, wplate(seatAt(0), 'me')), el('div', { className: 'okc br' }));
+      root.replaceChildren(roomHead(room, data, root, [stakeTag(room)]), table, waitingBar(room), roomLog(room.log), pastBox('turn', room.past));
       return resultSound(room, root);
     }
     syncRack(room);
