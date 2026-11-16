@@ -26,6 +26,18 @@ commands:
   uyelikal:
     description: Üyelik kademesini coin ile 30 günlüğüne alır
     usage: /uyelikal <vip|vipplus|kvip|prime>
+  destek:
+    description: Yetkililere yazar; Discord'da destek talebi açar, cevap oyunda gelir
+    usage: /destek <mesaj>
+    aliases: [talep, ticket]
+  oneri:
+    description: Discord'daki öneri kanalına öneri gönderir
+    usage: /oneri <önerin>
+    aliases: [suggest]
+  rapor:
+    description: Kural ihlal eden oyuncuyu yetkililere gizlice bildirir
+    usage: /rapor <oyuncu> <sebep>
+    aliases: [report, sikayet]
   ekonomi:
     description: Ekonomi yönetimi
     usage: /ekonomi <ver|al|durum> [oyuncu] [miktar]

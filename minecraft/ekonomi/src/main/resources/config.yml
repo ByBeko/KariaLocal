@@ -21,6 +21,10 @@ baslangic-parasi: 250
 yenileme-saniye: 60
 
 mesaj-oneki: "&#5BE0F0&lKARIA &8» &f"
+
+# /destek talep kanalına yetkililerin yazdığı cevaplar bu aralıkla çekilip oyuncuya gösterilir (saniye)
+destek:
+  yanit-yoklama-saniye: 15
 bagla-adresi: "karia.live/minecraft"
 
 # Üyelik kademeleri: Discord'daki süreli rol esas alınır, LuckPerms grubu buna eşitlenir.

@@ -45,6 +45,12 @@ public final class KariaEkonomi extends JavaPlugin implements Listener {
         getServer().getServicesManager().register(Economy.class, new KariaEconomy(this), this, ServicePriority.Highest);
         getServer().getPluginManager().registerEvents(this, this);
         uyelik = new Uyelik(this);
+        // Oyundan Discord'a destek talebi, öneri ve rapor
+        Destek destek = new Destek(this, api);
+        for (String c : new String[]{"destek", "oneri", "rapor"}) {
+            getCommand(c).setExecutor(destek);
+            getCommand(c).setTabCompleter(destek);
+        }
 
         // Kuyruk: her saniye bota iletmeyi dene
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, this::drainQueue, 40L, 20L);

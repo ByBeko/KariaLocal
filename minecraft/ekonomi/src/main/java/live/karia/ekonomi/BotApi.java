@@ -63,6 +63,28 @@ final class BotApi {
         return send("POST", "/tier", "{\"uuid\":" + q(uuid.toString()) + ",\"tier\":" + q(tier) + ",\"txId\":" + q(txId) + "}");
     }
 
+    /** Oyundan destek talebi: açık talep varsa mesaj ona eklenir. */
+    Result ticket(UUID uuid, String name, String text, String world, int x, int y, int z) {
+        return send("POST", "/ticket", "{\"uuid\":" + q(uuid.toString()) + ",\"name\":" + q(name) + ",\"text\":" + q(text)
+                + ",\"world\":" + q(world) + ",\"x\":" + x + ",\"y\":" + y + ",\"z\":" + z + "}");
+    }
+
+    Result suggestion(UUID uuid, String name, String text) {
+        return send("POST", "/suggestion", "{\"uuid\":" + q(uuid.toString()) + ",\"name\":" + q(name) + ",\"text\":" + q(text) + "}");
+    }
+
+    Result report(UUID uuid, String name, String target, String reason, String world, int x, int y, int z) {
+        return send("POST", "/report", "{\"uuid\":" + q(uuid.toString()) + ",\"name\":" + q(name) + ",\"target\":" + q(target)
+                + ",\"reason\":" + q(reason) + ",\"world\":" + q(world) + ",\"x\":" + x + ",\"y\":" + y + ",\"z\":" + z + "}");
+    }
+
+    /** Talep kanalındaki yetkili yanıtları; çekilenler teslim edilmiş sayılır. */
+    Result ticketReplies(java.util.List<UUID> uuids) {
+        StringBuilder sb = new StringBuilder();
+        for (UUID u : uuids) sb.append(sb.length() == 0 ? "" : ",").append(u);
+        return send("GET", "/ticket-replies?uuids=" + URLEncoder.encode(sb.toString(), StandardCharsets.UTF_8), null);
+    }
+
     private Result send(String method, String path, String json) {
         try {
             HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(base + path))
