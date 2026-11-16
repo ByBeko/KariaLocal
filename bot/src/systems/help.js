@@ -18,28 +18,21 @@ export const CATEGORIES = {
   ekonomi: { label: 'Ekonomi', get emoji() { return e('oyun', '🎰'); }, description: 'Coin ve oyunlar' },
 };
 
-/** Kategori sayfalarındaki alt başlıklar. Burada olmayan üye komutu Genel altında "Diğer" başlığında görünür, yani kaybolmaz. */
-const COMMAND_GROUPS = {
-  genel: [
-    ['Bilgi', 'bilgi', ['bilgi']],
-    ['Karia', 'bot', ['yardim', 'bot-bilgi']],
-  ],
-  topluluk: [
-    ['Sosyal', 'arkadaslar', ['afk', 'oneri', 'rapor']],
-  ],
-  muzik: [
-    ['Çalma', 'oynat', ['cal', 'duraklat', 'gec', 'dur']],
-    ['Sıra', 'pano', ['sira', 'simdi', 'karistir', 'dongu']],
-    ['Ayar', 'ayarlar', ['ses']],
-  ],
-  ekonomi: [
-    ['Coin', 'dolar', ['bakiye', 'gunluk', 'gonder']],
-    ['Oyunlar', 'oyun', ['coinflip', 'slot', 'blackjack']],
-  ],
+/** Kategorilerdeki komut sırası. Burada olmayan üye komutu Genel'in sonunda görünür, yani kaybolmaz. */
+const COMMAND_ORDER = {
+  genel: ['bilgi', 'yardim', 'bot-bilgi', 'ping'],
+  topluluk: ['afk', 'oneri', 'rapor'],
+  muzik: ['cal', 'duraklat', 'gec', 'dur', 'sira', 'simdi', 'karistir', 'dongu', 'ses'],
+  ekonomi: ['bakiye', 'gunluk', 'gonder', 'coinflip', 'slot', 'blackjack'],
 };
 /** /bilgi butonlarından açılan komutlar: çalışmaya devam eder ama yardım listesinde ayrıca gösterilmez */
 const HIDDEN_IN_HELP = new Set(['avatar', 'roller', 'emoji', 'seviye', 'siralama', 'istatistik']);
-const CATEGORY_OF =new Map(Object.entries(COMMAND_GROUPS).flatMap(([category, groups]) => groups.flatMap(([, , names]) => names.map((name) => [name, category]))));
+/** Ana sayfada gösterilmeyen komutlar: sadece "Detaylı Gör"de listelenir */
+const DETAIL_ONLY = new Set(['duraklat', 'gec', 'dur', 'sira', 'simdi', 'karistir', 'dongu', 'ses']);
+/** Ana sayfada kategorinin altına düşülen kısa not */
+const MAIN_NOTES = { muzik: '*Duraklat, geç, durdur, döngü, karıştır: oynatıcının butonlarında.*' };
+const CATEGORY_OF = new Map(Object.entries(COMMAND_ORDER).flatMap(([category, names]) => names.map((name) => [name, category])));
+const ORDER_INDEX = new Map(Object.values(COMMAND_ORDER).flatMap((names) => names.map((name, i) => [name, i])));
 
 const SHORT_DESCRIPTIONS = {
   seviye: 'Seviye kartın ve ödüller',
@@ -59,16 +52,15 @@ const commandLine = (c) => `${commandRefs(c).join(' ')} — ${shortDescription(c
 // Bölümler arasında en fazla bir satır boşluk
 const compactSections = (sections) => sections.map((s) => `${s.icon} **${s.title}**\n${quote(s.body)}`).join('\n\n');
 
-function groupedSections(category, list) {
-  const remaining = new Map(list.map((c) => [c.data.name, c]));
+/** Her kategori tek bölüm; detailed=false iken DETAIL_ONLY komutları gizlenir */
+function categorySections(groups, detailed) {
   const sections = [];
-  for (const [title, icon, names] of COMMAND_GROUPS[category] ?? []) {
-    const commands = names.map((name) => remaining.get(name)).filter(Boolean);
-    names.forEach((name) => remaining.delete(name));
-    if (commands.length) sections.push({ icon: e(icon, '📌'), title, body: commands.map(commandLine).join('\n') });
-  }
-  if (remaining.size) {
-    sections.push({ icon: e('kitap', '📖'), title: sections.length ? 'Diğer' : 'Komutlar', body: [...remaining.values()].map(commandLine).join('\n') });
+  for (const [key, list] of groups) {
+    const shown = detailed ? list : list.filter((c) => !DETAIL_ONLY.has(c.data.name));
+    if (!shown.length) continue;
+    const lines = shown.map(commandLine);
+    if (!detailed && shown.length < list.length && MAIN_NOTES[key]) lines.push(MAIN_NOTES[key]);
+    sections.push({ icon: info(key).emoji, title: info(key).label, body: lines.join('\n') });
   }
   return sections;
 }
@@ -141,41 +133,23 @@ function userCommands(member, client) {
     if (isStaffCommand(command) || HIDDEN_IN_HELP.has(command.data.name) || checkAccess(member, command)) continue;
     groups.get(CATEGORY_OF.get(command.data.name) ?? 'genel').push(command);
   }
-  for (const [key, list] of groups) if (!list.length) groups.delete(key);
+  const rank = (c) => ORDER_INDEX.get(c.data.name) ?? Infinity;
+  for (const [key, list] of groups) {
+    if (!list.length) groups.delete(key);
+    else list.sort((a, b) => rank(a) - rank(b));
+  }
   return groups;
 }
 
 const info = (key) => CATEGORIES[key] ?? { label: key, emoji: e('pano', '📁'), description: '' };
 
-/** Kategori açılır menüsü + kategori sayfasında komut seçme menüsü */
-function components(member, client, ownerId, selected = 'ana', staffButton = false) {
-  const groups = userCommands(member, client);
-  const categorySelect = new StringSelectMenuBuilder()
-    .setCustomId(`yardim:kategori:${ownerId}`)
-    .setPlaceholder('Bir komut kategorisi seçin...')
-    .addOptions(
-      { label: 'Ana Sayfa', value: 'ana', emoji: e('ev', '🏠'), description: 'Yardım Merkezi' },
-      ...[...groups.keys()].map((key) => ({ label: info(key).label, value: key, emoji: info(key).emoji, description: info(key).description, default: key === selected })),
-    );
-  const rows = [new ActionRowBuilder().addComponents(categorySelect)];
-
-  const list = groups.get(selected);
-  if (list?.length) {
-    const select = new StringSelectMenuBuilder()
-      .setCustomId(`yardim:komut:${ownerId}:${selected}`)
-      .setPlaceholder('Detayını görmek istediğin komutu seç')
-      .addOptions(list.slice(0, 25).map((c) => ({ label: `/${c.data.name}`, value: c.data.name, description: c.data.description.slice(0, 100) })));
-    rows.push(new ActionRowBuilder().addComponents(select));
-  }
-  // Yetkili butonu sadece kişiye özel (gizli) menülerde; herkese açık yardımda görünmez
-  if (staffButton && getLevel(member) >= Level.STAFF) rows.push(staffButtonRow());
-  return rows;
-}
+const navButton = (id, label, emoji) => new ButtonBuilder().setCustomId(id).setLabel(label).setEmoji(emoji).setStyle(ButtonStyle.Secondary);
+const staffButtonComponent = () => navButton('yardim:yetkili', 'Yetkili Paneli', e('kalkan2', '🛡️'));
+// Yetkili butonu sadece kişiye özel (gizli) menülerde; herkese açık yardımda görünmez
+const withStaff = (member, buttons, staffButton) => (staffButton && getLevel(member) >= Level.STAFF ? [...buttons, staffButtonComponent()] : buttons);
 
 export function staffButtonRow() {
-  return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('yardim:yetkili').setLabel('Yetkili Paneli').setEmoji(e('kalkan2', '🛡️')).setStyle(ButtonStyle.Secondary),
-  );
+  return new ActionRowBuilder().addComponents(staffButtonComponent());
 }
 
 const helpEmbed = (member, client, title, footer) => {
@@ -183,37 +157,50 @@ const helpEmbed = (member, client, title, footer) => {
   return embed.setTitle(title ?? client.user.username);
 };
 
+/** Tek sayfalık yardım: tüm kategoriler bir arada, müzikte sadece /cal */
 export function homeView(member, client, ownerId, { staffButton = false } = {}) {
-  const total = [...userCommands(member, client).values()].reduce((sum, list) => sum + list.length, 0);
-  const embed = helpEmbed(member, client)
-    .setDescription([
-      `Merhaba **${member.displayName}**!`,
-      '',
-      'Detaylı bilgi almak istediğin komut kategorisini **aşağıdaki açılır menüden** seçebilirsin.',
-      '',
-      `${e('zincir', '🔗')} **Hızlı Bağlantılar:**`,
-      `• Metin Komut Prefix: ${config.prefixes.map((p) => `\`${p}\``).join(' ')} | Slash Komutları: \`/\``,
-      `• Toplam Komut: \`${total}\``,
-    ].join('\n'));
-  return { content: '', embeds: [embed], components: [...components(member, client, ownerId, 'ana', staffButton), linkRow()], allowedMentions: { parse: [] } };
+  const embed = helpEmbed(member, client).setDescription(
+    fit(
+      [
+        `Merhaba **${member.displayName}**! Prefix: ${config.prefixes.map((p) => `\`${p}\``).join(' ')} · Slash: \`/\``,
+        '',
+        compactSections(categorySections(userCommands(member, client), false)),
+      ].join('\n'),
+      4096,
+    ),
+  );
+  const row = new ActionRowBuilder().addComponents(
+    withStaff(member, [navButton(`yardim:detay:${ownerId}`, 'Detaylı Gör', e('kitap', '📖')), ...linkRow().components], staffButton).slice(0, 5),
+  );
+  return { content: '', embeds: [embed], components: [row], allowedMentions: { parse: [] } };
 }
 
-export function categoryView(member, client, ownerId, category, { staffButton = false } = {}) {
-  const list = userCommands(member, client).get(category) ?? [];
-  const embed = helpEmbed(member, client, `${info(category).emoji} ${info(category).label}`, `${list.length} komut`)
-    .setDescription(fit(compactSections(groupedSections(category, list)), 4096) || 'Bu kategoride komut yok.');
-  return { content: '', embeds: [embed], components: components(member, client, ownerId, category, staffButton), allowedMentions: { parse: [] } };
+/** Detay sayfaları: komut seçme menüsü + geri butonları */
+function detailComponents(member, client, ownerId, staffButton, selected) {
+  const all = [...userCommands(member, client).values()].flat();
+  const select = new StringSelectMenuBuilder()
+    .setCustomId(`yardim:komut:${ownerId}`)
+    .setPlaceholder('Kullanımını görmek istediğin komutu seç')
+    .addOptions(all.slice(0, 25).map((c) => ({ label: `/${c.data.name}`, value: c.data.name, description: shortDescription(c).slice(0, 100), default: c.data.name === selected })));
+  const buttons = [
+    ...(selected ? [navButton(`yardim:detay:${ownerId}`, 'Tüm Komutlar', e('kitap', '📖'))] : []),
+    navButton(`yardim:ana:${ownerId}`, 'Ana Sayfa', e('ev', '🏠')),
+  ];
+  return [new ActionRowBuilder().addComponents(select), new ActionRowBuilder().addComponents(withStaff(member, buttons, staffButton))];
 }
 
-/** Buton ile açılan sayfa: ana sayfa ya da kategori */
-export function pageView(member, client, ownerId, page, options = {}) {
-  if (page === 'ana' || !CATEGORIES[page]) return homeView(member, client, ownerId, options);
-  return categoryView(member, client, ownerId, page, options);
+/** "Detaylı Gör": tüm üye komutları (müzik dahil) + komut seçme menüsü */
+export function detailView(member, client, ownerId, { staffButton = false } = {}) {
+  const groups = userCommands(member, client);
+  const total = [...groups.values()].reduce((sum, list) => sum + list.length, 0);
+  const embed = helpEmbed(member, client, `${e('kitap', '📖')} Tüm Komutlar`, `${total} komut · Kullanım ve örnek için menüden seç`)
+    .setDescription(fit(compactSections(categorySections(groups, true)), 4096) || 'Kullanabileceğin komut yok.');
+  return { content: '', embeds: [embed], components: detailComponents(member, client, ownerId, staffButton), allowedMentions: { parse: [] } };
 }
 
-/** Menüden seçilen komutun detayı; kategori butonları altta kalır */
-export function commandPage(member, client, ownerId, category, command, { staffButton = false } = {}) {
-  return { content: '', embeds: [commandView(command)], components: components(member, client, ownerId, category, staffButton) };
+/** Menüden seçilen komutun detayı; menü ve geri butonları altta kalır */
+export function commandPage(member, client, ownerId, command, { staffButton = false } = {}) {
+  return { content: '', embeds: [commandView(command)], components: detailComponents(member, client, ownerId, staffButton, command.data.name), allowedMentions: { parse: [] } };
 }
 
 /** Sadece yetkiliye görünen panel: seviyesine kadar olan yetkili komutları, kademe kademe */

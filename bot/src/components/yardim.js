@@ -1,10 +1,10 @@
 import { MessageFlags } from 'discord.js';
-import { homeView, pageView, commandPage, staffView, isStaffCommand } from '../systems/help.js';
+import { homeView, detailView, commandPage, staffView, isStaffCommand } from '../systems/help.js';
 import { checkAccess, isStaff } from '../utils/permissions.js';
 
 export default {
   prefix: 'yardim',
-  async execute(interaction, [action, ownerId, key]) {
+  async execute(interaction, [action, ownerId]) {
     const { member, client, user } = interaction;
 
     if (action === 'yetkili') {
@@ -20,18 +20,18 @@ export default {
     }
 
     // Herkese açık menüde yetkili butonu gösterilmez
-    const staffButton = interaction.message.flags.has(MessageFlags.Ephemeral);
+    const options = { staffButton: interaction.message.flags.has(MessageFlags.Ephemeral) };
 
     if (action === 'komut') {
       const command = client.commands.get(interaction.values[0]);
       if (command && !isStaffCommand(command) && !checkAccess(member, command)) {
-        return interaction.update(commandPage(member, client, user.id, key, command, { staffButton }));
+        return interaction.update(commandPage(member, client, user.id, command, options));
       }
-      return interaction.update(pageView(member, client, user.id, key, { staffButton }));
+      return interaction.update(detailView(member, client, user.id, options));
     }
 
-    // "kategori": bu güncellemeden önce gönderilmiş menülerin eski açılır listesi
-    const page = action === 'kategori' ? interaction.values[0] : key;
-    await interaction.update(pageView(member, client, user.id, page, { staffButton }));
+    // "kategori": eski (kategori menülü) yardım mesajlarından gelen seçim → detay sayfası
+    if (action === 'detay' || action === 'kategori') return interaction.update(detailView(member, client, user.id, options));
+    await interaction.update(homeView(member, client, user.id, options));
   },
 };
