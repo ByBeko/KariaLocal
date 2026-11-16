@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType, ChannelType } from 'discord.js';
 import { Level } from '../../utils/permissions.js';
-import { verifyPanel, rolePanel, ticketPanel, linksPanel, bannerMessage } from '../../systems/panels.js';
+import { verifyPanel, rolePanel, ticketPanel, linksPanel, votePanel, bannerMessage } from '../../systems/panels.js';
 import { replySuccess } from '../../utils/embeds.js';
 
 const PANELS = {
@@ -8,9 +8,10 @@ const PANELS = {
   roller: rolePanel,
   talep: ticketPanel,
   baglantilar: linksPanel,
+  oy: votePanel,
 };
 // Panelden önce gönderilen kanal banner'ı (bot/assets/banners)
-const BANNERS = { roller: 'roller', talep: 'destek-talebi', baglantilar: 'baglantilar' };
+const BANNERS = { roller: 'roller', talep: 'destek-talebi', baglantilar: 'baglantilar', oy: 'oy-ver' };
 
 export default {
   level: Level.ADMIN,
@@ -23,6 +24,7 @@ export default {
         { name: 'Rol seçimi', value: 'roller' },
         { name: 'Destek talebi', value: 'talep' },
         { name: 'Bağlantılar', value: 'baglantilar' },
+        { name: 'Oy ver (Top.gg + Disboard)', value: 'oy' },
       ),
     )
     .addChannelOption((o) =>

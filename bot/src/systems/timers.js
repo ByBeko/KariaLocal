@@ -5,6 +5,7 @@ import { sendLog } from '../utils/logger.js';
 import { endGiveaway } from './giveaway.js';
 import { tickWeeklyUpdate } from './updates.js';
 import { tickMonthlyGifts } from './monthlyGifts.js';
+import { tickWeeklyVotes } from './voteBoard.js';
 import { endDuePolls } from './polls.js';
 
 const q = {
@@ -36,6 +37,7 @@ async function tick(client) {
   await endDuePolls(client, now);
   await tickWeeklyUpdate(client);
   await tickMonthlyGifts(client);
+  await tickWeeklyVotes(client);
 }
 
 export function startTimers(client) {

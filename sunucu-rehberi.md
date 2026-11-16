@@ -24,12 +24,14 @@ Rehberde ayrıca şunları anlat (kanal değil, açıklama olarak yaz):
 
 ## Kaynak sayfaları
 
-| Başlık | Kanal | Açıklama |
-|---|---|---|
-| Kurallar | #kurallar | Sunucu kuralları |
-| SSS | #sss | Sık sorulan sorular |
-| Roller | #roller | Rol seçim menüsü |
-| Takviyeler | #takviyeler | Prime üyelik ve takviye ayrıcalıkları |
-| Bağlantılar | #bağlantılar | Resmi hesaplarımız |
-| Oy Ver | #oy-ver | Karia'nın büyümesine destek ol |
-| Destek Talebi | #destek-talebi | Sorunun varsa buradan talep aç |
+Her sayfanın görseli `bot/assets/onboarding/rehber/` klasöründe (512x512, başlık yazılı). Açıklamayı emojisiyle birlikte kopyala.
+
+| Başlık | Kanal | Görsel | Açıklama |
+|---|---|---|---|
+| Kurallar | #kurallar | `kurallar.png` | 📜 Sunucu kuralları |
+| SSS | #sss | `sss.png` | ❓ Sık sorulan sorular |
+| Roller | #roller | `roller.png` | 🎭 Rol seçim menüsü |
+| Takviyeler | #takviyeler | `tavsiyeler.png` | 💎 Prime üyelik ve takviye ayrıcalıkları |
+| Bağlantılar | #bağlantılar | `baglantilar.png` | 🔗 Resmi hesaplarımız |
+| Oy Ver | #oy-ver | `oy-ver.png` | 🔥 Karia'nın büyümesine destek ol |
+| Destek Talebi | #destek-talebi | `destek-talebi.png` | 🎫 Sorunun varsa buradan talep aç |

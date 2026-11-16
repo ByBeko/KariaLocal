@@ -217,6 +217,22 @@ db.exec(`
     PRIMARY KEY (guild_id, user_id, month)
   );
 
+  -- ── Oy kayıtları (haftalık sıralama: Top.gg oyları ve Disboard bumpları) ──
+  CREATE TABLE IF NOT EXISTS vote_log (
+    guild_id TEXT NOT NULL,
+    user_id  TEXT NOT NULL,
+    source   TEXT NOT NULL,
+    at       INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS vote_log_at ON vote_log (guild_id, at);
+
+  -- ── Destek talebinde Karia Local'in sustuğu talepler (yetkili çağrıldı ya da yetkili yazdı) ──
+  CREATE TABLE IF NOT EXISTS ticket_ai (
+    channel_id TEXT PRIMARY KEY,
+    reason     TEXT NOT NULL,
+    at         INTEGER NOT NULL
+  );
+
   -- ── E-posta ile açılan talepler ──
   CREATE TABLE IF NOT EXISTS mail_tickets (
     channel_id TEXT PRIMARY KEY,

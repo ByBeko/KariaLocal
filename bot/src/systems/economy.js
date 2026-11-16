@@ -22,6 +22,7 @@ const q = {
   // Süresi dolmadıysa satır değişmez: aynı anda iki istekle iki kez alınamaz
   daily: db.prepare('UPDATE economy SET daily_at=? WHERE guild_id=? AND user_id=? AND daily_at<=?'),
   board: db.prepare('SELECT user_id, wallet FROM economy WHERE guild_id=? AND wallet>0 ORDER BY wallet DESC LIMIT ?'),
+  above: db.prepare('SELECT COUNT(*) n FROM economy WHERE guild_id=? AND wallet>?'),
 };
 
 /** Bakiye tüm sunucularda ortaktır: Karia'nın (GUILD_ID) kaydı kullanılır */
@@ -31,6 +32,11 @@ const ensure = (guildId, userId) => q.ensure.run(wallet(guildId), userId, STARTI
 
 export const getBalance = (guildId, userId) => Number(q.get.get(wallet(guildId), userId)?.wallet ?? STARTING_BALANCE);
 export const richBoard = (guildId, limit = 15) => q.board.all(wallet(guildId), limit).map((r) => ({ userId: r.user_id, value: Number(r.wallet) }));
+/** Coin sıralamasındaki yeri (bakiyesi 0 ise null) */
+export function coinRank(guildId, userId) {
+  const balance = getBalance(guildId, userId);
+  return balance > 0 ? Number(q.above.get(wallet(guildId), balance).n) + 1 : null;
+}
 export const fmt = (n) => `**${Number(n).toLocaleString('tr-TR')}** ${currency()}`;
 
 export function addMoney(guildId, userId, amount) {

@@ -21,7 +21,7 @@ import { socialView, startConnect, disconnect, beginUpload, publishVideo, retryP
 import { mailList, openMail, deleteMail } from '../systems/mailbox.js';
 import { roleProblem, sendButtonRoles } from '../systems/buttonRoles.js';
 import { emojiList } from '../utils/emojis.js';
-import { getOpenTicket, claimTicket, markTicketClosed, finishTicket, approveTicket, approvalRoleName, mailInfo } from '../components/ticket.js';
+import { getOpenTicket, claimTicket, markTicketClosed, finishTicket, approveTicket, approvalRoleName, mailInfo, pauseTicketAI } from '../components/ticket.js';
 
 export const isPanelAdmin = (member) => getLevel(member) >= Level.ADMIN;
 /** Personel ve üstü paneli açar; komutları seviyesine göre görür */
@@ -360,6 +360,7 @@ async function ticketAction(guild, member, channelId, action, body) {
   if (action === 'reply') {
     const text = String(body.text ?? '').trim();
     if (!text || text.length > 1500) throw new UserError('Mesaj 1 ile 1500 karakter arasında olmalı.');
+    pauseTicketAI(channelId); // yetkili cevap verdi: Karia Local bu talepte susar
     await channel.send({ content: `**${member.displayName}:** ${text}`, allowedMentions: { parse: [] } });
     return ticketMessages(guild, channelId);
   }

@@ -1,5 +1,5 @@
 import { MessageFlags } from 'discord.js';
-import { homeView, detailView, commandPage, staffView, isStaffCommand } from '../systems/help.js';
+import { homeView, commandPage, staffView, isStaffCommand } from '../systems/help.js';
 import { checkAccess, isStaff } from '../utils/permissions.js';
 
 export default {
@@ -27,11 +27,9 @@ export default {
       if (command && !isStaffCommand(command) && !checkAccess(member, command)) {
         return interaction.update(commandPage(member, client, user.id, command, options));
       }
-      return interaction.update(detailView(member, client, user.id, options));
     }
 
-    // "kategori": eski (kategori menülü) yardım mesajlarından gelen seçim → detay sayfası
-    if (action === 'detay' || action === 'kategori') return interaction.update(detailView(member, client, user.id, options));
+    // "ana" ve eski mesajlardaki "detay" / "kategori" seçimleri ana sayfaya döner
     await interaction.update(homeView(member, client, user.id, options));
   },
 };

@@ -2,12 +2,14 @@ import { e } from '../utils/emojis.js';
 import { Events, EmbedBuilder } from 'discord.js';
 import { sendLog } from '../utils/logger.js';
 import { checkMessage } from '../systems/protection.js';
+import { DISBOARD_ID, handleDisboard } from '../systems/voteBoard.js';
 
 export default {
   name: Events.MessageUpdate,
   async execute(oldMessage, newMessage) {
     if (!newMessage.guild) return;
     if (newMessage.partial) await newMessage.fetch().catch(() => {});
+    if (newMessage.author?.id === DISBOARD_ID) return handleDisboard(newMessage); // ertelenmiş /bump cevabı
     if (newMessage.partial || newMessage.author?.bot || newMessage.system) return;
     if (oldMessage.content === newMessage.content) return; // sadece embed yüklenmesi vb.
 

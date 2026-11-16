@@ -10,6 +10,8 @@ import { handleAutoResponse } from '../systems/autoresponse.js';
 import { handleQuickAnswer } from '../systems/quickAnswers.js';
 import { handleGuide } from '../systems/guide.js';
 import { handleAfk } from '../systems/afk.js';
+import { handleTicketMessage } from '../components/ticket.js';
+import { DISBOARD_ID, handleDisboard } from '../systems/voteBoard.js';
 
 const hasMedia = (message) =>
   message.attachments.size > 0 || message.embeds.some((e) => e.image || e.video || e.thumbnail);
@@ -17,14 +19,18 @@ const hasMedia = (message) =>
 export default {
   name: Events.MessageCreate,
   async execute(message) {
+    if (message.inGuild() && message.author.id === DISBOARD_ID) return handleDisboard(message);
     if (!message.inGuild() || message.author.bot || message.system) return;
 
     if (await checkMessage(message)) return;
     await handleAfk(message).catch((e) => console.error('[AFK]', e.message));
     recordMessage(message);
     if (await handlePrefix(message)) return;
-    if (await handleMention(message)) return;
+    // Destek talebinde Karia Local cevap verir; etiket sohbeti, hızlı cevap, oto cevap ve rehber orada çalışmaz
+    const inTicket = handleTicketMessage(message);
+    if (!inTicket && (await handleMention(message))) return;
     await handleMessageXp(message).catch((e) => console.error('[Mesaj XP]', e.message));
+    if (inTicket) return;
     if (await handleQuickAnswer(message).catch((e) => console.error('[Hızlı cevap]', e.message))) return;
     if (await handleAutoResponse(message)) return;
     await handleGuide(message).catch((e) => console.error('[Rehber]', e.message));

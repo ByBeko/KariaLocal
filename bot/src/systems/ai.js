@@ -546,32 +546,83 @@ export async function askAI(guild, member, question, { historyKey = null } = {})
     if (safety.value === 'selfharm') return CRISIS();
     if (first.status === 'rejected') throw first.reason;
 
-    let reply = first.value;
-    for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-      messages.push(reply);
-      if (!reply.tool_calls?.length) {
-        const answer = (reply.content ?? '').trim() || 'Buna bir yanıt üretemedim, farklı sormayı dener misin?';
-        if (historyKey) remember(historyKey, question, answer);
-        return linkChannels(guild, stripEmojis(answer));
-      }
+    const answer = await finishWithTools(guild, member, messages, tools, first.value);
+    if (answer == null) return 'Yanıt üretilemedi.';
+    const text = answer || 'Buna bir yanıt üretemedim, farklı sormayı dener misin?';
+    if (historyKey) remember(historyKey, question, text);
+    return linkChannels(guild, stripEmojis(text));
+  });
+}
 
-      for (const call of reply.tool_calls) {
-        const name = call.function?.name;
-        let args = call.function?.arguments ?? {};
-        if (typeof args === 'string') {
-          try {
-            args = JSON.parse(args);
-          } catch {
-            args = {};
-          }
+/** Modelin araç çağrılarını çalıştırıp son metni döndürür (araç turları biterse null) */
+async function finishWithTools(guild, member, messages, tools, firstReply) {
+  let reply = firstReply;
+  for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+    messages.push(reply);
+    if (!reply.tool_calls?.length) return (reply.content ?? '').trim();
+
+    for (const call of reply.tool_calls) {
+      const name = call.function?.name;
+      let args = call.function?.arguments ?? {};
+      if (typeof args === 'string') {
+        try {
+          args = JSON.parse(args);
+        } catch {
+          args = {};
         }
-        const result = await runTool(name, args, { guild, member }).catch((e) => ({ hata: e.message }));
-        messages.push({ role: 'tool', tool_call_id: call.id, name, content: JSON.stringify(result) });
       }
-      if (round === MAX_TOOL_ROUNDS) break;
-      reply = await chat(messages, round + 1 < MAX_TOOL_ROUNDS ? tools : undefined);
+      const result = await runTool(name, args, { guild, member }).catch((e) => ({ hata: e.message }));
+      messages.push({ role: 'tool', tool_call_id: call.id, name, content: JSON.stringify(result) });
     }
-    return 'Yanıt üretilemedi.';
+    if (round === MAX_TOOL_ROUNDS) break;
+    reply = await chat(messages, round + 1 < MAX_TOOL_ROUNDS ? tools : undefined);
+  }
+  return null;
+}
+
+// ───────────────────────── Destek talebi asistanı ─────────────────────────
+
+const STAFF_MARK = /\[YETK[İI]L[İI]\]/gi;
+
+/**
+ * Destek talebi kanalında talebi açan üyeye cevap. conversation: [{ role: 'user'|'assistant', content }].
+ * Dönen: { answer, escalate } — escalate true ise yetkililer çağrılmalı.
+ */
+export async function ticketAnswer(guild, member, category, conversation) {
+  const context = await serverContext(guild);
+  const system = [
+    `Sen "${guild.name}" sunucusunun destek asistanı Karia Local'sin. Şu an bir DESTEK TALEBİ kanalındasın ve talebi açan üyeye yardım ediyorsun.`,
+    `Talep konusu: ${category ? `${category.label} (${category.description})` : 'belirtilmemiş'}. Talebi açan: ${member.displayName}.`,
+    'Görevin: Üyenin sorununu anlamak ve çözebiliyorsan adım adım çözmek. Çözemiyorsan ya da iş yetkili gerektiriyorsa yetkilileri çağırmak.',
+    'Cevap biçimi:',
+    '- Her zaman Türkçe, sade ve kısa yaz (çoğunlukla 1-6 satır). Adım gerekiyorsa numaralı liste kullan. Emoji süsü kullanma.',
+    '- Bilgi eksikse çözüm uydurma; sadece gereken TEK kısa soruyu sor (ör. "Hangi sürümle bağlanıyorsun?", "Hata mesajı tam olarak ne yazıyor?").',
+    '- Karia ile ilgili bilgilerde SADECE aşağıdaki SUNUCU BİLGİSİ\'ne ve araç sonuçlarına dayan; bilmediğini uydurma.',
+    '- Ceza vermek, rol vermek, coin/eşya iadesi gibi işlemleri kendin yapamazsın ve yaptığını asla söyleme.',
+    'Yetkili çağırma: Aşağıdaki durumlarda cevabının EN SONUNA ayrı bir satırda sadece [YETKILI] yaz; sistem yetkilileri otomatik etiketler:',
+    '- Üye yetkili, insan ya da yönetici istiyorsa.',
+    '- İş yetkili işlemi gerektiriyorsa: ceza/ban/mute itirazı, rol veya üyelik sorunu, coin ya da eşya kaybı/iadesi, ödeme/satın alma, hesap sorunu, şikayet, sponsorluk ya da iş birliği teklifi.',
+    '- Hata bildiriminde: ne olduğunu, nerede olduğunu (bot, site, Minecraft) ve nasıl tekrarlandığını öğrendikten sonra.',
+    '- Önerdiğin çözümler işe yaramadıysa ya da emin değilsen.',
+    '[YETKILI] yazdığın cevapta tek kısa cümleyle durumu özetle (ör. "Bunu bir yetkilinin incelemesi gerekiyor, yetkilileri çağırıyorum."); başka soru sorma.',
+    '- @everyone, @here yazma. Şifre, token ya da kişisel bilgi isteme.',
+    '',
+    '=== SUNUCU BİLGİSİ ===',
+    context,
+  ].join('\n');
+  const messages = [{ role: 'system', content: system }, ...conversation];
+  const lastQuestion = conversation.filter((m) => m.role === 'user').at(-1)?.content ?? '';
+
+  return enqueue(async () => {
+    const [safety, first] = await Promise.allSettled([safetyCheck(lastQuestion), chat(messages, PUBLIC_TOOLS, { max_tokens: 900 })]);
+    if (safety.value === 'illegal') return { answer: REFUSAL(), escalate: false };
+    if (safety.value === 'selfharm') return { answer: CRISIS(), escalate: true };
+    if (first.status === 'rejected') throw first.reason;
+
+    const raw = (await finishWithTools(guild, member, messages, PUBLIC_TOOLS, first.value)) ?? '';
+    const escalate = raw.search(STAFF_MARK) !== -1;
+    const text = raw.replace(STAFF_MARK, '').trim() || (escalate ? 'Bunu bir yetkilinin incelemesi gerekiyor, yetkilileri çağırıyorum.' : '');
+    return { answer: text ? linkChannels(guild, stripEmojis(text)).slice(0, 1900) : '', escalate };
   });
 }
 

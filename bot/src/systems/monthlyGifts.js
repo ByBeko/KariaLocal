@@ -6,6 +6,7 @@ import { findGuideChannel } from './guide.js';
 import { grantTier, PRIME_ROLE } from './membership.js';
 import { sendLog } from '../utils/logger.js';
 import { e } from '../utils/emojis.js';
+import { logVote } from './voteBoard.js';
 
 const GIFT_DAYS = 30;
 const VOTE_GAP = 11 * 3_600_000; // Top.gg aynı oyu yeniden iletirse iki kez sayılmaz
@@ -13,6 +14,7 @@ const BOOST_PRIZE = 1_000;
 
 const q = {
   get: db.prepare('SELECT last_at FROM votes WHERE guild_id=? AND user_id=? AND month=?'),
+  count: db.prepare('SELECT count FROM votes WHERE guild_id=? AND user_id=? AND month=?'),
   add: db.prepare(`INSERT INTO votes (guild_id, user_id, month, count, last_at) VALUES (?, ?, ?, 1, ?)
     ON CONFLICT(guild_id, user_id, month) DO UPDATE SET count = count + 1, last_at = excluded.last_at`),
   top: db.prepare('SELECT user_id, count FROM votes WHERE guild_id=? AND month=? ORDER BY count DESC, last_at ASC LIMIT 25'),
@@ -24,11 +26,15 @@ const q = {
 /** Türkiye saatine göre ay: 2026-11 */
 export const monthKey = (at = Date.now()) => new Date(at + 3 * 3_600_000).toISOString().slice(0, 7);
 
+/** Üyenin bu ayki Top.gg oy sayısı */
+export const monthVotes = (guildId, userId) => Number(q.count.get(guildId, userId, monthKey())?.count ?? 0);
+
 /** Top.gg bildirimini sayar; kısa sürede gelen tekrarı atlar. */
 export function recordVote(guildId, userId, now = Date.now()) {
   const month = monthKey(now);
   if (now - Number(q.get.get(guildId, userId, month)?.last_at ?? 0) < VOTE_GAP) return false;
   q.add.run(guildId, userId, month, now);
+  logVote(guildId, userId, 'topgg', now);
   return true;
 }
 

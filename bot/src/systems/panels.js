@@ -42,24 +42,93 @@ export function verifyPanel() {
 
 export function linksPanel() {
   const links = LINKS.filter((l) => config.links[l.key]);
-  // Banner başlık işini görür; önizlemeler mesajı uzatmasın diye kapalı
-  const lines = [`### ${e('zincir', '🔗')}  Resmi Bağlantılar`];
-  if (links.length) for (const l of links) lines.push(`> ${e(l.icon, l.emoji)} ${l.label} [${l.cta}](${config.links[l.key]})`);
-  else lines.push('> Henüz link eklenmedi.');
-  return { ...panel(lines.join('\n'), []), flags: MessageFlags.SuppressEmbeds };
+  // Önizlemeler mesajı uzatmasın diye kapalı; linkler ayrıca buton olarak da duruyor
+  const content = ruleText({
+    icon: logo(),
+    title: 'Bağlantılar',
+    intro: 'Karia’nın resmi hesapları aşağıda. Sadece buradaki bağlantılar bize aittir, başka hesaplara itibar etme.',
+    sections: [
+      {
+        icon: e('zincir', '🔗'),
+        title: 'Resmi Hesaplarımız',
+        body: links.length
+          ? links.map((l) => `${e(l.icon, l.emoji)}  **${l.label}** — [${l.cta}](${config.links[l.key]})`).join('\n')
+          : 'Henüz bağlantı eklenmedi.',
+      },
+    ],
+    note: 'Takip ederek yeni etkinlik ve duyurulardan ilk sen haberdar ol.',
+  });
+  const rows = [];
+  for (let i = 0; i < links.length; i += 5) {
+    rows.push(new ActionRowBuilder().addComponents(
+      links.slice(i, i + 5).map((l) => new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel(l.label).setEmoji(e(l.icon, l.emoji)).setURL(config.links[l.key])),
+    ));
+  }
+  return { ...panel(content, rows), flags: MessageFlags.SuppressEmbeds };
+}
+
+export function votePanel(guild) {
+  const topgg = `https://top.gg/servers/${guild.id}/vote`;
+  const disboard = `https://disboard.org/server/${guild.id}`;
+  const content = ruleText({
+    icon: logo(),
+    title: 'Oy Ver',
+    intro: 'Verdiğin her oy Karia’yı listelerde yukarı taşır ve topluluğumuzun büyümesine doğrudan destek olur.',
+    sections: [
+      {
+        icon: e('topgg', '🔺'),
+        title: 'Top.gg',
+        body: `Aşağıdaki **Top.gg** butonuyla Karia sunucusuna oy ver.\nHer **12 saatte** bir tekrar oy verebilirsin.`,
+      },
+      {
+        icon: e('disboard', '📣'),
+        title: 'Disboard',
+        body: 'Herhangi bir kanalda Disboard botunun `/bump` komutunu kullan.\nHer **2 saatte** bir sunucuyu öne çıkarabilirsin.',
+      },
+      {
+        icon: e('kupa', '🏆'),
+        title: 'Sıralama ve Ödüller',
+        body: '• Her **Pazar 20.00**’de haftanın en çok oy veren ve bump yapan üyeleri duyurularda paylaşılır.\n• Ayın en çok oy veren üyesi **30 gün Prime** kazanır.',
+      },
+    ],
+    note: 'Bize destek olan herkese teşekkür ederiz!',
+  });
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Top.gg’de Oy Ver').setEmoji(e('topgg', '🔺')).setURL(topgg),
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Disboard Sayfası').setEmoji(e('disboard', '📣')).setURL(disboard),
+  );
+  return { ...panel(content, [row]), flags: MessageFlags.SuppressEmbeds };
 }
 
 export function ticketPanel(guild) {
+  const categories = config.ticketCategories.filter((c) => !c.hidden);
   const content = ruleText({
     icon: logo(),
     title: 'Destek Talebi',
-    intro: `Bir sorunun mu var? Aşağıdaki menüden konuyu seç, sana özel bir kanal açılsın.\nBir üyeyi şikayet etmek için ${commandRef(guild.client, 'rapor')} komutunu kullan.`,
-    note: 'Gereksiz talep açanlar ceza alabilir.',
+    intro: 'Bir sorun mu yaşıyorsun ya da yetkililere ulaşmak mı istiyorsun? Sana özel bir kanal açıp birlikte çözelim.',
+    sections: [
+      {
+        icon: e('liste', '📋'),
+        title: 'Talep Konuları',
+        body: categories.map((c) => `${e(c.icon, c.emoji)}  **${c.label}** — ${c.description}`).join('\n'),
+      },
+      {
+        icon: e('unlem', '❗'),
+        title: 'Nasıl Çalışır?',
+        body: [
+          '**1.** Aşağıdaki menüden talep konunu seç.',
+          '**2.** Sadece senin ve yetkililerin görebildiği bir kanal açılır.',
+          '**3.** Sorununu detaylıca yaz; varsa ekran görüntüsü ekle.',
+          `Bir üyeyi şikayet etmek için ${commandRef(guild.client, 'rapor')} komutunu kullan.`,
+        ].join('\n'),
+      },
+    ],
+    note: 'Gereksiz veya şaka amaçlı talep açanlar ceza alabilir.',
   });
   const menu = new StringSelectMenuBuilder()
     .setCustomId('ticket:ac')
     .setPlaceholder('Talep konusunu seç')
-    .addOptions(config.ticketCategories.filter((c) => !c.hidden).map((c) => ({ label: c.label, value: c.value, description: c.description.slice(0, 100) })));
+    .addOptions(categories.map((c) => ({ label: c.label, value: c.value, description: c.description.slice(0, 100), emoji: e(c.icon, c.emoji) })));
   return panel(content, [new ActionRowBuilder().addComponents(menu)]);
 }
 

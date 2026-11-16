@@ -29,7 +29,7 @@ const COMMAND_ORDER = {
 };
 /** /bilgi butonlarından açılan komutlar: çalışmaya devam eder ama yardım listesinde ayrıca gösterilmez */
 const HIDDEN_IN_HELP = new Set(['avatar', 'roller', 'emoji', 'seviye', 'siralama', 'istatistik']);
-/** Ana sayfada gösterilmeyen komutlar: sadece "Detaylı Gör"de listelenir */
+/** Ana sayfada yazılmayan komutlar: sadece komut seçme menüsünde çıkar */
 const DETAIL_ONLY = new Set(['duraklat', 'gec', 'dur', 'sira', 'simdi', 'karistir', 'dongu', 'ses']);
 /** Ana sayfada kategorinin altına düşülen kısa not */
 const MAIN_NOTES = { muzik: '*Diğer kontroller oynatıcının butonlarında.*' };
@@ -83,14 +83,14 @@ function memberLines(c) {
 // Bölümler arasında en fazla bir satır boşluk
 const compactSections = (sections) => sections.map((s) => `${s.icon} **${s.title}**\n${quote(s.body)}`).join('\n\n');
 
-/** Her kategori tek bölüm; detailed=false iken DETAIL_ONLY komutları gizlenir */
-function categorySections(groups, detailed) {
+/** Her kategori tek bölüm; DETAIL_ONLY komutları sadece komut seçme menüsünde */
+function categorySections(groups) {
   const sections = [];
   for (const [key, list] of groups) {
-    const shown = detailed ? list : list.filter((c) => !DETAIL_ONLY.has(c.data.name));
+    const shown = list.filter((c) => !DETAIL_ONLY.has(c.data.name));
     if (!shown.length) continue;
     const lines = shown.flatMap(memberLines);
-    if (!detailed && shown.length < list.length && MAIN_NOTES[key]) lines.push(MAIN_NOTES[key]);
+    if (shown.length < list.length && MAIN_NOTES[key]) lines.push(MAIN_NOTES[key]);
     lines.push(...(EXTRA_LINES[key] ?? []));
     sections.push({ icon: info(key).emoji, title: info(key).label, body: lines.join('\n') });
   }
@@ -196,42 +196,29 @@ export function homeView(member, client, ownerId, { staffButton = false } = {}) 
       [
         `Merhaba **${member.displayName}**! Prefix: ${config.prefixes.map((p) => `\`${p}\``).join(' ')} · Slash: \`/\``,
         '',
-        compactSections(categorySections(userCommands(member, client), false)),
+        compactSections(categorySections(userCommands(member, client))),
       ].join('\n'),
       4096,
     ),
   );
   const website = new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Web Sitesi').setURL(config.links.website || 'https://karia.live').setEmoji(e('baglanti', '🌐'));
-  const row = new ActionRowBuilder().addComponents(withStaff(member, [navButton(`yardim:detay:${ownerId}`, 'Detaylı Gör', e('kitap', '📖')), website], staffButton));
-  return { content: '', embeds: [embed], components: [row], allowedMentions: { parse: [] } };
+  return { content: '', embeds: [embed], components: helpComponents(member, client, ownerId, [website], staffButton), allowedMentions: { parse: [] } };
 }
 
-/** Detay sayfaları: komut seçme menüsü + geri butonları */
-function detailComponents(member, client, ownerId, staffButton, selected) {
+/** Komut seçme menüsü (ana sayfada gizlenen müzik komutları dahil hepsi) + altında butonlar */
+function helpComponents(member, client, ownerId, buttons, staffButton, selected = null) {
   const all = [...userCommands(member, client).values()].flat();
   const select = new StringSelectMenuBuilder()
     .setCustomId(`yardim:komut:${ownerId}`)
     .setPlaceholder('Kullanımını görmek istediğin komutu seç')
     .addOptions(all.slice(0, 25).map((c) => ({ label: `/${c.data.name}`, value: c.data.name, description: shortDescription(c).slice(0, 100), default: c.data.name === selected })));
-  const buttons = [
-    ...(selected ? [navButton(`yardim:detay:${ownerId}`, 'Tüm Komutlar', e('kitap', '📖'))] : []),
-    navButton(`yardim:ana:${ownerId}`, 'Ana Sayfa', e('ev', '🏠')),
-  ];
   return [new ActionRowBuilder().addComponents(select), new ActionRowBuilder().addComponents(withStaff(member, buttons, staffButton))];
 }
 
-/** "Detaylı Gör": tüm üye komutları (müzik dahil) + komut seçme menüsü */
-export function detailView(member, client, ownerId, { staffButton = false } = {}) {
-  const groups = userCommands(member, client);
-  const total = [...groups.values()].reduce((sum, list) => sum + list.length, 0);
-  const embed = helpEmbed(member, client, `${e('kitap', '📖')} Tüm Komutlar`, `${total} komut · Kullanım ve örnek için menüden seç`)
-    .setDescription(fit(compactSections(categorySections(groups, true)), 4096) || 'Kullanabileceğin komut yok.');
-  return { content: '', embeds: [embed], components: detailComponents(member, client, ownerId, staffButton), allowedMentions: { parse: [] } };
-}
-
-/** Menüden seçilen komutun detayı; menü ve geri butonları altta kalır */
+/** Menüden seçilen komutun detayı; menü ve Ana Sayfa butonu altta kalır */
 export function commandPage(member, client, ownerId, command, { staffButton = false } = {}) {
-  return { content: '', embeds: [commandView(command)], components: detailComponents(member, client, ownerId, staffButton, command.data.name), allowedMentions: { parse: [] } };
+  const home = navButton(`yardim:ana:${ownerId}`, 'Ana Sayfa', e('ev', '🏠'));
+  return { content: '', embeds: [commandView(command)], components: helpComponents(member, client, ownerId, [home], staffButton, command.data.name), allowedMentions: { parse: [] } };
 }
 
 /** Sadece yetkiliye görünen panel: seviyesine kadar olan yetkili komutları, kademe kademe */

@@ -10,6 +10,7 @@ import { UserError } from '../utils/errors.js';
 import { sendLog } from '../utils/logger.js';
 import { relativeTime } from '../utils/time.js';
 import { e } from '../utils/emojis.js';
+import { ticketAnswer } from '../systems/ai.js';
 
 const insertStmt = db.prepare(
   'INSERT INTO tickets (channel_id, guild_id, user_id, number, category, created_at) VALUES (?, ?, ?, ?, ?, ?)',
@@ -65,25 +66,31 @@ async function openTicket(interaction) {
   });
   insertStmt.run(channel.id, guild.id, user.id, number, category.value, Date.now());
 
+  // Yetkililer açılışta etiketlenmez: önce Karia Local cevaplar, çözemezse ya da üye isterse yetkilileri çağırır
   const embed = brandEmbed()
     .setTitle(`${e(category.icon, category.emoji)} ${category.label} • Talep #${number}`)
     .setDescription(
-      `Merhaba ${user}! Talebin oluşturuldu.\n\nSorununu **detaylıca** yaz, varsa ekran görüntüsü ekle. Yetkililer en kısa sürede dönecek.`,
+      [
+        `Merhaba ${user}! Talebin oluşturuldu.`,
+        '',
+        'Sorununu **detaylıca** yaz, varsa ekran görüntüsü ekle. **Karia Local** hemen yardımcı olmaya çalışacak; çözemezse yetkilileri çağırır.',
+        `Doğrudan bir yetkiliyle konuşmak istersen **Yetkili Çağır** butonuna bas.`,
+      ].join('\n'),
     )
     .setTimestamp();
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('ticket:ustlen').setLabel('Üstlen').setEmoji(e('kullanici', '🙋')).setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId('ticket:yetkili').setLabel('Yetkili Çağır').setEmoji(e('zil', '🔔')).setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId('ticket:ustlen').setLabel('Üstlen').setEmoji(e('kullanici', '🙋')).setStyle(ButtonStyle.Secondary),
     new ButtonBuilder().setCustomId('ticket:kapat').setLabel('Kapat').setEmoji(e('kilit', '🔒')).setStyle(ButtonStyle.Danger),
   );
   if (APPROVAL_ROLES[category.value]) {
     row.addComponents(new ButtonBuilder().setCustomId('ticket:rolonay').setLabel(`Onayla: ${APPROVAL_ROLES[category.value].name}`).setEmoji(e('onayli', '✅')).setStyle(ButtonStyle.Success));
   }
-  const pings = staffRoleIds(guild.id).map((id) => `<@&${id}>`).join(' ');
   await channel.send({
-    content: `${user} ${pings}`,
+    content: `${user}`,
     embeds: [embed],
     components: [row],
-    allowedMentions: { users: [user.id], roles: staffRoleIds(guild.id) },
+    allowedMentions: { users: [user.id] },
   });
 
   await replySuccess(interaction, `Talebin açıldı: ${channel}`);
@@ -232,6 +239,116 @@ export async function receiveSupportMail(guild, raw) {
   return { created: true, number };
 }
 
+// ───────────────────────── Karia Local talep asistanı ─────────────────────────
+// Talebi açan üyenin her mesajına yapay zeka cevap verir. Yetkili çağrılınca, bir yetkili yazınca
+// ya da talep üstlenilince o talepte susar. Yetkililerin mesajlarına hiç cevap vermez.
+
+const aiStateStmt = db.prepare('SELECT * FROM ticket_ai WHERE channel_id = ?');
+const aiStopStmt = db.prepare('INSERT OR REPLACE INTO ticket_ai (channel_id, reason, at) VALUES (?, ?, ?)');
+const AI_DEBOUNCE = 3_500; // üye art arda yazarsa son mesajdan sonra tek cevap
+const AI_MAX_REPLIES = 12; // bu kadar cevaptan sonra hâlâ sürüyorsa yetkili çağrılır
+const AI_HISTORY = 40;
+const aiTimers = new Map(); // kanal -> zamanlayıcı
+
+const stopAI = (channelId, reason) => aiStopStmt.run(channelId, reason, Date.now());
+const aiStopped = (channelId) => aiStateStmt.get(channelId) ?? null;
+/** Panelden yetkili cevabı gibi bot adıyla yazılan yetkili mesajlarında çağrılır; çağrı kaydını ezmez */
+export const pauseTicketAI = (channelId) => aiStopped(channelId) || stopAI(channelId, 'yetkili');
+/** Karia Local'in talepteki cevapları: düz metin, embed ve buton yok */
+const isAiReply = (m) => m.author.id === m.client.user.id && m.content && !m.embeds.length && !m.components.length;
+
+/** Yetkilileri etiketler ve o talepte yapay zekayı susturur. Zaten çağrıldıysa false. */
+export async function callStaff(channel, reason) {
+  if (aiStopped(channel.id)?.reason === 'cagri') return false;
+  stopAI(channel.id, 'cagri');
+  const roles = staffRoleIds(channel.guild.id);
+  await channel.send({
+    content: roles.map((id) => `<@&${id}>`).join(' ') || null,
+    embeds: [brandEmbed().setDescription(`${e('zil', '🔔')} **Yetkili çağrıldı.** ${reason}\nBir yetkili en kısa sürede burada olacak.`)],
+    allowedMentions: { roles },
+  });
+  return true;
+}
+
+function ticketText(m) {
+  const files = m.attachments.size ? `(${m.attachments.size} dosya/görsel ekledi)` : '';
+  return [m.cleanContent, files].filter(Boolean).join(' ').trim();
+}
+
+/** Kanal geçmişini modelin beklediği sohbete çevirir: üye → user, Karia Local → assistant */
+function conversationOf(messages, ticket) {
+  const out = [];
+  for (const m of messages) {
+    const role = m.author.id === ticket.user_id ? 'user' : isAiReply(m) ? 'assistant' : null;
+    const content = role === 'user' ? ticketText(m) : m.content;
+    if (!role || !content) continue;
+    if (!out.length && role === 'assistant') continue; // sohbet üyeyle başlamalı
+    if (out.at(-1)?.role === role) out.at(-1).content += `\n${content}`;
+    else out.push({ role, content: content.slice(0, 2000) });
+  }
+  return out;
+}
+
+async function answerTicket(channel) {
+  aiTimers.delete(channel.id);
+  const ticket = getOpenTicket(channel.id);
+  if (!ticket || ticket.claimed_by || aiStopped(channel.id)) return;
+
+  const fetched = await channel.messages.fetch({ limit: AI_HISTORY }).catch(() => null);
+  if (!fetched?.size) return;
+  const messages = [...fetched.values()].reverse();
+  // Daha önce bir yetkili yazdıysa (ör. bu sistemden önce açılmış talepler) karışmaz
+  if (messages.some((m) => !m.author.bot && m.author.id !== ticket.user_id && isStaff(m.member))) return void stopAI(channel.id, 'yetkili');
+  // Üyenin son mesajı; ondan sonra zaten cevap verildiyse tekrar cevaplanmaz
+  const last = messages.findLast((m) => m.author.id === ticket.user_id);
+  if (!last || messages.slice(messages.indexOf(last)).some(isAiReply)) return;
+  if (messages.filter(isAiReply).length >= AI_MAX_REPLIES) {
+    await callStaff(channel, 'Karia Local bu talepte bir süredir yardım ediyor ama sorun çözülmedi.');
+    return;
+  }
+
+  const member = last.member ?? (await channel.guild.members.fetch(ticket.user_id).catch(() => null));
+  if (!member) return;
+  const category = config.ticketCategories.find((c) => c.value === ticket.category);
+  await channel.sendTyping().catch(() => {});
+  const typing = setInterval(() => channel.sendTyping().catch(() => {}), 8_000);
+  let result;
+  try {
+    result = await ticketAnswer(channel.guild, member, category, conversationOf(messages, ticket));
+  } catch (error) {
+    if (!(error instanceof UserError)) console.error('[Talep asistanı]', error);
+    await callStaff(channel, 'Karia Local şu an cevap veremiyor.').catch(() => {});
+    return;
+  } finally {
+    clearInterval(typing);
+  }
+  // Bu arada üye yeni mesaj yazdıysa (yeni zamanlayıcı kuruldu) güncel cevabı o verir; yetkili geldiyse susar
+  if (aiTimers.has(channel.id) || aiStopped(channel.id) || getOpenTicket(channel.id)?.claimed_by) return;
+  if (result.answer) await last.reply({ content: result.answer, allowedMentions: { parse: [], repliedUser: false } });
+  if (result.escalate) await callStaff(channel, 'Karia Local bu konuda bir yetkilinin bakması gerektiğini düşünüyor.');
+}
+
+/**
+ * Talep kanalındaki mesaj: talep kanalıysa true döner (diğer otomatik cevaplar çalışmasın diye).
+ * Yetkili yazınca o talepte asistan susar; talebi açan üyenin mesajına kısa bir beklemeden sonra cevap verilir.
+ */
+export function handleTicketMessage(message) {
+  const ticket = getOpenTicket(message.channelId);
+  if (!ticket || ticket.guild_id !== message.guild.id) return false;
+  if (message.author.id !== ticket.user_id) {
+    if (isStaff(message.member) && !aiStopped(message.channelId)) stopAI(message.channelId, 'yetkili');
+    return true;
+  }
+  if (isStaff(message.member) || ticket.claimed_by || aiStopped(message.channelId)) return true;
+
+  clearTimeout(aiTimers.get(message.channelId));
+  aiTimers.set(
+    message.channelId,
+    setTimeout(() => answerTicket(message.channel).catch((error) => console.error('[Talep asistanı]', error)), AI_DEBOUNCE),
+  );
+  return true;
+}
+
 export const getOpenTicket = (channelId) => {
   const row = getStmt.get(channelId);
   return row && !row.closed_at ? row : null;
@@ -249,6 +366,13 @@ export default {
     const staff = isStaff(interaction.member);
 
     switch (action) {
+      case 'yetkili':
+        if (!staff && ticket.user_id !== interaction.user.id) return replyError(interaction, 'Yetkiliyi sadece talebi açan üye çağırabilir.');
+        if (!(await callStaff(interaction.channel, `${interaction.user} bir yetkiliyle konuşmak istiyor.`))) {
+          return replyError(interaction, 'Yetkililer zaten çağrıldı, birazdan burada olacaklar.');
+        }
+        return replySuccess(interaction, 'Yetkililer çağrıldı.');
+
       case 'ustlen':
         if (!staff) return replyError(interaction, 'Talepleri sadece yetkililer üstlenebilir.');
         if (ticket.claimed_by) return replyError(interaction, `Bu talep zaten <@${ticket.claimed_by}> tarafından üstlenildi.`);
