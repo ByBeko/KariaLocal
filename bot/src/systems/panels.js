@@ -76,12 +76,12 @@ export function votePanel(guild) {
     intro: 'Verdiğin her oy Karia’yı listelerde yukarı taşır ve topluluğumuzun büyümesine doğrudan destek olur.',
     sections: [
       {
-        icon: e('topgg', '🔺'),
+        icon: e('yukari', '🔺'),
         title: 'Top.gg',
         body: `Aşağıdaki **Top.gg** butonuyla Karia sunucusuna oy ver.\nHer **12 saatte** bir tekrar oy verebilirsin.`,
       },
       {
-        icon: e('disboard', '📣'),
+        icon: e('megafon', '📣'),
         title: 'Disboard',
         body: 'Herhangi bir kanalda Disboard botunun `/bump` komutunu kullan.\nHer **2 saatte** bir sunucuyu öne çıkarabilirsin.',
       },
@@ -94,8 +94,8 @@ export function votePanel(guild) {
     note: 'Bize destek olan herkese teşekkür ederiz!',
   });
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Top.gg’de Oy Ver').setEmoji(e('topgg', '🔺')).setURL(topgg),
-    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Disboard Sayfası').setEmoji(e('disboard', '📣')).setURL(disboard),
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Top.gg’de Oy Ver').setEmoji(e('yukari', '🔺')).setURL(topgg),
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Disboard Sayfası').setEmoji(e('megafon', '📣')).setURL(disboard),
   );
   return { ...panel(content, [row]), flags: MessageFlags.SuppressEmbeds };
 }
@@ -108,7 +108,7 @@ export function ticketPanel(guild) {
     intro: 'Bir sorun mu yaşıyorsun ya da yetkililere ulaşmak mı istiyorsun? Sana özel bir kanal açıp birlikte çözelim.',
     sections: [
       {
-        icon: e('liste', '📋'),
+        icon: e('pano', '📋'),
         title: 'Talep Konuları',
         body: categories.map((c) => `${e(c.icon, c.emoji)}  **${c.label}** — ${c.description}`).join('\n'),
       },
