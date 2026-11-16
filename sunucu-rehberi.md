@@ -31,7 +31,7 @@ Her sayfanın görseli `bot/assets/onboarding/rehber/` klasöründe (512x512, ba
 | Kurallar | #kurallar | `kurallar.png` | 📜 Sunucu kuralları |
 | SSS | #sss | `sss.png` | ❓ Sık sorulan sorular |
 | Roller | #roller | `roller.png` | 🎭 Rol seçim menüsü |
-| Takviyeler | #takviyeler | `tavsiyeler.png` | 💎 Prime üyelik ve takviye ayrıcalıkları |
+| Takviyeler | #takviyeler | `takviyeler.png` | 💎 Prime üyelik ve takviye ayrıcalıkları |
 | Bağlantılar | #bağlantılar | `baglantilar.png` | 🔗 Resmi hesaplarımız |
 | Oy Ver | #oy-ver | `oy-ver.png` | 🔥 Karia'nın büyümesine destek ol |
 | Destek Talebi | #destek-talebi | `destek-talebi.png` | 🎫 Sorunun varsa buradan talep aç |
