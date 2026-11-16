@@ -157,6 +157,7 @@ export function initTables(ctx) {
     const info = LOBBY[game];
     const stakes = game === 'poker' ? data.blinds.map((b) => [b, `${fmt(b)}/${fmt(b * 2)}`]) : game === 'zar' ? data.antes.map((a) => [a, fmt(a)]) : data.stakes?.length ? data.stakes.map((a) => [a, fmt(a)]) : null;
     const select = stakes ? el('select', { className: 'stake-select' }, ...stakes.map(([v, label]) => el('option', { value: String(v), textContent: `${info.stake} ${label}` }))) : null;
+    if (select && STAKES[game]?.includes(pickedStake(game))) select.value = String(pickedStake(game));
     const create = btn('Yeni Masa Aç', () => guarded(async () => {
       const made = await api('/tables', { game, stake: select ? Number(select.value) : null });
       openTable(game, made.id, root);
@@ -206,8 +207,20 @@ export function initTables(ctx) {
     // Online masada (bahisli blackjack hariç) ve solo Okey'de sağ panel kapanır; köşedeki düğmeyle açılır
     // Satranç ve labirentte de kapanır: tahta ortada büyük durur
     autoSide(id, ['okey', 'satranc', 'labirent'].includes(game) || (!solo && game !== 'blackjack'));
+    let restaking = false;
     watch(id, (room, data) => {
       setLeave(room);
+      // Sağ panelde tutar değiştiyse solo masa, oyun/el bitince yeni tutarla yeniden kurulur
+      const want = solo && STAKES[game] ? pickedStake(game) : 0;
+      const has = room.sb ?? room.ante ?? room.stake;
+      const idle = game === 'poker' ? room.turn < 0 : room.phase !== 'playing' && room.phase !== 'rolling';
+      if (want && has && has !== want && idle && room.mySeat >= 0 && !restaking) {
+        restaking = true;
+        api('/tables/solo', { game, stake: want })
+          .then((made) => { if (current?.table === id) openTable(game, made.id, root); })
+          .catch(() => {})
+          .finally(() => { restaking = false; });
+      }
       // Solo masada bekleme ekranı yok: oturur oturmaz Hazırım'a bir kez kendiliğinden basılır (Blackjack gibi doğrudan oyun)
       if (solo && READY_GAMES.has(game) && room.phase === 'waiting' && room.mySeat >= 0 && !room.ready && !autoReady.has(id)) {
         autoReady.add(id);
@@ -1197,6 +1210,44 @@ export function initTables(ctx) {
   document.addEventListener('click', (event) => { if (event.target.closest('[data-rules]')) openRules(); });
   $('rules').addEventListener('click', (event) => { if (event.target === $('rules')) $('rules').close(); }); // dışına tıklayınca kapanır
 
+  // ── Giriş / kör seçimi (bahis kutusu olmayan oyunlar): sağ panelde ──
+  const STAKES = { poker: [10, 50, 250], zar: [100, 500, 2500, 10000], satranc: [100, 500, 2500, 10000], okey: [100, 500, 2500, 10000], labirent: [100, 500, 2500, 10000] };
+  const stakeLabel = (game, v) => (game === 'poker' ? `${short(v)}/${short(v * 2)}` : short(v));
+  function pickedStake(game) {
+    let v = 0;
+    try { v = Number(localStorage.getItem(`karia-stake-${game}`)); } catch {}
+    return STAKES[game]?.includes(v) ? v : STAKES[game]?.[0];
+  }
+  function drawStakePick(game) {
+    const box = $('stake-pick');
+    if (!STAKES[game]) {
+      box.hidden = true;
+      return;
+    }
+    const now = pickedStake(game);
+    box.replaceChildren(
+      el('label', { textContent: game === 'poker' ? 'Kör' : 'Giriş' }),
+      el('div', { className: 'stake-btns' }, ...STAKES[game].map((v) => {
+        const b = btn(stakeLabel(game, v), () => changeStake(game, v), v === now ? 'active' : '');
+        return b;
+      })),
+      el('small', { className: 'stake-note', textContent: game === 'poker' ? `Masaya ${fmt(now * 200)} fişle oturursun` : `Kazanan potu alır • ${fmt(now)} giriş` }));
+    box.hidden = false;
+  }
+  function changeStake(game, v) {
+    try { localStorage.setItem(`karia-stake-${game}`, String(v)); } catch {}
+    sfx.chip();
+    drawStakePick(game);
+    if (activeGame !== game) return;
+    const root = $(ROOTS[game]);
+    // Solo masa yeni tutarla yeniden kurulur; online'da lobideki Yeni Masa Aç bu tutarla başlar
+    if (modeOf(game) === 'solo') {
+      api('/tables/solo', { game, stake: v })
+        .then((made) => openTable(game, made.id, root))
+        .catch(() => say('Yeni tutar bu oyun bitince geçerli olacak.'));
+    } else if (current && !current.table) showLobby(game, root);
+  }
+
   // ── Solo / Online ──
   // Solo: yalnız sana açılan oda (poker ve zarda botlarla); Online: sunucudaki herkesle aynı masa
   const DEFAULT_MODE = { blackjack: 'solo', slot: 'solo', poker: 'online', zar: 'online', roulette: 'online', tayyare: 'online', satranc: 'solo', okey: 'solo', labirent: 'solo' };
@@ -1256,7 +1307,7 @@ export function initTables(ctx) {
     }
     root.replaceChildren();
     try {
-      const made = await api('/tables/solo', { game });
+      const made = await api('/tables/solo', { game, stake: pickedStake(game) });
       if (current?.root === root && !current.table) openTable(game, made.id, root);
     } catch (error) {
       // Masa açılamadıysa (ör. bakiye yetmiyor) ekran boş kalmasın: sebep ve Tekrar Dene
@@ -1269,6 +1320,7 @@ export function initTables(ctx) {
   function open(name) {
     activeGame = DEFAULT_MODE[name] ? name : null;
     setLeave(null);
+    drawStakePick(name);
     placeMode(name);
     const mode = modeOf(name);
     clearTimeout(lobbyTimer);

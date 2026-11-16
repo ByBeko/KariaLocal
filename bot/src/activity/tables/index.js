@@ -127,16 +127,25 @@ function freeSeat(userId, target) {
 const list = (game) => [...rooms.values()].filter((r) => r.game === game && !r.owner).map((r) => r.summary());
 
 const SOLO_BOTS = { poker: 3, zar: 2, blackjack: 0, satranc: 1, labirent: 1, okey: 3 };
-function soloRoom(game, user) {
+const stakeOf = (r) => r.sb ?? r.ante ?? r.stake;
+const playingNow = (r) => (r.game === 'poker' ? Boolean(r.hand) : r.phase === 'playing' || r.phase === 'rolling');
+function soloRoom(game, user, stake) {
   const id = `solo-${game}-${user.id}`;
   let room = rooms.get(id);
+  // Oyuncu tutarı değiştirdiyse solo masa yeni tutarla yeniden kurulur (oyun sürerken değil)
+  const want = Number(stake) || null;
+  if (room && want && SEAT_GAMES.has(game) && stakeOf(room) !== want && room.seatedIds().includes(user.id)) {
+    if (playingNow(room)) throw new UserError('Oyun sürerken tutar değişmez; el bitince değiştir.');
+    closeRoom(room);
+    room = null;
+  }
   if (room && (room.seatedIds().includes(user.id) || !SEAT_GAMES.has(game))) return room;
   if (room) closeRoom(room);
   if (game === 'tayyare') room = new CrashRoom(guildId, MIN_BET, MAX_BET, id, 4_000);
   else if (game === 'rulet') room = new RouletteRoom(guildId, MIN_BET, MAX_BET, id);
   else if (SEAT_GAMES.has(game)) {
     freeSeat(user.id, id);
-    room = makeTable(game, game === 'zar' ? 100 : null);
+    room = makeTable(game, want ?? (game === 'zar' ? 100 : null));
     rooms.delete(room.id);
     room.id = id;
     room.name = 'Solo Masa';
@@ -179,7 +188,7 @@ export async function tablesRoute(method, path, body, query, user) {
   // Solo: yalnızca bu oyuncunun gördüğü oda; poker ve zarda botlarla dolu masa
   if (path === '/tables/solo' && method === 'POST') {
     ensureEnabled(guildId);
-    return { id: soloRoom(String(body.game), user).id };
+    return { id: soloRoom(String(body.game), user, body.stake).id };
   }
   if (path === '/tables') {
     if (method === 'GET') {

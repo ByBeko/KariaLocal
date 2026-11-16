@@ -825,3 +825,12 @@
   .content.game.side-closed main>#game-corner .mode-switch button img{display:inline}
   .content.game.side-closed main>.panel:not([hidden]){padding-top:56px}
 }
+/* Giriş / kör seçimi (poker, zar, satranç, okey, labirent): sağ panelde */
+.stake-pick{display:flex;flex-direction:column;gap:8px}
+.stake-pick label{color:var(--muted);font-size:13px;font-weight:700}
+.stake-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.stake-btns button{height:44px;border:0;border-radius:12px;background:var(--panel2);color:var(--fg);font-size:15px;font-weight:800;cursor:pointer;box-shadow:inset 0 0 0 1px var(--line)}
+.stake-btns button:hover{box-shadow:inset 0 0 0 1px rgba(79,207,180,.5)}
+.stake-btns button.active{background:linear-gradient(180deg,#ffd479,#e0a93a);color:#2a1a02;box-shadow:none}
+.stake-note{color:var(--muted);font-size:12px}
+@media (max-width:900px){.betbar.no-bet:has(#stake-pick:not([hidden])){display:flex!important}.stake-btns{grid-template-columns:repeat(4,minmax(0,1fr))}}
