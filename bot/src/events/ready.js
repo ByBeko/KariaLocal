@@ -26,6 +26,7 @@ const DESCRIPTION_LIMIT = 400;
 const describe = (icon) => [
   `${icon('beyaz_logo', '💠')} Karia'nın resmi botuyum`,
   `${icon('beyaz_kod', '⌨️')} Komutlar: /yardım`,
+  `${icon('beyaz_oyun', '🎮')} Oyunlar: sesteyken Etkinlikler'den Karia Local'i aç`,
   `${icon('beyaz_baglanti', '🌐')} https://karia.live/`,
 ].join('\n');
 // Özel emojilerle sınırı aşarsa normal emojilerle yazılır
