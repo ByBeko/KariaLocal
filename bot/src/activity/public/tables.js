@@ -184,11 +184,12 @@ export function initTables(ctx) {
   function openTable(game, id, root) {
     clearTimeout(lobbyTimer);
     current = { game, root, table: id };
-    root.replaceChildren(el('p', { className: 'room-empty', textContent: 'Masaya bağlanılıyor...' }));
+    root.replaceChildren(); // bağlanırken yazı gösterme, masa gelince çizilir
     const draw = { poker: drawPoker, blackjack: drawBlackjackTable, zar: drawDice, satranc: boards.drawChess, okey: boards.drawOkey, labirent: boards.drawLabirent }[game];
     const solo = id.startsWith('solo-');
     // Online masada (bahisli blackjack hariç) ve solo Okey'de sağ panel kapanır; köşedeki düğmeyle açılır
-    autoSide(id, game === 'okey' || (!solo && game !== 'blackjack'));
+    // Satranç ve labirentte de kapanır: tahta ortada büyük durur
+    autoSide(id, ['okey', 'satranc', 'labirent'].includes(game) || (!solo && game !== 'blackjack'));
     watch(id, (room, data) => {
       setLeave(room);
       // Solo masada artık oturmuyorsan (süre doldu, kalktın) masa yerine tanıtım ekranı gösterilir
@@ -217,7 +218,9 @@ export function initTables(ctx) {
       ...(room.seats.some((s) => !s) ? [btn('+ Bot', () => act(room.id, 'bot'), 'ghost bot-add')] : []),
       ...(bots && !solo ? [btn('Botları Kaldır', () => act(room.id, 'kickbots'), 'ghost')] : []),
     ] : [];
-    return el('div', { className: 'room-head' }, ...(seated ? [] : [back]), el('strong', { textContent: room.name }), ...tools, ...extra);
+    // + Bot ve Botları Kaldır sağdaki panelde durur
+    $('side-actions').replaceChildren(...tools);
+    return el('div', { className: 'room-head' }, ...(seated ? [] : [back]), el('strong', { textContent: room.name }), ...extra);
   }
 
   const SPOTS = 6;
@@ -1014,6 +1017,7 @@ export function initTables(ctx) {
   let leaveRoom = null;
   function setLeave(room) {
     leaveRoom = room && room.mySeat >= 0 ? room : null;
+    if (!room) $('side-actions').replaceChildren(); // masadan çıkınca paneldeki masa düğmeleri de gider
     const b = $('game-leave');
     b.hidden = !leaveRoom;
     if (leaveRoom) b.title = leaveRoom.id.startsWith('solo-') ? 'Oyundan çık' : 'Masadan ayrıl';
@@ -1138,9 +1142,10 @@ export function initTables(ctx) {
       return;
     }
     sw.hidden = false;
-    if (panel.firstElementChild !== sw) panel.prepend(sw);
+    // Solo/Online ve köşe düğmeleri sağ üstte tek satır
     const corner = $('game-corner');
-    if (sw.nextElementSibling !== corner) sw.after(corner);
+    if (panel.firstElementChild !== corner) panel.prepend(corner);
+    if (corner.firstElementChild !== sw) corner.prepend(sw);
     corner.hidden = false;
     for (const b of sw.querySelectorAll('[data-mode]')) b.classList.toggle('active', b.dataset.mode === modeOf(name));
   }
@@ -1155,14 +1160,6 @@ export function initTables(ctx) {
     });
   }
 
-  const SOLO_TEXT = {
-    poker: ['Solo Poker', "3 bota karşı Texas Hold'em. Kör 10/20, masaya 2.000 coin fişle oturursun; kalkınca kalan fiş cüzdana döner."],
-    zar: ['Solo Zar Düellosu', '2 bota karşı zar at, en yüksek atan 300 coinlik potu alır. Giriş 100 coin.'],
-    satranc: ['Solo Satranç', 'Bota karşı satranç. Giriş 100 coin: kazanırsan 200 alırsın, berabere biterse girişin döner. Masada Hazırım’a bas.'],
-    okey: ['Solo Okey 101', '3 bota karşı Okey 101. Giriş 100 coin, elini ilk bitiren 400 coinlik potu alır. Masada Hazırım’a bas.'],
-    labirent: ['Solo Karia Labirent', 'Bota karşı koridor yarışı: karşı kenara ilk varan kazanır, sıranda yürür ya da rakibin önüne engel koyarsın. Giriş 100 coin, kazanan 200 alır. Masada Hazırım’a bas.'],
-  };
-
   // Solo'ya girince masa "Başla" beklemeden açılır. auto=false: masadan yeni kalkıldı, kendiliğinden tekrar oturtulmaz
   // (yeniden oynamak için Solo'ya tekrar basılır).
   async function soloIntro(game, root, auto = true) {
@@ -1176,13 +1173,12 @@ export function initTables(ctx) {
       if (data.seatedAt === `solo-${game}-${myId()}`) return openTable(game, data.seatedAt, root);
     } catch {}
     if (current?.root !== root) return;
-    const [title, text] = SOLO_TEXT[game];
-    root.replaceChildren(el('div', { className: 'solo-intro' },
-      el('img', { src: 'emojis/bot.png', alt: '' }),
-      el('h3', { textContent: title }),
-      el('p', { textContent: text }),
-      ...(auto ? [] : [el('p', { className: 'hint', textContent: 'Masadan kalktın. Tekrar oynamak için yukarıdan Solo’ya bas.' })])));
-    if (!auto) return;
+    // Blackjack gibi: tanıtım yazısı yok, masa doğrudan açılır. Masadan kalkınca yalnızca Tekrar Oyna düğmesi
+    if (!auto) {
+      root.replaceChildren(el('div', { className: 'solo-intro' }, btn('Tekrar Oyna', () => soloIntro(game, root), 'primary')));
+      return;
+    }
+    root.replaceChildren();
     guarded(async () => {
       const made = await api('/tables/solo', { game });
       if (current?.root === root && !current.table) openTable(game, made.id, root);

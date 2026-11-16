@@ -594,7 +594,18 @@ export function initBoards(ctx) {
     root.replaceChildren(
       roomHead(room, data, root, [...resign(room), stakeTag(room)]),
       table, ...(me ? [rack] : []), ...(controls.childElementCount ? [controls] : []), waitingBar(room), roomLog(room.log), pastBox('turn', room.past));
+    fitMelds(felt);
     resultSound(room, root);
+  }
+
+  /** Açılan perler masaya sığmazsa taşlar kademeli küçülür; kaydırma gerekmez */
+  function fitMelds(felt) {
+    const overflows = () => felt.scrollHeight > felt.clientHeight + 1
+      || [...felt.querySelectorAll('.okz:not(.empty)')].some((z) => z.scrollHeight > z.clientHeight + 1 || z.scrollWidth > z.clientWidth + 1);
+    for (let level = 0; level <= 4; level++) {
+      felt.dataset.fit = String(level);
+      if (!overflows()) return;
+    }
   }
 
   return { drawChess, drawLabirent, drawOkey };
