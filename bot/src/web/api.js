@@ -12,6 +12,8 @@ import { leaderboard, serverStats, userStats } from '../systems/stats.js';
 import { getServerStatus, mcEnabled, mcIp } from '../systems/minecraft.js';
 import { buyTier, changeBalance, createLinkCode, linkOf, playerView, redeemLinkCode, unlink } from '../systems/mcLink.js';
 import { ensureTierRoles, memberTier } from '../systems/membership.js';
+import { myPunishments, punishmentLog, recordPunishment } from '../systems/mcPunish.js';
+import { mcReport, mcSuggestion, mcTicket, mcTicketReplies, startMcSupport } from '../systems/mcSupport.js';
 
 const MAX_BODY = 16 * 1024;
 const BOARD_SIZE = 15;
@@ -142,6 +144,11 @@ async function route(client, guild, req, url, body) {
     unlink(guild.id, member.id);
     return { minecraft: null };
   }
+  if (pathname === '/minecraft/my-punishments' && req.method === 'GET') return myPunishments(guild.id, member.id);
+  if (pathname === '/minecraft/punishments' && req.method === 'GET') {
+    if (!isPanelAdmin(member)) return { __status: 403, error: 'Ceza kayıtlarını yalnızca yöneticiler görebilir.' };
+    return punishmentLog(guild.id);
+  }
   if (pathname.startsWith('/admin/')) return adminRoute(client, guild, member, req.method, pathname, body);
   return { __status: 404, error: 'Bulunamadı.' };
 }
@@ -162,12 +169,18 @@ function pluginRoute(guild, req, url, body) {
   if (req.method === 'GET' && pathname === '/mc/player') return mcPlayerView(guild, url.searchParams.get('uuid'));
   if (req.method === 'POST' && pathname === '/mc/balance') return changeBalance(guild.id, body.uuid, body.amount, body.txId, body.reason);
   if (req.method === 'POST' && pathname === '/mc/tier') return buyTier(guild, body.uuid, body.tier, body.txId);
+  if (req.method === 'POST' && pathname === '/mc/punishment') return recordPunishment(guild.id, body);
+  if (req.method === 'POST' && pathname === '/mc/ticket') return mcTicket(guild, body);
+  if (req.method === 'POST' && pathname === '/mc/suggestion') return mcSuggestion(guild, body);
+  if (req.method === 'POST' && pathname === '/mc/report') return mcReport(guild, body);
+  if (req.method === 'GET' && pathname === '/mc/ticket-replies') return mcTicketReplies(guild, url.searchParams.get('uuids'));
   return { __status: 404, error: 'Bulunamadı.' };
 }
 
 /** WEB_API_SECRET yoksa kapı hiç açılmaz. */
 export function startWebApi(client, { port = Number(process.env.WEB_API_PORT || 8788), guildId = process.env.GUILD_ID, secret = process.env.WEB_API_SECRET } = {}) {
   if (!secret) return null;
+  startMcSupport(client);
 
   const server = http.createServer(async (req, res) => {
     const send = (status, payload) => {

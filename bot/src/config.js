@@ -23,10 +23,10 @@ export default {
 
   minecraft: {
     // Boş bırakılırsa MC özellikleri (/ip durumu, oyuncu sayısı) kapalı kalır.
-    host: '', // örn: 'play.karia.net'
+    host: 'karia.live', // örn: 'play.karia.net'
     port: 25565,
     displayIp: '', // oyunculara gösterilecek IP (boşsa host kullanılır)
-    version: '', // örn: '1.21.x'
+    version: '1.21.x', // örn: '1.21.x'
   },
 
   // Boş olanlar /linkler ve bağlantılar panelinde gösterilmez.

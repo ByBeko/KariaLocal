@@ -13,11 +13,11 @@ export const TIER_DAYS = [7, 30, 90];
 export const SHOP_DAYS = 30; // Minecraft'ta /uyelikal ile coinle alınan süre
 const DAY = 86_400_000;
 
-/** Düşükten yükseğe. key Minecraft eklentisindeki grup adıyla aynıdır; price oyunda coinle alma ücreti. */
+/** Düşükten yükseğe. key Minecraft eklentisindeki grup adıyla aynıdır; price oyunda coinle alma ücreti. id: Karia sunucusundaki sabit rol. */
 export const TIERS = [
-  { key: 'vip', name: 'VIP', color: 0x57f287, coins: 1_000, price: 5_000 },
-  { key: 'vipplus', name: 'VIP+', color: 0x3498db, coins: 1_500, price: 10_000 },
-  { key: 'kvip', name: 'KVIP', color: 0xf1c40f, coins: 2_000, price: 20_000 },
+  { key: 'vip', name: 'VIP', id: '1571854951267827764', color: 0x57f287, coins: 1_000, price: 5_000 },
+  { key: 'vipplus', name: 'VIP+', id: '1571854952303951994', color: 0x3498db, coins: 1_500, price: 10_000 },
+  { key: 'kvip', name: 'KVIP', id: '1571854953419378779', color: 0xf1c40f, coins: 2_000, price: 20_000 },
   { key: 'prime', name: 'Prime', id: PRIME_ROLE, coins: 3_000, price: 40_000 },
 ];
 export const tierRank = (key) => TIERS.findIndex((t) => t.key === key);
