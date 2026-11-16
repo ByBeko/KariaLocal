@@ -26,6 +26,7 @@ const NAMES = ['Karia', 'Liman', 'Fener', 'Kale', 'Çarşı', 'Saray', 'Sahil', 
 const GAMES = ['poker', 'blackjack', 'zar', 'satranc', 'okey', 'labirent'];
 const SEAT_GAMES = new Set(GAMES);
 const MAX_TABLES = 8; // oyun başına
+const LOBBY_GAMES = [...GAMES, 'rulet']; // masa listesi olan oyunlar (rulette koltuk yok, masaya bakan oturmuş sayılır)
 const SEAT_IDLE = 45_000; // bakmayan oyuncu masadan kaldırılır
 const EMPTY_IDLE = 60_000;
 
@@ -43,6 +44,10 @@ function makeTable(game, stake, fixed = false) {
     const sb = POKER_BLINDS.includes(Number(stake)) ? Number(stake) : POKER_BLINDS[0];
     room = new PokerTable(id, guildId, `${word} Masası`, sb, MAX_BET);
   } else if (game === 'blackjack') room = new BlackjackTable(id, guildId, `${word} Masası`, MIN_BET, MAX_BET);
+  else if (game === 'rulet') {
+    room = new RouletteRoom(guildId, MIN_BET, MAX_BET, id);
+    room.name = `${word} Ruleti`;
+  }
   else if (TURN_GAMES[game]) {
     const { make, stakes } = TURN_GAMES[game];
     room = make(id, guildId, `${word} Masası`, stakes.includes(Number(stake)) ? Number(stake) : stakes[0]);
@@ -60,7 +65,9 @@ export function startTables(id) {
   if (guildId) return;
   guildId = id;
   rooms.set('tayyare', new CrashRoom(guildId, MIN_BET, MAX_BET));
-  rooms.set('rulet', new RouletteRoom(guildId, MIN_BET, MAX_BET));
+  const rulet = new RouletteRoom(guildId, MIN_BET, MAX_BET);
+  rulet.fixed = true; // varsayılan rulet masası hep durur
+  rooms.set('rulet', rulet);
   for (const game of GAMES) makeTable(game, null, true);
 
   // Bakmayı bırakan oyuncular kalkar, boş kalan oyuncu masaları kapanır
@@ -90,8 +97,9 @@ export function startTables(id) {
         if (away && !(room.bets?.size)) closeRoom(room);
         continue;
       }
-      if (room.seatedIds().length) room.emptySince = now;
-      else if (!room.fixed && GAMES.includes(room.game) && now - room.emptySince > EMPTY_IDLE) {
+      const inUse = room.seatedIds().length || (room.game === 'rulet' && (room.present().length || room.bets.size));
+      if (inUse) room.emptySince = now;
+      else if (!room.fixed && LOBBY_GAMES.includes(room.game) && now - room.emptySince > EMPTY_IDLE) {
         clearTimeout(room.timer);
         rooms.delete(room.id);
       }
@@ -181,7 +189,7 @@ export async function tablesRoute(method, path, body, query, user) {
     if (method === 'POST') {
       ensureEnabled(guildId);
       const game = String(body.game);
-      if (!GAMES.includes(game)) throw new UserError('Geçersiz oyun.');
+      if (!LOBBY_GAMES.includes(game)) throw new UserError('Geçersiz oyun.');
       if (list(game).length >= MAX_TABLES) throw new UserError('Şu an yeni masa açılamıyor, var olan bir masaya otur.');
       return { id: makeTable(game, body.stake).id };
     }

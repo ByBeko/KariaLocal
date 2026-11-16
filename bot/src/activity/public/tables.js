@@ -181,7 +181,23 @@ export function initTables(ctx) {
     lobbyTimer = setTimeout(() => { if (current?.root === root && !current.table && root.isConnected && !root.closest('[hidden]')) showLobby(game, root); }, 5000);
   }
 
+  const READY_GAMES = new Set(['zar', 'satranc', 'okey', 'labirent']);
+  const autoReady = new Set(); // bu açılışta Hazırım'a basılmış solo masalar
+  /** İstek sınırına (429) takılırsa kısa aralıklarla birkaç kez yeniden dener */
+  async function readySoon(id, tries = 4) {
+    for (let i = 0; i < tries; i++) {
+      await sleep(350 * (i + 1));
+      if (current?.table !== id) return;
+      try {
+        await send(id, 'ready');
+        return;
+      } catch (error) {
+        if (i === tries - 1) say(error.message, 'lose'); // son denemede de olmazsa sebebi göster
+      }
+    }
+  }
   function openTable(game, id, root) {
+    autoReady.delete(id); // her girişte bir kez
     clearTimeout(lobbyTimer);
     current = { game, root, table: id };
     root.replaceChildren(); // bağlanırken yazı gösterme, masa gelince çizilir
@@ -192,6 +208,11 @@ export function initTables(ctx) {
     autoSide(id, ['okey', 'satranc', 'labirent'].includes(game) || (!solo && game !== 'blackjack'));
     watch(id, (room, data) => {
       setLeave(room);
+      // Solo masada bekleme ekranı yok: oturur oturmaz Hazırım'a bir kez kendiliğinden basılır (Blackjack gibi doğrudan oyun)
+      if (solo && READY_GAMES.has(game) && room.phase === 'waiting' && room.mySeat >= 0 && !room.ready && !autoReady.has(id)) {
+        autoReady.add(id);
+        readySoon(id);
+      }
       // Solo masada artık oturmuyorsan (süre doldu, kalktın) masa yerine tanıtım ekranı gösterilir
       if (solo && room.mySeat < 0) {
         if (data.balance !== undefined) setBalance(data.balance);
@@ -1015,15 +1036,70 @@ export function initTables(ctx) {
 
   // ── Köşe düğmeleri: ? (nasıl oynanır) ve yuvarlak Masadan Ayrıl ──
   let leaveRoom = null;
-  function setLeave(room) {
+  let leaveFn = null; // koltuksuz masalarda (rulet) ayrıl düğmesinin yaptığı iş
+  function setLeave(room, onLeave = null) {
     leaveRoom = room && room.mySeat >= 0 ? room : null;
+    leaveFn = leaveRoom ? onLeave : null;
     if (!room) $('side-actions').replaceChildren(); // masadan çıkınca paneldeki masa düğmeleri de gider
     const b = $('game-leave');
     b.hidden = !leaveRoom;
     if (leaveRoom) b.title = leaveRoom.id.startsWith('solo-') ? 'Oyundan çık' : 'Masadan ayrıl';
     b.setAttribute('aria-label', b.title);
   }
-  $('game-leave').addEventListener('click', () => { if (leaveRoom) act(leaveRoom.id, 'leave'); });
+  $('game-leave').addEventListener('click', () => {
+    if (leaveFn) return leaveFn();
+    if (leaveRoom) act(leaveRoom.id, 'leave');
+  });
+
+  // ── Online rulet: masa listesi, Otur, Yeni Masa Aç ──
+  const rlTable = () => document.querySelector('.roulette');
+  async function rouletteLobby() {
+    stop();
+    clearTimeout(lobbyTimer);
+    const box = $('rl-lobby');
+    current = { game: 'roulette', root: box, table: null };
+    setLeave(null);
+    let data;
+    try {
+      data = await api('/tables?game=rulet');
+    } catch (error) {
+      data = { tables: [], error: error.message };
+    }
+    if (activeGame !== 'roulette' || current?.root !== box || current.table) return;
+    const create = btn('Yeni Masa Aç', () => guarded(async () => {
+      const made = await api('/tables', { game: 'rulet' });
+      joinRoulette(made.id);
+    }), 'primary');
+    const cards = data.tables.map((t) => {
+      const card = el('button', { type: 'button', className: 'lobby-card' },
+        el('div', { className: 'lobby-felt' }, el('img', { src: 'logo.png', alt: '' })),
+        el('div', { className: 'lobby-info' },
+          el('strong', { textContent: t.name }),
+          el('small', { textContent: `${t.players} oyuncu${t.phase === 'spinning' ? ' • Çark dönüyor' : t.phase === 'betting' ? ' • Bahisler açık' : ''}` })),
+        el('span', { className: 'lobby-go', textContent: 'Otur' }));
+      card.addEventListener('click', () => joinRoulette(t.id));
+      return card;
+    });
+    box.replaceChildren(el('div', { className: 'lobby' },
+      el('div', { className: 'lobby-head' },
+        el('div', {}, el('h3', { textContent: 'Rulet Masaları' }), el('p', { textContent: data.error ?? 'Bir masaya otur ya da yeni masa aç • Masadaki herkesin bahsi aynı çarkta döner' })),
+        el('div', { className: 'lobby-new' }, create)),
+      el('div', { className: 'lobby-list' }, ...cards)));
+    box.hidden = false;
+    rlTable().hidden = true;
+    lobbyTimer = setTimeout(() => { if (current?.root === box && !current.table && activeGame === 'roulette') rouletteLobby(); }, 5000);
+  }
+  function joinRoulette(id) {
+    clearTimeout(lobbyTimer);
+    current = { game: 'roulette', root: $('rl-lobby'), table: id };
+    $('rl-lobby').hidden = true;
+    rlTable().hidden = false;
+    setLeave({ id, mySeat: 0 }, () => rouletteLobby()); // ayrılınca masa listesine dönülür
+    watch(id, drawRoulette, () => {
+      say('Masa kapandı.');
+      rouletteLobby();
+    });
+  }
 
   const GAME = {
     blackjack: ['Blackjack', 'kart.png'], poker: ['Poker', 'maca.png'], tayyare: ['Tayyare', 'tayyare.svg'], roulette: ['Rulet', 'oyun.png'],
@@ -1142,9 +1218,9 @@ export function initTables(ctx) {
       return;
     }
     sw.hidden = false;
-    // Solo/Online ve köşe düğmeleri sağ üstte tek satır
+    // Solo/Online ve köşe düğmeleri sağ panelde oyun seçicinin üstünde tek satır (panel kapalıyken masanın sağ üstünde)
     const corner = $('game-corner');
-    if (panel.firstElementChild !== corner) panel.prepend(corner);
+    if (corner.nextElementSibling !== $('game-switch')) $('game-switch').before(corner);
     if (corner.firstElementChild !== sw) corner.prepend(sw);
     corner.hidden = false;
     for (const b of sw.querySelectorAll('[data-mode]')) b.classList.toggle('active', b.dataset.mode === modeOf(name));
@@ -1179,10 +1255,15 @@ export function initTables(ctx) {
       return;
     }
     root.replaceChildren();
-    guarded(async () => {
+    try {
       const made = await api('/tables/solo', { game });
       if (current?.root === root && !current.table) openTable(game, made.id, root);
-    });
+    } catch (error) {
+      // Masa açılamadıysa (ör. bakiye yetmiyor) ekran boş kalmasın: sebep ve Tekrar Dene
+      if (current?.root !== root || current.table) return;
+      root.replaceChildren(el('div', { className: 'solo-intro' },
+        el('p', { textContent: error.message }), btn('Tekrar Dene', () => soloIntro(game, root), 'primary')));
+    }
   }
 
   function open(name) {
@@ -1198,6 +1279,11 @@ export function initTables(ctx) {
     }
     if (name === 'tayyare' || name === 'roulette') {
       current = null;
+      if (name === 'roulette') {
+        $('rl-lobby').hidden = true;
+        rlTable().hidden = false;
+        if (mode === 'online') return rouletteLobby();
+      }
       const game = name === 'tayyare' ? 'tayyare' : 'rulet';
       const draw = name === 'tayyare' ? drawTayyare : drawRoulette;
       if (mode === 'solo') {
