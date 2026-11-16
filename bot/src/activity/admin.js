@@ -288,7 +288,7 @@ const q = {
   recentCases: db.prepare('SELECT * FROM cases WHERE guild_id = ? ORDER BY id DESC LIMIT ?'),
   casesSince: db.prepare('SELECT count(*) n FROM cases WHERE guild_id = ? AND created_at >= ?'),
 };
-const nameOf = (guild, id) => guild.members.cache.get(id)?.displayName ?? 'ayrılmış üye';
+const nameOf = (guild, id) => (String(id).startsWith('mc:') ? `${String(id).slice(3)} (Minecraft)` : guild.members.cache.get(id)?.displayName ?? 'ayrılmış üye');
 const channelName = (guild, id) => guild.channels.cache.get(id)?.name ?? 'silinmiş kanal';
 const jump = (guild, channelId, messageId) => `https://discord.com/channels/${guild.id}/${channelId}${messageId ? `/${messageId}` : ''}`;
 
