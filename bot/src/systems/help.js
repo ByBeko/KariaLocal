@@ -2,7 +2,7 @@
 // Yetkililer ek olarak sadece kendilerine görünen "Yetkili Paneli"ni açabilir (seviye seviye ayrılmış).
 import { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ApplicationCommandOptionType as T } from 'discord.js';
 import config from '../config.js';
-import { brandEmbed, kariaEmbed, linkRow } from '../utils/embeds.js';
+import { brandEmbed, kariaEmbed } from '../utils/embeds.js';
 import { e } from '../utils/emojis.js';
 import { checkAccess, getLevel, Level, LevelName } from '../utils/permissions.js';
 import { quote, fit } from '../utils/style.js';
@@ -15,7 +15,8 @@ export const CATEGORIES = {
   genel: { label: 'Genel', get emoji() { return e('bilgi', '📌'); }, description: 'Profil, sunucu, roller' },
   topluluk: { label: 'Topluluk', get emoji() { return e('yildiz', '⭐'); }, description: 'AFK, öneri, rapor' },
   muzik: { label: 'Müzik', get emoji() { return e('muzik', '🎵'); }, description: 'YouTube’dan müzik çal' },
-  ekonomi: { label: 'Ekonomi', get emoji() { return e('oyun', '🎰'); }, description: 'Coin ve oyunlar' },
+  ekonomi: { label: 'Ekonomi', get emoji() { return e('coin', '🪙'); }, description: 'Coin bakiyesi ve ödüller' },
+  oyunlar: { label: 'Oyunlar', get emoji() { return e('oyun', '🎮'); }, description: 'Coin oyunları ve Etkinlik' },
 };
 
 /** Kategorilerdeki komut sırası. Burada olmayan üye komutu Genel'in sonunda görünür, yani kaybolmaz. */
@@ -23,31 +24,61 @@ const COMMAND_ORDER = {
   genel: ['bilgi', 'yardim', 'bot-bilgi', 'ping'],
   topluluk: ['afk', 'oneri', 'rapor'],
   muzik: ['cal', 'duraklat', 'gec', 'dur', 'sira', 'simdi', 'karistir', 'dongu', 'ses'],
-  ekonomi: ['bakiye', 'gunluk', 'gonder', 'coinflip', 'slot', 'blackjack'],
+  ekonomi: ['bakiye', 'gunluk', 'gonder'],
+  oyunlar: ['coinflip', 'slot', 'blackjack'],
 };
 /** /bilgi butonlarından açılan komutlar: çalışmaya devam eder ama yardım listesinde ayrıca gösterilmez */
 const HIDDEN_IN_HELP = new Set(['avatar', 'roller', 'emoji', 'seviye', 'siralama', 'istatistik']);
 /** Ana sayfada gösterilmeyen komutlar: sadece "Detaylı Gör"de listelenir */
 const DETAIL_ONLY = new Set(['duraklat', 'gec', 'dur', 'sira', 'simdi', 'karistir', 'dongu', 'ses']);
 /** Ana sayfada kategorinin altına düşülen kısa not */
-const MAIN_NOTES = { muzik: '*Duraklat, geç, durdur, döngü, karıştır: oynatıcının butonlarında.*' };
+const MAIN_NOTES = { muzik: '*Diğer kontroller oynatıcının butonlarında.*' };
+/** Kategorinin sonuna her zaman eklenen satırlar (komut olmayan bağlantılar) */
+const EXTRA_LINES = { oyunlar: ['[Karia Etkinlik](https://activity.karia.live) — Okey ve diğer oyunlar'] };
 const CATEGORY_OF = new Map(Object.entries(COMMAND_ORDER).flatMap(([category, names]) => names.map((name) => [name, category])));
 const ORDER_INDEX = new Map(Object.values(COMMAND_ORDER).flatMap((names) => names.map((name, i) => [name, i])));
 
+/** Yardımda tek satıra sığan kısa açıklamalar; alt komutlu olanlarda alt komut başına */
 const SHORT_DESCRIPTIONS = {
-  seviye: 'Seviye kartın ve ödüller',
+  bilgi: { kullanici: 'Üye bilgisi', sunucu: 'Sunucu bilgisi' },
+  yardim: 'Komut listesi',
+  'bot-bilgi': 'Bot hakkında',
+  ping: 'Bot gecikmesi',
   afk: 'AFK durumuna geç',
-  siralama: 'Sunucu sıralamaları',
-  sira: 'Müzik sırası',
-  avatar: 'Profil fotoğrafı ve afişi',
-  bilgi: 'Üye/sunucu bilgisi; avatar, seviye, sıralama, roller butonlarda',
-  rapor: 'Bir üyeyi yetkililere bildir',
-  emoji: 'Sunucunun emojileri',
-  roller: 'Sunucunun rolleri',
+  oneri: 'Öneri gönder',
+  rapor: 'Üyeyi yetkililere bildir',
+  cal: 'Şarkı çal ya da sıraya ekle',
+  duraklat: 'Duraklat / devam ettir',
+  gec: 'Şarkıyı geç',
+  dur: 'Müziği durdur',
+  sira: { liste: 'Sırayı göster', sil: 'Sıradan şarkı sil', temizle: 'Sırayı temizle' },
+  simdi: 'Çalan şarkı',
+  karistir: 'Sırayı karıştır',
+  dongu: 'Tekrar modu',
+  ses: 'Ses düzeyi',
+  bakiye: 'Coin bakiyen',
+  gunluk: 'Günlük coin ödülü',
+  gonder: 'Üyeye coin gönder',
+  coinflip: 'Yazı tura',
+  slot: 'Slot makinesi',
+  blackjack: 'Blackjack',
 };
-const shortDescription = (c) => SHORT_DESCRIPTIONS[c.data.name] ?? c.data.description.split(/[.:(]/)[0].trim();
-// Alt komutu olanların hepsi yan yana yazılır, her biri ayrı tıklanır
+const firstClause = (text) => text.split(/[.:(]/)[0].trim();
+const shortDescription = (c) => {
+  const short = SHORT_DESCRIPTIONS[c.data.name];
+  if (typeof short === 'string') return short;
+  return short ? Object.values(short).join(', ') : firstClause(c.data.description);
+};
+// Alt komutu olanların hepsi yan yana yazılır, her biri ayrı tıklanır (yetkili paneli)
 const commandLine = (c) => `${commandRefs(c).join(' ')} — ${shortDescription(c)}`;
+/** Üye yardımında her alt komut kendi satırında */
+function memberLines(c) {
+  const refs = commandRefs(c);
+  if (refs.length === 1) return [`${refs[0]} — ${shortDescription(c)}`];
+  const subs = c.data.toJSON().options.filter((o) => o.type === T.Subcommand);
+  const short = SHORT_DESCRIPTIONS[c.data.name];
+  return refs.map((ref, i) => `${ref} — ${short?.[subs[i].name] ?? firstClause(subs[i].description)}`);
+}
 
 // Bölümler arasında en fazla bir satır boşluk
 const compactSections = (sections) => sections.map((s) => `${s.icon} **${s.title}**\n${quote(s.body)}`).join('\n\n');
@@ -58,8 +89,9 @@ function categorySections(groups, detailed) {
   for (const [key, list] of groups) {
     const shown = detailed ? list : list.filter((c) => !DETAIL_ONLY.has(c.data.name));
     if (!shown.length) continue;
-    const lines = shown.map(commandLine);
+    const lines = shown.flatMap(memberLines);
     if (!detailed && shown.length < list.length && MAIN_NOTES[key]) lines.push(MAIN_NOTES[key]);
+    lines.push(...(EXTRA_LINES[key] ?? []));
     sections.push({ icon: info(key).emoji, title: info(key).label, body: lines.join('\n') });
   }
   return sections;
@@ -169,9 +201,8 @@ export function homeView(member, client, ownerId, { staffButton = false } = {}) 
       4096,
     ),
   );
-  const row = new ActionRowBuilder().addComponents(
-    withStaff(member, [navButton(`yardim:detay:${ownerId}`, 'Detaylı Gör', e('kitap', '📖')), ...linkRow().components], staffButton).slice(0, 5),
-  );
+  const website = new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('Web Sitesi').setURL(config.links.website || 'https://karia.live').setEmoji(e('baglanti', '🌐'));
+  const row = new ActionRowBuilder().addComponents(withStaff(member, [navButton(`yardim:detay:${ownerId}`, 'Detaylı Gör', e('kitap', '📖')), website], staffButton));
   return { content: '', embeds: [embed], components: [row], allowedMentions: { parse: [] } };
 }
 
