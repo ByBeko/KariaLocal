@@ -4,7 +4,7 @@ Discord bu sayfayı botların doldurmasına izin vermiyor. **Sunucu Ayarları �
 
 Discord sınırları: karşılama mesajı 300, başlık 60, açıklama 200 karakter. Yapılacaklar en az 3 en fazla 5, kaynak sayfası en fazla 7. Aşağıdaki metinlerin hepsi bu sınırların içinde.
 
-Emoji sütununda önce sunucunun kendi Karia emojisi yazıyor; seçicide çıkmazsa yanındaki yedek emojiyi seç. Açıklamaların başındaki emojiler normal (unicode) emojidir çünkü açıklamada sunucu emojisi görünmez.
+Kaynak sayfası açıklamaları sunucunun kendi Karia emojileriyle başlar: `<:Karia_ad:id>` yazısını olduğu gibi yapıştır, rehberde emoji olarak görünür (ayarlar listesinde yazı olarak kalır). Discord'un yapılacaklar penceresinde açıklama ve emoji alanı yok; orada sadece başlık, kanal ve küçük resim seçilir.
 
 ## 👋 Karşılama mesajı
 
@@ -71,41 +71,41 @@ Her sayfanın ikonu `bot/assets/onboarding/kaynak-ikonlar/` klasöründe (512x51
 **1. Kurallar**
 
 ```
-📜 Karia'nın temel kuralları. Saygılı ol, spam ve reklam yapma, kurallara uymayanlara uyarı ve ceza uygulanır. Sohbete başlamadan önce mutlaka oku.
+<:Karia_kitap:1568696930400473202> Karia'nın temel kuralları. Saygılı ol, spam ve reklam yapma, kurallara uymayanlara uyarı ve ceza uygulanır. Sohbete başlamadan önce mutlaka oku.
 ```
 
 **2. Sık Sorulan Sorular**
 
 ```
-❓ Seviye ve XP, coin ödülleri, VIP'ten Prime'a üyelik kademeleri, Minecraft IP'si ve komutlar. En çok sorulan soruların cevapları tek sayfada.
+<:Karia_soru:1568696909755846680> Seviye ve XP, coin ödülleri, VIP'ten Prime'a üyelik kademeleri, Minecraft IP'si ve komutlar. En çok sorulan soruların cevapları tek sayfada.
 ```
 
 **3. Rollerini Seç**
 
 ```
-🎭 Menüden bildirim ve ilgi alanı rollerini seç; ruh halini ve rozetini de buradan ayarla. Seçmediğin roller üzerinden otomatik alınır.
+<:Karia_rozet:1568722560533925909> Menüden bildirim ve ilgi alanı rollerini seç; ruh halini ve rozetini de buradan ayarla. Seçmediğin roller üzerinden otomatik alınır.
 ```
 
 **4. Takviyeler**
 
 ```
-💎 Takviye yapanlar ve ayrıcalıkları. İlk takviyende 2.500 coin kazanırsın, her ay takviye yapanlar arasından 1 kişiye 30 gün Prime ve 1.000 coin çıkar.
+<:Karia_elmas:1568986769808957460> Takviye yapanlar ve ayrıcalıkları. İlk takviyende 2.500 coin kazanırsın, her ay takviye yapanlar arasından 1 kişiye 30 gün Prime ve 1.000 coin çıkar.
 ```
 
 **5. Bağlantılar**
 
 ```
-🔗 Resmi hesaplarımız: karia.live • Instagram ve TikTok: @karia.live • YouTube: @karialivemedya • Minecraft: karia.live/minecraft. Bunların dışındakiler bize ait değil.
+<:Karia_zincir:1568732258461024387> Resmi hesaplarımız: karia.live • Instagram ve TikTok: @karia.live • YouTube: @karialivemedya • Minecraft: karia.live/minecraft. Başkaları bize ait değil.
 ```
 
 **6. Oy Ver**
 
 ```
-🔥 Top.gg'de 12 saatte bir oy ver, Disboard'da 2 saatte bir /bump yap. Sıralama her Pazar 20.00'de açıklanır, ayın en çok oy veren üyesi 30 gün Prime kazanır!
+<:Karia_alev:1568696770891088024> Top.gg'de 12 saatte bir oy ver, Disboard'da 2 saatte bir /bump yap. Sıralama her Pazar 20.00'de açıklanır, ayın en çok oy veren üyesi 30 gün Prime kazanır!
 ```
 
 **7. Destek Talebi**
 
 ```
-🎫 Minecraft sorunu, hata bildirimi ya da sponsorluk için menüden talep aç; sadece sen ve yetkililerin gördüğü bir kanal açılır. Üye şikayeti için /rapor kullan.
+<:Karia_cankurtaran:1568696969659162775> Minecraft sorunu, hata bildirimi ya da sponsorluk için menüden talep aç; sadece sen ve yetkililerin gördüğü bir kanal açılır. Üye şikayeti için /rapor kullan.
 ```
