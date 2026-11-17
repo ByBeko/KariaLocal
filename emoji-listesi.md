@@ -308,3 +308,77 @@ Karia stilinde çizildi, hem bota hem sunucuya yüklendi. Zip dosyalarında yokl
 | Karia_uyku | `<:Karia_uyku:1568986625533411379>` |
 | Karia_x | `<:Karia_x:1568986638003208313>` |
 | Karia_yukari | `<:Karia_yukari:1568986650405638374>` |
+
+### Maskot emojileri: Kari (30, hareketli, sunucuya yüklendi)
+
+Karia'nın maskotu **Kari**: turkuaz, chibi tarzı bir bebek ejderha. Logodaki motifleri taşır: alnında cyan taş (logodaki nokta), yanaklarında "=" işareti, kuyruk ucunda beyaz ok, cyan ateş. Hepsi 128x128, şeffaf ve 256 KB'ın altında. Dosyalar `bot/assets/maskot/emojiler/` klasöründe; hepsi birden `bot/assets/maskot/Karia_kari_emojiler.zip` içinde. Hareketli emojinin kodu `<a:...>` ile başlar.
+
+| Emoji | İfade | Kod |
+|---|---|---|
+| Karia_kari_selam | El sallıyor, hoş geldin | `<a:Karia_kari_selam:1572249497118183424>` |
+| Karia_kari_sevinc | Zıplıyor, kanat çırpıyor | `<a:Karia_kari_sevinc:1572249639124607046>` |
+| Karia_kari_bekle | Nefes alıyor, göz kırpıyor (idle) | `<a:Karia_kari_bekle:1572249782729052293>` |
+| Karia_kari_kalp | Kalp gözler, uçuşan kalpler | `<a:Karia_kari_kalp:1572249874995351713>` |
+| Karia_kari_dusun | Eli çenesinde, soru işareti | `<a:Karia_kari_dusun:1572249962593394870>` |
+| Karia_kari_uyku | Uyuyor, Z harfleri | `<a:Karia_kari_uyku:1572251849623478324>` |
+| Karia_kari_aglama | Ağlıyor, gözyaşı şelalesi | `<a:Karia_kari_aglama:1572251871555616962>` |
+| Karia_kari_kizgin | Sinirli, burnundan duman | `<a:Karia_kari_kizgin:1572251891834818730>` |
+| Karia_kari_ates | Cyan ateş püskürtüyor | `<a:Karia_kari_ates:1572251914274476042>` |
+| Karia_kari_saskin | Şaşırıyor, ünlem | `<a:Karia_kari_saskin:1572251937603063819>` |
+| Karia_kari_gulme | Kahkaha, sevinç gözyaşı | `<a:Karia_kari_gulme:1572251959032021002>` |
+| Karia_kari_goz_kirp | Göz kırpıp dil çıkarıyor | `<a:Karia_kari_goz_kirp:1572252472360177706>` |
+| Karia_kari_onay | Başını sallıyor, tik | `<a:Karia_kari_onay:1572252817752588388>` |
+| Karia_kari_hayir | Başını iki yana sallıyor, çarpı | `<a:Karia_kari_hayir:1572252829937303672>` |
+| Karia_kari_alkis | Alkışlıyor | `<a:Karia_kari_alkis:1572252843023409164>` |
+| Karia_kari_dans | Dans ediyor, notalar | `<a:Karia_kari_dans:1572252854868246568>` |
+| Karia_kari_utangac | Utanıyor, yanakları pembe | `<a:Karia_kari_utangac:1572252918202114178>` |
+| Karia_kari_havali | Güneş gözlüklü, havalı | `<a:Karia_kari_havali:1572252930826969148>` |
+| Karia_kari_kod | Laptopta kod yazıyor | `<a:Karia_kari_kod:1572252942957019176>` |
+| Karia_kari_oyun | Gamepad ile oyun oynuyor | `<a:Karia_kari_oyun:1572252954537238720>` |
+| Karia_kari_kazma | Kazma sallıyor | `<a:Karia_kari_kazma:1572252966940057662>` |
+| Karia_kari_cay | İnce belli bardakta çay içiyor | `<a:Karia_kari_cay:1572252981309612224>` |
+| Karia_kari_gg | GG tabelası | `<a:Karia_kari_gg:1572252994894958612>` |
+| Karia_kari_parti | Parti şapkası, konfeti | `<a:Karia_kari_parti:1572253059742961674>` |
+| Karia_kari_bakis | Aşağıdan gizlice bakıyor | `<a:Karia_kari_bakis:1572253072833511525>` |
+| Karia_kari_ucus | Kanat çırparak uçuyor | `<a:Karia_kari_ucus:1572253084992802878>` |
+| Karia_kari_korku | Korkudan titriyor | `<a:Karia_kari_korku:1572253096514687108>` |
+| Karia_kari_ter | Gergin, ter damlası | `<a:Karia_kari_ter:1572253110078935110>` |
+| Karia_kari_suphe | Şüpheyle bakıyor | `<a:Karia_kari_suphe:1572253122435227791>` |
+| Karia_kari_bu | Yukarıyı gösteriyor (bu ↑) | `<a:Karia_kari_bu:1572253135479775332>` |
+
+### Maskot çıkartmaları: Kari (30, hareketli, sunucuya yüklendi)
+
+Aynı 30 ifadenin 320x320 çıkartma sürümleri (512 KB altı GIF). Dosyalar `bot/assets/maskot/cikartmalar/` klasöründe, adları emojilerle aynı. Her çıkartmanın açıklaması (alt metni) ifadeyi anlatır.
+
+| Çıkartma | İlgili emoji | ID |
+|---|---|---|
+| Kari Selam | 👋 | `1572254167672688740` |
+| Kari Sevinç | 😄 | `1572254340977270937` |
+| Kari Bekle | 😌 | `1572254408547373159` |
+| Kari Kalp | 😍 | `1572254455292895262` |
+| Kari Düşün | 🤔 | `1572254602550841536` |
+| Kari Uyku | 😴 | `1572254644258865213` |
+| Kari Ağlama | 😭 | `1572254680472494122` |
+| Kari Kızgın | 😡 | `1572254715729809560` |
+| Kari Ateş | 🔥 | `1572324092776812698` |
+| Kari Şaşkın | 😲 | `1572324127195406366` |
+| Kari Gülme | 😂 | `1572324158287650939` |
+| Kari Göz Kırp | 😜 | `1572324259035086960` |
+| Kari Onay | ✅ | `1572324295881916497` |
+| Kari Hayır | ❌ | `1572324332313514106` |
+| Kari Alkış | 👏 | `1572324447879430337` |
+| Kari Dans | 💃 | `1572324482746683523` |
+| Kari Utangaç | 😊 | `1572324514698625105` |
+| Kari Havalı | 😎 | `1572324549087989820` |
+| Kari Kod | 💻 | `1572324643640184963` |
+| Kari Oyun | 🎮 | `1572324931717562439` |
+| Kari Kazma | ⛏️ | `1572324965003305011` |
+| Kari Çay | 🍵 | `1572324998947807353` |
+| Kari GG | 🏆 | `1572325109761581096` |
+| Kari Parti | 🥳 | `1572325144121049198` |
+| Kari Bakış | 👀 | `1572325177054859424` |
+| Kari Uçuş | 🐉 | `1572325211313803365` |
+| Kari Korku | 😨 | `1572325325030039663` |
+| Kari Ter | 😅 | `1572325358785798274` |
+| Kari Şüphe | 🤨 | `1572325397008482486` |
+| Kari Bu | 👆 | `1572325429350502481` |
