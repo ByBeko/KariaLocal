@@ -63,8 +63,9 @@ export class TurnTable extends Room {
     const seated = this.seats.filter(Boolean);
     const humansReady = seated.some((s) => s.ready && !isBot(s.id));
     if (seated.length >= this.minPlayers && humansReady && seated.every((s) => s.ready)) {
-      this.startsAt = Date.now() + START_MS;
-      this.schedule(() => this.begin(), START_MS);
+      const wait = this.owner ? 150 : START_MS; // solo masada geri sayım yok: Dağıt'a basınca başlar
+      this.startsAt = Date.now() + wait;
+      this.schedule(() => this.begin(), wait);
     } else if (this.startsAt) {
       this.startsAt = 0;
       clearTimeout(this.timer);

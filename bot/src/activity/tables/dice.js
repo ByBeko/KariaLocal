@@ -71,8 +71,9 @@ export class DiceTable extends Room {
       return;
     }
     if (ready.length === this.seats.filter(Boolean).length) {
-      this.endsAt = Date.now() + 800;
-      this.schedule(() => this.play(), 800);
+      const wait = this.owner ? 150 : 800;
+      this.endsAt = Date.now() + wait;
+      this.schedule(() => this.play(), wait);
     } else if (!this.endsAt) {
       this.endsAt = Date.now() + WAIT_MS;
       this.schedule(() => this.play(), WAIT_MS);

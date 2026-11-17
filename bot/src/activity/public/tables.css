@@ -844,3 +844,8 @@
 .okp.wait-empty{justify-content:center;border:1px dashed rgba(79,207,180,.35);background:rgba(0,0,0,.18);min-height:46px}
 .okp.wait-empty small{color:var(--muted)}
 .okp.ready{border-color:rgba(88,214,141,.55)}
+/* Keçe yazısının alt satırı (oyun kuralı) ve Okey masasındaki yazı */
+.felt-mark small{font:700 11px system-ui,sans-serif;letter-spacing:2px;color:#fff;text-align:center;max-width:80%}
+.okf.okf-101{position:relative}
+.ok-felt{z-index:0}
+.okf-101>*:not(.felt-mark){position:relative;z-index:1}

@@ -78,9 +78,15 @@ export class PokerTable extends Room {
 
   maybeStart() {
     if (this.phase !== 'waiting' || this.ready().length < 2) return;
+    // Solo masada her el oyuncu Dağıt'a basınca başlar (Blackjack gibi)
+    if (this.owner) {
+      if (!this.dealNext) return;
+      this.dealNext = false;
+    }
+    const wait = this.owner ? 300 : START_MS;
     this.phase = 'starting';
-    this.startsAt = Date.now() + START_MS;
-    this.schedule(() => this.startHand(), START_MS);
+    this.startsAt = Date.now() + wait;
+    this.schedule(() => this.startHand(), wait);
   }
 
   /** Oyuncuları koltuk sırasıyla, verilen koltuktan sonrakinden başlayarak döner */
@@ -326,6 +332,12 @@ export class PokerTable extends Room {
     if (action === 'sitout') {
       p.sittingOut = true;
       return;
+    }
+    if (action === 'deal') {
+      if (!this.owner) throw new UserError('Online masada el kendiliğinden başlar.');
+      if (this.hand || this.phase !== 'waiting') throw new UserError('El zaten sürüyor.');
+      this.dealNext = true;
+      return this.maybeStart();
     }
     if (action === 'back') {
       p.sittingOut = false;

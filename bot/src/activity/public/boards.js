@@ -24,9 +24,11 @@ export function initBoards(ctx) {
     const bar = el('div', { className: 'pcontrols' });
     if (room.mySeat < 0) bar.append(el('p', { className: 'hint', textContent: `Giriş ${fmt(room.stake)} coin. Boş bir koltuğa otur.` }));
     else if (room.phase === 'waiting') {
-      bar.append(room.ready ? btn('Vazgeç', () => act(room.id, 'unready'), 'ghost') : btn(`Hazırım • ${fmt(room.stake)}`, () => act(room.id, 'ready'), 'primary big'));
       const solo = room.id.startsWith('solo-');
-      bar.append(el('p', { className: 'hint' }, room.startsAt ? countdown('Oyun {s} sn sonra başlıyor', room.startsAt) : solo ? 'Botlar hazır; Hazırım’a basınca oyun başlar.' : `Herkes hazır olunca başlar (en az ${room.game === 'okey' ? 4 : 2} kişi; boş yere + Bot ekleyebilirsin)`));
+      // Solo masada Blackjack gibi tek düğme: Okey'de Dağıt, satranç ve labirentte Başla
+      const go = solo ? (room.game === 'okey' ? 'Dağıt' : 'Başla') : 'Hazırım';
+      bar.append(room.ready ? btn('Vazgeç', () => act(room.id, 'unready'), 'ghost') : btn(`${go} • ${fmt(room.stake)}`, () => act(room.id, 'ready'), 'primary big'));
+      bar.append(el('p', { className: 'hint' }, room.startsAt ? countdown('Oyun {s} sn sonra başlıyor', room.startsAt) : solo ? `${go}’a basınca oyun başlar.` : `Herkes hazır olunca başlar (en az ${room.game === 'okey' ? 4 : 2} kişi; boş yere + Bot ekleyebilirsin)`));
     } else if (room.phase === 'result') {
       const r = room.result;
       bar.append(el('p', { className: 'hint big-result', textContent: r.winners.length ? `${r.winners.map((w) => w.name).join(', ')} kazandı • ${r.reason}` : `Berabere • ${r.reason}` }));
@@ -417,6 +419,8 @@ export function initBoards(ctx) {
     },
   });
 
+  const okFelt = () => el('div', { className: 'felt-mark ok-felt' }, el('span', { textContent: 'OKEY 101' }), el('small', { textContent: '101 SAYI YA DA 5 ÇİFTLE AÇILIR • ELİNİ İLK BİTİREN POTU ALIR' }));
+
   function drawOkey(room, data, root) {
     const playing = room.phase !== 'waiting' && room.players.length > 0;
     if (!playing) {
@@ -431,7 +435,7 @@ export function initBoards(ctx) {
         return el('div', { className: `okp ${side}${s.ready ? ' ready' : ''}` }, avatar(s.id, s.ready ? 'ready' : ''),
           el('div', { className: 'okp-text' }, el('strong', { textContent: s.seat === room.mySeat ? 'Sen' : s.name }), el('small', { textContent: s.ready ? 'Hazır' : 'Bekliyor' })));
       };
-      const felt = el('div', { className: 'okf okf-101' },
+      const felt = el('div', { className: 'okf okf-101' }, okFelt(),
         el('div', { className: 'okf-mid' },
           el('div', { className: 'ok-deck' }, el('b', { textContent: '106' }), el('small', { textContent: 'deste' })),
           el('div', { className: 'ok-info' }, el('strong', { textContent: 'Okey 101' }), el('small', { textContent: 'Herkes hazır olunca taşlar dağıtılır' }))));
@@ -498,7 +502,7 @@ export function initBoards(ctx) {
       return el('div', { className: `okz z${rel}${list.length ? '' : ' empty'}`, title: p ? `${p.seat === room.mySeat ? 'Senin' : p.name} açtığı perler` : '' },
         el('div', { className: 'okz-list' }, ...list.map(([m, i]) => meldBox(m, i))));
     };
-    const felt = el('div', { className: 'okf okf-101' },
+    const felt = el('div', { className: 'okf okf-101' }, okFelt(),
       zone(2), zone(3),
       el('div', { className: 'okf-mid' },
         deck,

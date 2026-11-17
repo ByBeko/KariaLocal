@@ -182,23 +182,7 @@ export function initTables(ctx) {
     lobbyTimer = setTimeout(() => { if (current?.root === root && !current.table && root.isConnected && !root.closest('[hidden]')) showLobby(game, root); }, 5000);
   }
 
-  const READY_GAMES = new Set(['zar', 'satranc', 'okey', 'labirent']);
-  const autoReady = new Set(); // bu açılışta Hazırım'a basılmış solo masalar
-  /** İstek sınırına (429) takılırsa kısa aralıklarla birkaç kez yeniden dener */
-  async function readySoon(id, tries = 4) {
-    for (let i = 0; i < tries; i++) {
-      await sleep(350 * (i + 1));
-      if (current?.table !== id) return;
-      try {
-        await send(id, 'ready');
-        return;
-      } catch (error) {
-        if (i === tries - 1) say(error.message, 'lose'); // son denemede de olmazsa sebebi göster
-      }
-    }
-  }
   function openTable(game, id, root) {
-    autoReady.delete(id); // her girişte bir kez
     clearTimeout(lobbyTimer);
     current = { game, root, table: id };
     root.replaceChildren(); // bağlanırken yazı gösterme, masa gelince çizilir
@@ -220,11 +204,6 @@ export function initTables(ctx) {
           .then((made) => { if (current?.table === id) openTable(game, made.id, root); })
           .catch(() => {})
           .finally(() => { restaking = false; });
-      }
-      // Solo masada bekleme ekranı yok: oturur oturmaz Hazırım'a bir kez kendiliğinden basılır (Blackjack gibi doğrudan oyun)
-      if (solo && READY_GAMES.has(game) && room.phase === 'waiting' && room.mySeat >= 0 && !room.ready && !autoReady.has(id)) {
-        autoReady.add(id);
-        readySoon(id);
       }
       // Solo masada artık oturmuyorsan (süre doldu, kalktın) masa yerine tanıtım ekranı gösterilir
       if (solo && room.mySeat < 0) {
@@ -257,6 +236,9 @@ export function initTables(ctx) {
     return el('div', { className: 'room-head' }, ...(seated ? [] : [back]), el('strong', { textContent: room.name }), ...extra);
   }
 
+  /** Masanın keçesindeki yazı (Blackjack'teki gibi): oyun adı ve kısa kural */
+  const feltMark = (title, sub) => el('div', { className: 'felt-mark' }, el('img', { src: 'logo.png', alt: '' }), el('span', { textContent: title }), ...(sub ? [el('small', { textContent: sub })] : []));
+
   const SPOTS = 6;
   /** Benim koltuğum hep altta ortada */
   const spot = (seat, mySeat) => (seat - (mySeat >= 0 ? mySeat : 0) + SPOTS) % SPOTS;
@@ -274,7 +256,7 @@ export function initTables(ctx) {
     const seated = room.mySeat >= 0;
     const table = el('div', { className: 'ptable' });
     const felt = el('div', { className: 'pfelt' },
-      el('div', { className: 'felt-mark' }, el('img', { src: 'logo.png', alt: '' }), el('span', { textContent: 'KARIA' })),
+      feltMark('KARIA POKER', `TEXAS HOLD'EM • KÖR ${fmt(room.sb)}/${fmt(room.bb)}`),
       el('div', { className: 'pboard' }, ...room.board.map((c, i) => card(c, `${room.id}-b${i}`)), ...Array.from({ length: 5 - room.board.length }, () => el('div', { className: 'card slot' }))),
       el('div', { className: 'ppot' }, el('img', { src: 'emojis/coin.png', alt: '' }), el('span', { textContent: room.pot ? `Pot ${fmt(room.pot)}` : `Kör ${fmt(room.sb)}/${fmt(room.bb)}` })),
       el('div', { className: 'pstatus' }, pokerStatus(room)));
@@ -322,7 +304,9 @@ export function initTables(ctx) {
     const controls = el('div', { className: `pcontrols${room.controls ? ' my-turn' : ''}` });
     if (!seated) controls.append(el('p', { className: 'hint', textContent: room.seats.some((s) => !s) ? 'Boş bir koltuğa tıklayıp otur.' : 'Masa dolu, izliyorsun.' }));
     else if (room.controls) controls.append(...pokerControls(room));
-    else {
+    else if (room.id.startsWith('solo-') && room.phase === 'waiting' && !room.sittingOut) {
+      controls.append(btn('Dağıt', () => act(room.id, 'deal'), 'primary big deal'), el('p', { className: 'hint', textContent: 'Dağıt’a basınca yeni el başlar.' }));
+    } else {
       controls.append(el('p', { className: 'hint', textContent: room.myHand ? `Elin: ${room.myHand}` : room.phase === 'waiting' ? 'Oyuncu bekleniyor...' : 'Sıranı bekle.' }));
       controls.append(room.sittingOut ? btn('Oyuna Dön', () => act(room.id, 'back'), 'primary') : btn('Ara Ver', () => act(room.id, 'sitout'), 'ghost'));
     }
@@ -331,7 +315,7 @@ export function initTables(ctx) {
   }
 
   function pokerStatus(room) {
-    if (room.phase === 'waiting') return el('span', { textContent: room.seats.filter(Boolean).length < 2 ? 'En az 2 oyuncu gerekli' : 'Oyuncular hazırlanıyor' });
+    if (room.phase === 'waiting') return el('span', { textContent: room.seats.filter(Boolean).length < 2 ? 'En az 2 oyuncu gerekli' : room.id.startsWith('solo-') ? 'Dağıt’a bas' : 'Oyuncular hazırlanıyor' });
     if (room.phase === 'starting') return countdown('Yeni el {s} sn sonra', room.startsAt);
     if (room.result) return el('span', { textContent: room.result.winners.map((w) => `${w.name} kazandı${w.hand ? ` (${w.hand})` : ''}`).join(' • ') });
     const name = room.seats[room.turn]?.name;
@@ -485,9 +469,9 @@ export function initTables(ctx) {
     const seated = room.mySeat >= 0;
     const table = el('div', { className: 'ztable' });
     const center = el('div', { className: 'zcenter' },
-      el('div', { className: 'felt-mark' }, el('img', { src: 'logo.png', alt: '' }), el('span', { textContent: 'KARIA' })),
+      feltMark('KARIA ZAR', 'EN YÜKSEK ATAN POTU ALIR • BERABERE KALAN YENİDEN ATAR'),
       el('div', { className: 'ppot' }, el('img', { src: 'emojis/coin.png', alt: '' }), el('span', { textContent: `Pot ${fmt(room.pot)}` })),
-      el('div', { className: 'pstatus' }, room.phase === 'waiting' ? (room.endsAt ? countdown('Zarlar {s} sn sonra atılıyor', room.endsAt) : el('span', { textContent: room.id.startsWith('solo-') ? 'Hazırım’a basınca botlarla zarlar atılır' : 'Hazır olanlar en az 2 kişi olunca başlar' })) : el('span', { textContent: room.winner ? `${room.winner.names.join(', ')} kazandı! +${fmt(room.winner.amount)}` : 'Zarlar atılıyor...' })));
+      el('div', { className: 'pstatus' }, room.phase === 'waiting' ? (room.endsAt ? countdown('Zarlar {s} sn sonra atılıyor', room.endsAt) : el('span', { textContent: room.id.startsWith('solo-') ? 'Zar At’a basınca botlarla zarlar atılır' : 'Hazır olanlar en az 2 kişi olunca başlar' })) : el('span', { textContent: room.winner ? `${room.winner.names.join(', ')} kazandı! +${fmt(room.winner.amount)}` : 'Zarlar atılıyor...' })));
     table.append(center);
     dieBoxes = new Map();
     room.seats.forEach((s, i) => {
@@ -508,7 +492,7 @@ export function initTables(ctx) {
 
     const controls = el('div', { className: 'pcontrols' });
     if (!seated) controls.append(el('p', { className: 'hint', textContent: `Giriş ${fmt(room.ante)} coin. Boş bir koltuğa tıklayıp otur.` }));
-    else if (room.phase === 'waiting') controls.append(room.ready ? btn('Vazgeç', () => act(room.id, 'unready'), 'ghost') : btn(`Hazırım • ${fmt(room.ante)}`, () => act(room.id, 'ready'), 'primary big'));
+    else if (room.phase === 'waiting') controls.append(room.ready ? btn('Vazgeç', () => act(room.id, 'unready'), 'ghost') : btn(`${room.id.startsWith('solo-') ? 'Zar At' : 'Hazırım'} • ${fmt(room.ante)}`, () => act(room.id, 'ready'), 'primary big'));
     else controls.append(el('p', { className: 'hint', textContent: 'Zarlar atılıyor...' }));
     root.replaceChildren(roomHead(room, data, root, [el('span', { className: 'room-stake', textContent: `Giriş ${fmt(room.ante)}` })]), table, controls, roomLog(room.log), pastBox('zar', room.past));
     setBalance(data.balance);
