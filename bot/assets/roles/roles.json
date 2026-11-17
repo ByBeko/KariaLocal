@@ -1,0 +1,162 @@
+[
+  {
+    "id": "1568323512710463508",
+    "name": "Karia",
+    "slug": "karia"
+  },
+  {
+    "id": "1568708741795414167",
+    "name": "Karia Network",
+    "slug": "karia-network"
+  },
+  {
+    "id": "1568323512702214305",
+    "name": "Moderatör",
+    "slug": "moderator"
+  },
+  {
+    "id": "1568323512702214304",
+    "name": "Personel",
+    "slug": "personel"
+  },
+  {
+    "id": "1568323512702214300",
+    "name": "Geliştirici",
+    "slug": "gelistirici"
+  },
+  {
+    "id": "1568323512702214299",
+    "name": "Sponsor",
+    "slug": "sponsor"
+  },
+  {
+    "id": "1568323512693821649",
+    "name": "Erken Destekçi",
+    "slug": "erken-destekci"
+  },
+  {
+    "id": "1568323512693821650",
+    "name": "Hata Avcısı",
+    "slug": "hata-avcisi"
+  },
+  {
+    "id": "1569468546713526443",
+    "name": "Prime",
+    "slug": "prime"
+  },
+  {
+    "id": "1571854953419378779",
+    "name": "KVIP",
+    "slug": "kvip"
+  },
+  {
+    "id": "1571854951267827764",
+    "name": "VIP+",
+    "slug": "vip-plus"
+  },
+  {
+    "id": "1571854952303951994",
+    "name": "VIP",
+    "slug": "vip"
+  },
+  {
+    "id": "1568654095991185488",
+    "name": "Takviye",
+    "slug": "takviye"
+  },
+  {
+    "id": "1570211860911751251",
+    "name": "Oy Destekçisi",
+    "slug": "oy-destekcisi"
+  },
+  {
+    "id": "1568323512693821642",
+    "name": "Sunucu Üyesi",
+    "slug": "sunucu-uyesi"
+  },
+  {
+    "id": "1568323512693821641",
+    "name": "Botlar",
+    "slug": "botlar"
+  },
+  {
+    "id": "1569026683485425754",
+    "name": "Güzel",
+    "slug": "ruh-guzel"
+  },
+  {
+    "id": "1569026687851700324",
+    "name": "Orta",
+    "slug": "ruh-orta"
+  },
+  {
+    "id": "1569026691429433464",
+    "name": "Kötü",
+    "slug": "ruh-kotu"
+  },
+  {
+    "id": "1569026655878385724",
+    "name": "Sohbet Sever",
+    "slug": "sohbet-sever"
+  },
+  {
+    "id": "1569026659582087399",
+    "name": "Oyun Sever",
+    "slug": "oyun-sever"
+  },
+  {
+    "id": "1569026663205834824",
+    "name": "Yazılım Sever",
+    "slug": "yazilim-sever"
+  },
+  {
+    "id": "1569026671263228105",
+    "name": "Blok Ustası",
+    "slug": "blok-ustasi"
+  },
+  {
+    "id": "1569026679744241835",
+    "name": "Müzik Sever",
+    "slug": "muzik-sever"
+  },
+  {
+    "id": "1568323512689623050",
+    "name": "Duyuru Bildirimi",
+    "slug": "bildirim-duyuru"
+  },
+  {
+    "id": "1568323512689623049",
+    "name": "Güncelleme Bildirimi",
+    "slug": "bildirim-guncelleme"
+  },
+  {
+    "id": "1568323512689623048",
+    "name": "Haber Bildirimi",
+    "slug": "bildirim-haber"
+  },
+  {
+    "id": "1569026695045054684",
+    "name": "Çekiliş Bildirimi",
+    "slug": "bildirim-cekilis"
+  },
+  {
+    "id": "1569026698442317876",
+    "name": "Etkinlik Bildirimi",
+    "slug": "bildirim-etkinlik"
+  },
+  {
+    "id": "1569026702523367524",
+    "name": "Anket Bildirimi",
+    "slug": "bildirim-anket"
+  },
+  {
+    "id": "1569026706528936050",
+    "name": "Minecraft Bildirimi",
+    "slug": "bildirim-minecraft"
+  },
+  {
+    "id": "1568709837477511320",
+    "name": "Jail",
+    "slug": "jail"
+  }
+]
