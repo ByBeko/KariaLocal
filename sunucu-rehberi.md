@@ -1,37 +1,111 @@
 # Sunucu Rehberi Doldurma Listesi
 
-Discord bu sayfayı botların doldurmasına izin vermiyor. **Sunucu Ayarları → Onboarding → Sunucu Rehberi** bölümüne aşağıdakileri yaz.
+Discord bu sayfayı botların doldurmasına izin vermiyor. **Sunucu Ayarları → Onboarding → Sunucu Rehberi** bölümüne aşağıdakileri yaz. Kod bloklarındaki metni olduğu gibi (emojisiyle) kopyala.
 
-## Karşılama mesajı
+Discord sınırları: karşılama mesajı 300, başlık 60, açıklama 200 karakter. Yapılacaklar en az 3 en fazla 5, kaynak sayfası en fazla 7. Aşağıdaki metinlerin hepsi bu sınırların içinde.
 
-Karia'ya hoş geldin! Yazılım, oyun ve Minecraft'ı bir araya getiren bu toplulukta yerini almak için aşağıdaki adımlara göz at.
+Emoji sütununda önce sunucunun kendi Karia emojisi yazıyor; seçicide çıkmazsa yanındaki yedek emojiyi seç. Açıklamaların başındaki emojiler normal (unicode) emojidir çünkü açıklamada sunucu emojisi görünmez.
 
-## Yeni üye yapılacaklar
+## 👋 Karşılama mesajı
 
-| Başlık | Kanal | Tür |
-|---|---|---|
-| Kuralları oku | #kurallar | Kanalı görüntüle |
-| Önemli gelişmeleri takip et | #duyurular | Kanalı görüntüle |
-| Sık sorulanlara bak | #sss | Kanalı görüntüle |
-| Rollerini seç | #roller | Kanalı görüntüle |
-| Sohbete katıl | #sohbet | Mesaj gönder |
+Yazar olarak sunucu sahibini seç. `[@username]` yazan yere Discord yeni üyenin adını koyar.
 
-Rehberde ayrıca şunları anlat (kanal değil, açıklama olarak yaz):
+```
+Karia'ya hoş geldin [@username]! 👋 Yazılım, oyun ve Minecraft'ı bir araya getiren topluluğumuza katıldın. Aşağıdaki adımları tamamla, rollerini seç ve sohbete katıl. Seste Etkinlikler menüsünden Karia Local'i açıp oyunlara katılabilirsin. 🌐 karia.live
+```
 
-- **Seviye:** Mesaj yazarak ve seste vakit geçirerek XP kazanılır. Her seviye yaklaşık 5 gün sürer. Seviye 5, 10, 15 ve böyle 50'ye kadar her 5 seviyede bir rol verilir.
-- **Etkinlik:** Ses kanalındayken Etkinlikler menüsünden Karia Local'i aç. Blackjack, poker, Süper Tayyare, rulet, zar düellosu, slot, müzik ve sıralamalar orada. Poker, blackjack masası ve zar 6 kişiye kadar aynı masada oynanır.
-- **Roller:** Oryantasyon sorularından ilgi alanı ve bildirim rollerini seç. Ruh hali ve rozet seçimi de orada.
+## ✅ Yeni üye yapılacaklar
 
-## Kaynak sayfaları
+| # | Kanal | Tür | Emoji | Başlık |
+|---|---|---|---|---|
+| 1 | #kurallar | Kanalı görüntüle | `Karia_kitap` / 📜 | Kuralları oku |
+| 2 | #roller | Kanalı görüntüle | `Karia_rozet` / 🎭 | Rollerini seç |
+| 3 | #duyurular | Kanalı görüntüle | `Karia_megafon` / 📢 | Duyuruları takip et |
+| 4 | #sss | Kanalı görüntüle | `Karia_soru` / ❓ | Sık sorulanlara göz at |
+| 5 | #sohbet | Mesaj gönder | `Karia_mesaj` / 💬 | Sohbete merhaba de |
 
-Her sayfanın görseli `bot/assets/onboarding/rehber/` klasöründe (512x512, başlık yazılı). Açıklamayı emojisiyle birlikte kopyala.
+**1. Kuralları oku**
 
-| Başlık | Kanal | Görsel | Açıklama |
+```
+📜 Sohbete başlamadan önce sunucu kurallarını oku. Kurallara uymak hem seni hem topluluğu korur; bilmemek kuralı çiğnemek için mazeret sayılmaz.
+```
+
+**2. Rollerini seç**
+
+```
+🎭 İlgi alanı ve bildirim rollerini seç, sadece ilgilendiğin duyurular sana gelsin. Seçmediğin rolleri istediğin zaman menüden geri alabilirsin.
+```
+
+**3. Duyuruları takip et**
+
+```
+📢 Etkinlikler, çekilişler, güncellemeler ve Karia ile ilgili resmi haberler ilk burada paylaşılır. Hiçbir gelişmeyi kaçırma!
+```
+
+**4. Sık sorulanlara göz at**
+
+```
+❓ Seviye, coin, üyelik kademeleri, Minecraft ve bot komutları hakkında aklına takılan çoğu sorunun cevabı burada. Sormadan önce bir göz at.
+```
+
+**5. Sohbete merhaba de**
+
+```
+💬 Kendini tanıt ve topluluğa katıl! Mesaj yazarak ve seste vakit geçirerek XP kazanırsın; 5. seviyeden 50. seviyeye kadar her 5 seviyede yeni bir rol açılır.
+```
+
+## 📚 Kaynak sayfaları
+
+Her sayfanın görseli `bot/assets/onboarding/rehber/` klasöründe (512x512, başlık yazılı).
+
+| # | Kanal | Görsel | Başlık |
 |---|---|---|---|
-| Kurallar | #kurallar | `kurallar.png` | 📜 Sunucu kuralları |
-| SSS | #sss | `sss.png` | ❓ Sık sorulan sorular |
-| Roller | #roller | `roller.png` | 🎭 Rol seçim menüsü |
-| Takviyeler | #takviyeler | `takviyeler.png` | 💎 Prime üyelik ve takviye ayrıcalıkları |
-| Bağlantılar | #bağlantılar | `baglantilar.png` | 🔗 Resmi hesaplarımız |
-| Oy Ver | #oy-ver | `oy-ver.png` | 🔥 Karia'nın büyümesine destek ol |
-| Destek Talebi | #destek-talebi | `destek-talebi.png` | 🎫 Sorunun varsa buradan talep aç |
+| 1 | #kurallar | `kurallar.png` | Kurallar |
+| 2 | #sss | `sss.png` | Sık Sorulan Sorular |
+| 3 | #roller | `roller.png` | Rollerini Seç |
+| 4 | #takviyeler | `takviyeler.png` | Takviyeler |
+| 5 | #bağlantılar | `baglantilar.png` | Bağlantılar |
+| 6 | #oy-ver | `oy-ver.png` | Oy Ver |
+| 7 | #destek-talebi | `destek-talebi.png` | Destek Talebi |
+
+**1. Kurallar**
+
+```
+📜 Karia'nın temel kuralları. Saygılı ol, spam ve reklam yapma, kurallara uymayanlara uyarı ve ceza uygulanır. Sohbete başlamadan önce mutlaka oku.
+```
+
+**2. Sık Sorulan Sorular**
+
+```
+❓ Seviye ve XP, coin ödülleri, VIP'ten Prime'a üyelik kademeleri, Minecraft IP'si ve komutlar. En çok sorulan soruların cevapları tek sayfada.
+```
+
+**3. Rollerini Seç**
+
+```
+🎭 Menüden bildirim ve ilgi alanı rollerini seç; ruh halini ve rozetini de buradan ayarla. Seçmediğin roller üzerinden otomatik alınır.
+```
+
+**4. Takviyeler**
+
+```
+💎 Takviye yapanlar ve ayrıcalıkları. İlk takviyende 2.500 coin kazanırsın, her ay takviye yapanlar arasından 1 kişiye 30 gün Prime ve 1.000 coin çıkar.
+```
+
+**5. Bağlantılar**
+
+```
+🔗 Resmi hesaplarımız: karia.live • Instagram ve TikTok: @karia.live • YouTube: @karialivemedya • Minecraft: karia.live/minecraft. Bunların dışındakiler bize ait değil.
+```
+
+**6. Oy Ver**
+
+```
+🔥 Top.gg'de 12 saatte bir oy ver, Disboard'da 2 saatte bir /bump yap. Sıralama her Pazar 20.00'de açıklanır, ayın en çok oy veren üyesi 30 gün Prime kazanır!
+```
+
+**7. Destek Talebi**
+
+```
+🎫 Minecraft sorunu, hata bildirimi ya da sponsorluk için menüden talep aç; sadece sen ve yetkililerin gördüğü bir kanal açılır. Üye şikayeti için /rapor kullan.
+```
