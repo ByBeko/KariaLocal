@@ -56,17 +56,17 @@ Karia'ya hoş geldin [@username]! 👋 Yazılım, oyun ve Minecraft'ı bir araya
 
 ## 📚 Kaynak sayfaları
 
-Her sayfanın görseli `bot/assets/onboarding/rehber/` klasöründe (512x512, başlık yazılı).
+Her sayfanın ikonu `bot/assets/onboarding/kaynak-ikonlar/` klasöründe (512x512, yazısız, küçük boyutta da okunur). Sayfayı düzenle → ikonu değiştir ile yükle. Başlık yazılı eski görseller `bot/assets/onboarding/rehber/` klasöründe duruyor.
 
-| # | Kanal | Görsel | Başlık |
+| # | Kanal | İkon | Başlık |
 |---|---|---|---|
-| 1 | #kurallar | `kurallar.png` | Kurallar |
-| 2 | #sss | `sss.png` | Sık Sorulan Sorular |
-| 3 | #roller | `roller.png` | Rollerini Seç |
-| 4 | #takviyeler | `takviyeler.png` | Takviyeler |
-| 5 | #bağlantılar | `baglantilar.png` | Bağlantılar |
-| 6 | #oy-ver | `oy-ver.png` | Oy Ver |
-| 7 | #destek-talebi | `destek-talebi.png` | Destek Talebi |
+| 1 | #kurallar | `kurallar.png` (belge) | Kurallar |
+| 2 | #sss | `sss.png` (soru balonu) | Sık Sorulan Sorular |
+| 3 | #roller | `roller.png` (kişi + artı) | Rollerini Seç |
+| 4 | #takviyeler | `takviyeler.png` (elmas) | Takviyeler |
+| 5 | #bağlantılar | `baglantilar.png` (zincir) | Bağlantılar |
+| 6 | #oy-ver | `oy-ver.png` (alev) | Oy Ver |
+| 7 | #destek-talebi | `destek-talebi.png` (can simidi) | Destek Talebi |
 
 **1. Kurallar**
 
