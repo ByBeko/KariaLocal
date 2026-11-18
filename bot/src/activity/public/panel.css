@@ -1,0 +1,60 @@
+/* Panel görünümü: yüzen yuvarlak menü ve üst çubuk, yarı saydam kartlar, ışıltılı zemin.
+   Renkler Karia'nın kendi turkuazıdır (style.css :root); oyun masalarına dokunulmaz. En son yüklenir. */
+:root{--pl-line:rgba(255,255,255,.07);--pl-line2:rgba(255,255,255,.11);--pl-card:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012)),rgba(13,16,18,.82);--pl-tint:rgba(79,207,180,.13);--pl-edge:rgba(79,207,180,.45)}
+body{background:radial-gradient(1100px 600px at 88% -12%,rgba(79,207,180,.13),transparent 62%) fixed,radial-gradient(800px 600px at -8% 108%,rgba(47,158,135,.09),transparent 60%) fixed,radial-gradient(600px 400px at 55% 120%,rgba(70,120,255,.05),transparent 70%) fixed,#07090a}
+
+/* ── Sol menü ── */
+.side{background:rgba(13,16,18,.86);border:1px solid var(--pl-line);border-radius:20px;padding:16px 12px 12px;gap:14px;box-shadow:0 30px 60px -30px rgba(0,0,0,.8)}
+.side-brand{padding:2px 6px 4px}
+.side-brand .logo{width:40px;height:40px;border-radius:12px;box-shadow:0 0 0 1px var(--pl-line2)}
+.side-brand strong{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.side-brand strong::after{content:'.';color:var(--accent)}
+.sfx-toggle{border:1px solid var(--pl-line2);border-radius:10px;background:rgba(255,255,255,.03)}
+.balance{padding:11px 12px;border:1px solid var(--pl-line2);border-radius:14px;background:rgba(255,255,255,.03)}
+.balance small{color:var(--muted)}
+.tab{padding:11px 14px;border:1px solid transparent;border-radius:12px;font-weight:600}
+.tab:hover{background:rgba(255,255,255,.04)}
+.tab.active{color:#fff;background:linear-gradient(90deg,rgba(79,207,180,.22),rgba(79,207,180,.07));border-color:var(--pl-edge);box-shadow:0 0 26px -12px rgba(79,207,180,.8)}
+.admin-toggle{margin-top:16px;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.badge{border-radius:999px;background:rgba(239,122,127,.15);color:#ff9ba0;box-shadow:inset 0 0 0 1px rgba(239,122,127,.4)}
+.site-back{border-radius:10px}
+.side-user{padding:10px;border:1px solid var(--pl-line2);border-radius:14px;background:rgba(255,255,255,.03)}
+
+/* ── Üst çubuk: sayfa başlığı yol (breadcrumb) gibi ── */
+.page-title{display:flex;align-items:center;height:56px;margin:0 auto 18px;padding:0 22px;border:1px solid var(--pl-line);border-radius:18px;background:rgba(13,16,18,.82);font-size:15px;font-weight:700;letter-spacing:0;box-shadow:0 20px 40px -28px rgba(0,0,0,.8)}
+.page-title::before{content:'Karia Local\00a0\00a0/\00a0\00a0';color:var(--muted);font-weight:500}
+
+/* ── Kartlar ── */
+.panel{background:var(--pl-card);border:1px solid var(--pl-line);border-radius:18px}
+.panel.plain{background:transparent;border:0}
+.panel.casino{border-color:var(--pl-line)}
+.stat,.box,.betbar,.mod,.runners-box{background:var(--pl-card);border:1px solid var(--pl-line);border-radius:18px}
+.stat small{font-size:12.5px}
+.stat strong{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.box h4{margin:0 0 12px;padding-bottom:12px;border-bottom:1px solid var(--pl-line);font-size:15px;font-weight:700;color:#fff}
+.panel h4{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.mod{transition:border-color .15s,background-color .15s}
+.mod:hover{border-color:var(--pl-edge);background:var(--pl-card)}
+.mod-icon{border-radius:12px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.hero{border:1px solid var(--pl-line);border-radius:18px;background:radial-gradient(500px 260px at 100% 0%,rgba(79,207,180,.18),transparent 70%),var(--pl-card)}
+.hero-cover{border-right:1px solid var(--pl-line)}
+.item,.module,.ticket-row,.say-card,.cmd-card,.queue,.log{border:1px solid var(--pl-line);border-radius:14px}
+.item,.module,.ticket-row{background:rgba(255,255,255,.025)}
+.ticket-row.active{border-color:var(--pl-edge)}
+.setting{border-top-color:var(--pl-line)}
+
+/* ── Düğmeler, alanlar, şeritler ── */
+.primary,.actions .primary,.music-form .primary,.item-actions .primary,.inline .primary,.suggest button{border-radius:12px;box-shadow:0 8px 22px -10px rgba(79,207,180,.7)}
+.actions button,.item-actions button,.hero-actions button{border-radius:12px}
+.field,.music-form input,.picker-toggle,.bet-input input{background:rgba(255,255,255,.03);border:1px solid var(--pl-line2);border-radius:12px}
+.field:focus,.music-form input:focus,.bet-input input:focus{outline:none;border-color:var(--pl-edge)}
+.period,.mode-switch,.listen-modes{background:rgba(255,255,255,.03);border:1px solid var(--pl-line);border-radius:12px;box-shadow:none}
+.period button.active,.music-tabs button.active,.listen-modes button.active{background:var(--pl-tint);color:#fff;box-shadow:inset 0 0 0 1px var(--pl-edge)}
+.message{border:1px solid var(--pl-line2);border-radius:14px;box-shadow:0 20px 40px -12px rgba(0,0,0,.8)}
+.corner-btn{border-radius:12px}
+
+@media (max-width:720px){
+  .side{border-radius:16px}
+  .tab.active{box-shadow:none}
+  .page-title{height:48px;padding:0 16px;font-size:14px}
+}
