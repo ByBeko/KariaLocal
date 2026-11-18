@@ -292,16 +292,17 @@
 
     <section class="panel" data-panel="cardshop" hidden>
       <div class="cs-stage">
-        <div class="cs-stage-row">
-          <div class="cs-stage-frame"><img id="cs-current" class="cs-card" alt="Seviye kartın" hidden><span id="cs-current-loading" class="hint">Kartın hazırlanıyor...</span></div>
-          <button type="button" id="cs-mine-tile" class="cs-mine-tile" title="Sahip olduğun kartlar">
-            <span id="cs-mine-stack" class="cs-mine-stack"></span>
-            <strong>Kartlarım</strong>
-            <small id="cs-mine-count">0 kart</small>
-          </button>
-        </div>
+        <div class="cs-stage-frame"><img id="cs-current" class="cs-card" alt="Seviye kartın" hidden><span id="cs-current-loading" class="hint">Kartın hazırlanıyor...</span></div>
         <div class="cs-stage-bar">
-          <div><strong id="cs-stage-title">Şu anki kartın</strong><small id="cs-stage-note">Aşağıdan bir karta bas, burada kendi kartınla önizle.</small></div>
+          <div class="cs-stage-info">
+            <div class="cs-stage-titles">
+              <strong id="cs-stage-title">Şu anki kartın</strong>
+              <button type="button" id="cs-mine-tile" class="cs-mine-tile" title="Sahip olduğun kartlar">
+                <span id="cs-mine-stack" class="cs-mine-stack"></span>Kartlarım<small id="cs-mine-count">0</small>
+              </button>
+            </div>
+            <small id="cs-stage-note">Aşağıdan bir karta bas, burada kendi kartınla önizle.</small>
+          </div>
           <div id="cs-stage-actions" class="item-actions"></div>
         </div>
       </div>

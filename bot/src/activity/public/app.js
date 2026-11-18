@@ -1355,7 +1355,7 @@ function drawCardShop(data) {
   const store = data.items.filter((c) => !c.owned);
   $('cs-mine').replaceChildren(...mine.map(cardTile));
   // Kartın yanındaki "Kartlarım" kutusu: sahip olunanların küçük resimleri üst üste
-  $('cs-mine-count').textContent = `${mine.length} kart`;
+  $('cs-mine-count').textContent = String(mine.length);
   $('cs-mine-stack').replaceChildren(...mine.slice(-3).reverse().map((c) => (c.image ? el('img', { src: c.image, alt: '' }) : el('i', { className: 'cs-default' }))));
   $('cs-grid').replaceChildren(...(store.length ? store.map(cardTile) : [empty(data.items.length ? 'Mağazadaki bütün kartlara sahipsin.' : 'Mağazada henüz kart yok. Yöneticiler yakında ekleyecek.')]));
   drawStageBar();
