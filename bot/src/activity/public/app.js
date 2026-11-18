@@ -1310,6 +1310,121 @@ function drawMembership(data) {
 }
 const loadMembership = () => guarded(async () => drawMembership(await api('/admin/membership')));
 
+// ── Kart Mağazası (seviye kartı arka planları) ──
+/** id: null → üyenin taktığı kart, 0 → varsayılan, sayı → o arka plan */
+async function showCardImage(img, loading, id) {
+  const seq = String(Number(img.dataset.seq ?? 0) + 1);
+  img.dataset.seq = seq;
+  img.hidden = true;
+  if (loading) loading.hidden = false;
+  try {
+    const { image } = await api('/cards/preview', { id });
+    if (img.dataset.seq !== seq) return; // bu arada başka kart açıldı
+    img.src = image;
+    img.hidden = false;
+  } catch (error) {
+    say(error.message, 'lose');
+  } finally {
+    if (loading && img.dataset.seq === seq) loading.hidden = true;
+  }
+}
+
+function drawCardShop(data) {
+  setBalance(data.balance);
+  const def = { id: null, name: 'Varsayılan', price: 0, owned: true, selected: !data.selected, image: null };
+  $('cs-grid').replaceChildren(...[def, ...data.items].map((c) => {
+    const thumb = c.image ? el('img', { src: c.image, alt: '', loading: 'lazy' }) : el('div', { className: 'cs-default', textContent: 'Karia' });
+    const tag = c.selected ? 'Kullanılıyor' : c.owned ? 'Sahipsin' : c.price ? `${fmt(c.price)} coin` : 'Ücretsiz';
+    const card = el('button', { type: 'button', className: `cs-item${c.selected ? ' on' : ''}${c.owned ? ' owned' : ''}` },
+      thumb, el('span', { className: 'cs-meta' }, el('strong', { textContent: c.name }), el('em', { textContent: tag })));
+    card.addEventListener('click', () => openCardDialog(c));
+    return card;
+  }));
+  if (!data.items.length) $('cs-grid').append(empty('Mağazada henüz kart yok. Yöneticiler yakında ekleyecek.'));
+}
+
+function openCardDialog(c) {
+  $('cs-title').textContent = c.name;
+  const actions = [];
+  const act = (label, path, msg, primary = false) => {
+    const b = el('button', { type: 'button', textContent: label, className: primary ? 'primary' : '' });
+    b.addEventListener('click', () => guarded(async () => {
+      drawCardShop(await api(path, { id: c.id }));
+      $('cs-dialog').close();
+      say(msg, 'win');
+      refreshMyCard();
+    }));
+    return b;
+  };
+  if (c.adminView) actions.push(el('span', { className: 'hint', textContent: 'Üyeler bu kartı kendi bilgileriyle böyle görür.' }));
+  else if (c.selected) actions.push(el('span', { className: 'hint', textContent: 'Şu an bu kartı kullanıyorsun.' }));
+  else if (c.owned) actions.push(act('Kullan', '/cards/use', `${c.name} takıldı.`, true));
+  else actions.push(act(c.price ? `Satın Al · ${fmt(c.price)} coin` : 'Ücretsiz Al', '/cards/buy', `${c.name} satın alındı ve takıldı.`, true));
+  $('cs-actions').replaceChildren(...actions);
+  $('cs-dialog').showModal();
+  showCardImage($('cs-preview'), $('cs-loading'), c.id ?? 0);
+}
+
+const refreshMyCard = () => showCardImage($('cs-current'), null, null);
+const loadCardShop = () => guarded(async () => {
+  drawCardShop(await api('/cards'));
+  refreshMyCard();
+});
+
+// ── Yönetim: seviye kartı arka planları ──
+let cardUpload = null; // seçilen resmin data: adresi
+$('ca-file').addEventListener('change', () => {
+  const file = $('ca-file').files[0];
+  cardUpload = null;
+  $('ca-preview').hidden = true;
+  if (!file) { $('ca-file-name').textContent = 'Resim seç'; return; }
+  if (file.size > 6 * 1024 * 1024) { say('Resim en çok 6 MB olabilir.', 'lose'); $('ca-file').value = ''; return; }
+  $('ca-file-name').textContent = file.name;
+  if (!$('ca-name').value) $('ca-name').value = file.name.replace(/\.[^.]+$/, '').slice(0, 40);
+  const reader = new FileReader();
+  reader.onload = () => { cardUpload = reader.result; $('ca-preview').src = cardUpload; $('ca-preview').hidden = false; };
+  reader.readAsDataURL(file);
+});
+$('ca-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  guarded(async () => {
+    if (!cardUpload) throw new Error('Önce bir resim seç.');
+    const name = $('ca-name').value.trim();
+    if (!name) throw new Error('Karta bir isim ver.');
+    say('Yükleniyor...');
+    const data = await api('/admin/card-backgrounds', { name, price: Number($('ca-price').value) || 0, image: cardUpload });
+    drawCardAdmin(data);
+    $('ca-form').reset();
+    cardUpload = null;
+    $('ca-preview').hidden = true;
+    $('ca-file-name').textContent = 'Resim seç';
+    say(`${data.added} mağazaya eklendi.`, 'win');
+  });
+});
+
+function drawCardAdmin(data) {
+  $('ca-list').replaceChildren(...(data.items.length ? data.items.map((c) => {
+    const name = el('input', { className: 'field', value: c.name, maxLength: 40, ariaLabel: 'Kart adı' });
+    const price = el('input', { className: 'field', type: 'number', min: 0, value: String(c.price), ariaLabel: 'Fiyat' });
+    const save = el('button', { type: 'button', textContent: 'Kaydet' });
+    save.addEventListener('click', () => guarded(async () => {
+      drawCardAdmin(await api(`/admin/card-backgrounds/${c.id}/edit`, { name: name.value, price: Number(price.value) || 0 }));
+      say('Kaydedildi.', 'win');
+    }));
+    const thumb = el('img', { src: c.image, alt: '' });
+    thumb.addEventListener('click', () => openCardDialog({ ...c, owned: true, selected: true, adminView: true }));
+    return el('article', { className: 'cs-item admin' }, thumb,
+      el('span', { className: 'cs-meta' }, el('em', { textContent: `${c.owners} kişi satın aldı` })),
+      el('div', { className: 'cs-edit' }, name, price),
+      el('div', { className: 'item-actions' }, save, confirmButton('Kaldır', async () => {
+        const r = await api(`/admin/card-backgrounds/${c.id}/delete`, {});
+        drawCardAdmin(r);
+        say(`${r.removed} mağazadan kaldırıldı.`, 'win');
+      })));
+  }) : [empty('Henüz kart eklenmedi. Yukarıdan ilk kartı yükle.')]));
+}
+const loadCardAdmin = () => guarded(async () => drawCardAdmin(await api('/admin/card-backgrounds')));
+
 // ── Sosyal paylaşım ──
 const SOCIAL_STATUS = { pending: 'Sırada', running: 'Paylaşılıyor', done: 'Paylaşıldı', failed: 'Başarısız' };
 const socialOff = new Set(); // Kullanıcının işaretini kaldırdığı platformlar yenilemede geri gelmesin
@@ -1638,7 +1753,7 @@ setInterval(() => {
   if (!document.hidden && !document.querySelector('[data-panel="social"]').hidden) refreshSocial();
 }, 5000);
 
-const DASH = { mail: loadMails, social: refreshSocial, membership: loadMembership, home: loadHome,  leaderboard: loadBoard, overview: loadOverview, tickets: loadTickets, reports: loadReports, suggestions: loadSuggestions, cases: loadCases, modules: loadAdmin, settings: loadAdmin, commands: loadAdmin };
+const DASH = { cardshop: loadCardShop, cardadmin: loadCardAdmin, mail: loadMails, social: refreshSocial, membership: loadMembership, home: loadHome,  leaderboard: loadBoard, overview: loadOverview, tickets: loadTickets, reports: loadReports, suggestions: loadSuggestions, cases: loadCases, modules: loadAdmin, settings: loadAdmin, commands: loadAdmin };
 
 tables = initTables({
   api, $, el, fmt, say, setBalance, sfx, cardEl, avatarImg, betValue, guarded,

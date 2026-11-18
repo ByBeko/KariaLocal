@@ -697,3 +697,28 @@ textarea::-webkit-scrollbar{display:none}
 .board-types button:not(.active):hover{color:var(--fg);background:rgba(255,255,255,.05)}
 .board-empty{grid-column:1 / -1;max-width:560px;width:100%;margin:0 auto}
 [data-panel="leaderboard"]>.board-types{display:none}
+
+/* Kart Mağazası (seviye kartı arka planları) */
+.cs-card{display:block;width:100%;max-width:700px;aspect-ratio:934/282;border-radius:16px;object-fit:cover;background:var(--panel2)}
+.cs-mine{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.cs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.cs-item{display:flex;flex-direction:column;gap:8px;padding:8px;border:1px solid var(--line);border-radius:16px;background:var(--panel2);text-align:left;cursor:pointer;transition:transform .15s,border-color .15s}
+.cs-item:hover{transform:translateY(-2px);border-color:rgba(79,207,180,.45)}
+.cs-item.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.cs-item img,.cs-default{display:block;width:100%;aspect-ratio:934/282;border-radius:11px;object-fit:cover}
+.cs-default{display:grid;place-items:center;background:linear-gradient(135deg,#16181d,#0d0e12);color:var(--muted);font-weight:700;letter-spacing:.1em}
+.cs-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:0 4px 2px}
+.cs-meta strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cs-meta em{font-style:normal;font-size:12px;color:var(--muted);white-space:nowrap}
+.cs-item.owned .cs-meta em{color:var(--accent)}
+.cs-item.admin{cursor:default}
+.cs-item.admin img{cursor:zoom-in}
+.cs-edit{display:grid;grid-template-columns:1fr 110px;gap:6px}
+.cs-edit .field{min-width:0}
+.ca-form{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.ca-form .tier-row .field{flex:1 1 160px;min-width:0}
+.cs-dialog{width:min(760px,calc(100vw - 32px))}
+.cs-frame{display:grid;place-items:center;min-height:120px;margin:10px 0 14px}
+.cs-frame .cs-card{max-width:100%}
+.cs-actions{justify-content:flex-end}
+@media (max-width:560px){.cs-grid{grid-template-columns:1fr}}

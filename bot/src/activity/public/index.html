@@ -24,6 +24,7 @@
       <button class="tab" data-tab="blackjack" role="tab"><img src="emojis/oyun.png" alt="">Oyunlar</button>
       <button class="tab" data-tab="music" role="tab"><img src="emojis/muzik.png" alt="">Müzik</button>
       <button class="tab" data-tab="leaderboard" role="tab"><img src="emojis/kupa.png" alt="">Sıralama</button>
+      <button class="tab" data-tab="cardshop" role="tab"><img src="emojis/foto.png" alt="">Kart Mağazası</button>
       <div id="admin-nav" class="nav-group" hidden>
         <button id="admin-toggle" class="admin-toggle" aria-expanded="false" aria-controls="admin-links"><span>Yönetim</span><b id="admin-count" class="badge" hidden></b><i aria-hidden="true">›</i></button>
         <div id="admin-links" class="nav-group" hidden>
@@ -33,6 +34,7 @@
           <button class="tab" data-tab="suggestions" role="tab"><img src="emojis/ampul.png" alt="">Öneriler</button>
           <button class="tab" data-tab="cases" role="tab"><img src="emojis/tokmak.png" alt="">Cezalar</button>
           <button class="tab" data-tab="membership" data-admin role="tab"><img src="emojis/tac.png" alt="">Üyelik</button>
+          <button class="tab" data-tab="cardadmin" data-admin role="tab"><img src="emojis/foto.png" alt="">Seviye Kartları</button>
           <button class="tab" data-tab="social" data-admin role="tab"><img src="emojis/megafon.png" alt="">Sosyal Paylaşım</button>
           <button class="tab" data-tab="mail" data-admin role="tab"><img src="emojis/mesaj.png" alt="">Mailler<b id="badge-mail" class="badge" hidden></b></button>
           <button class="tab" data-tab="modules" data-admin role="tab"><img src="emojis/araclar.png" alt="">Modüller</button>
@@ -287,6 +289,38 @@
     <section class="panel" data-panel="cases" hidden>
       <div id="case-list" class="items"></div>
     </section>
+
+    <section class="panel" data-panel="cardshop" hidden>
+      <div class="cs-mine">
+        <img id="cs-current" class="cs-card" alt="Seviye kartın">
+        <p class="hint left">Kartın <b>/seviye</b> komutunda böyle görünür. Mağazadan bir arka plana tıklayıp kendi kartınla önizleyebilirsin.</p>
+      </div>
+      <div id="cs-grid" class="cs-grid"></div>
+    </section>
+
+    <section class="panel" data-panel="cardadmin" hidden>
+      <form id="ca-form" class="ca-form">
+        <label class="social-file">
+          <input id="ca-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+          <span id="ca-file-name">Resim seç (PNG, JPG, WEBP · en çok 6 MB · 934×282 önerilir)</span>
+        </label>
+        <img id="ca-preview" class="cs-card" alt="" hidden>
+        <div class="tier-row">
+          <input id="ca-name" class="field" maxlength="40" placeholder="Kart adı" autocomplete="off">
+          <input id="ca-price" class="field" type="number" min="0" step="1" placeholder="Fiyat (coin)">
+          <button type="submit" class="primary">Mağazaya Ekle</button>
+        </div>
+        <p class="hint left">Resim kart boyutuna ortalanıp kırpılır. Mağazadan kaldırılan kart yeni satılmaz; satın almış olanlar kullanmaya devam eder.</p>
+      </form>
+      <div id="ca-list" class="cs-grid"></div>
+    </section>
+
+    <dialog id="cs-dialog" class="rules cs-dialog">
+      <form method="dialog"><button class="rules-x" aria-label="Kapat">×</button></form>
+      <h3 id="cs-title"></h3>
+      <div class="cs-frame"><img id="cs-preview" class="cs-card" alt="Önizleme"><span id="cs-loading" class="hint">Önizleme hazırlanıyor...</span></div>
+      <div id="cs-actions" class="item-actions cs-actions"></div>
+    </dialog>
 
     <section class="panel" data-panel="membership" hidden>
       <div id="tier-form" class="tier-form"></div>

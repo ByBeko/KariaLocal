@@ -14,6 +14,7 @@ import { lyricsRoute } from './lyrics.js';
 import { getQueue, playQuery, requireVoice, voteSkip, stopMusic, goBack } from '../systems/music.js';
 import { coverSource } from '../systems/playlistImport.js';
 import { adminRoute, isPanelAdmin, isPanelStaff } from './admin.js';
+import { shopView, buyBackground, useBackground, cardPreview, backgroundImage } from '../systems/cardBackgrounds.js';
 import { recordVote } from '../systems/monthlyGifts.js';
 import { receiveSupportMail } from '../components/ticket.js';
 import { socialHttp, startSocial } from '../systems/social.js';
@@ -193,6 +194,11 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
     const board = pathname.match(/^\/leaderboard\/(\w+)$/);
     if (req.method === 'GET' && board) return leaderboardView(guild(), id, board[1]);
     if (req.method === 'POST' && pathname === '/daily') return claimDailyReward(guild(), id);
+    // Seviye kartı mağazası
+    if (req.method === 'GET' && pathname === '/cards') return shopView(guildId, id);
+    if (req.method === 'POST' && pathname === '/cards/buy') return buyBackground(guildId, id, body.id);
+    if (req.method === 'POST' && pathname === '/cards/use') return useBackground(guildId, id, body.id ?? null);
+    if (req.method === 'POST' && pathname === '/cards/preview') return cardPreview(guild(), member, body.id ?? null);
     if (req.method === 'POST' && pathname === '/report') return sendReport(guild(), member, body.target, body.reason);
     if (req.method === 'POST' && pathname === '/suggest') return sendSuggestion(client, guild(), member, body.text);
     const announcementPin = req.method === 'POST' && pathname.match(/^\/admin\/announcements\/(\d{17,20})\/pin$/);
@@ -293,6 +299,13 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
         res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=3600' });
         return res.end(image);
       }
+      const cardbg = req.method === 'GET' && pathname.match(/^\/cardbg\/(\d+)\.jpg$/);
+      if (cardbg) {
+        const image = backgroundImage(cardbg[1]);
+        if (!image) return send(404, { error: 'Bulunamadı.' });
+        res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=86400' });
+        return res.end(image);
+      }
       const plcover = req.method === 'GET' && pathname.match(/^\/plcover\/(\d+)\.jpg$/);
       if (plcover) {
         const image = listCoverImage(plcover[1]);
@@ -358,10 +371,12 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
         return res.end(file.body);
       }
 
+      // Kart arka planı yüklemesi resmi base64 olarak taşır (en çok 6 MB resim)
+      const limit = req.method === 'POST' && pathname === '/api/admin/card-backgrounds' ? 9 * 1024 * 1024 : MAX_BODY;
       let raw = '';
       for await (const chunk of req) {
         raw += chunk;
-        if (raw.length > MAX_BODY) return send(413, { error: 'İstek çok büyük.' });
+        if (raw.length > limit) return send(413, { error: limit > MAX_BODY ? 'Resim en çok 6 MB olabilir.' : 'İstek çok büyük.' });
       }
       let body = {};
       if (raw) {

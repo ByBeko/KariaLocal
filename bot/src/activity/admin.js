@@ -21,6 +21,7 @@ import { socialView, startConnect, disconnect, beginUpload, publishVideo, retryP
 import { mailList, openMail, deleteMail } from '../systems/mailbox.js';
 import { roleProblem, sendButtonRoles } from '../systems/buttonRoles.js';
 import { emojiList } from '../utils/emojis.js';
+import { adminList as cardList, addBackground, editBackground, removeBackground } from '../systems/cardBackgrounds.js';
 import { getOpenTicket, claimTicket, markTicketClosed, finishTicket, approveTicket, approvalRoleName, mailInfo, pauseTicketAI } from '../components/ticket.js';
 
 export const isPanelAdmin = (member) => getLevel(member) >= Level.ADMIN;
@@ -473,6 +474,7 @@ export async function adminRoute(client, guild, member, method, path, body) {
     if (path === '/admin/suggestions') return suggestionMessages(guild);
     if (path === '/admin/cases') return { cases: caseList(guild) };
     if (path === '/admin/membership') return membershipView(guild);
+    if (path === '/admin/card-backgrounds') return cardList(guild.id);
     if (path === '/admin/social') return socialView();
     if (path === '/admin/social/tiktok') return tiktokCreator();
     if (path === '/admin/social/mails') return mailList();
@@ -506,6 +508,18 @@ export async function adminRoute(client, guild, member, method, path, body) {
     }
     if (path === '/admin/membership') return addTierFromPanel(guild, member, body.userId, body.tier, body.days);
     if (path === '/admin/membership/remove') return removeTierFromPanel(guild, member, body.userId);
+    if (path === '/admin/card-backgrounds') {
+      const result = await addBackground(guild.id, member.id, body);
+      await sendLog(guild, 'log_staff', { content: `${member} panelden kart arka planı ekledi: **${result.added}** (${Number(body.price) || 0} coin)`, allowedMentions: { parse: [] } });
+      return result;
+    }
+    const cardEdit = path.match(/^\/admin\/card-backgrounds\/(\d+)\/(edit|delete)$/);
+    if (cardEdit && cardEdit[2] === 'edit') return editBackground(guild.id, cardEdit[1], body);
+    if (cardEdit) {
+      const result = removeBackground(guild.id, cardEdit[1]);
+      await sendLog(guild, 'log_staff', { content: `${member} panelden kart arka planını mağazadan kaldırdı: **${result.removed}**`, allowedMentions: { parse: [] } });
+      return result;
+    }
     const ticket = path.match(/^\/admin\/tickets\/(\d{17,20})\/(reply|claim|close|approve)$/);
     if (ticket) return ticketAction(guild, member, ticket[1], ticket[2], body);
     const report = path.match(/^\/admin\/reports\/(\d+)\/resolve$/);

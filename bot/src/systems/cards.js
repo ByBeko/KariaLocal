@@ -39,44 +39,61 @@ function fit(ctx, text, maxWidth) {
 
 const short = (n) => (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 10_000 ? `${(n / 1000).toFixed(1)}K` : n.toLocaleString('tr-TR'));
 
+export const CARD_W = 934;
+export const CARD_H = 282;
+
 /**
  * Seviye kartı
- * data: { name, tag, avatarURL, level, rank, xp, current, needed, color?, nextReward? }
+ * data: { name, tag, avatarURL, level, rank, xp, current, needed, color?, nextReward?, background? }
+ * background: kart boyutunda (934×282) resim Buffer'ı; mağazadan alınan arka plan
  */
 export async function rankCard(data) {
-  const W = 934;
-  const H = 282;
+  const W = CARD_W;
+  const H = CARD_H;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
   const accent = data.color && data.color !== '#000000' ? data.color : BRAND;
+  let custom = null;
+  if (data.background) custom = await loadImage(data.background).catch(() => null);
 
-  // Arka plan: koyu degrade + vurgu rengi parıltısı
   roundRect(ctx, 0, 0, W, H, 28);
   ctx.save();
   ctx.clip();
-  const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, '#16181d');
-  bg.addColorStop(1, '#0d0e12');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
-  const glow = ctx.createRadialGradient(W - 120, -40, 10, W - 120, -40, 520);
-  glow.addColorStop(0, `${accent}55`);
-  glow.addColorStop(1, `${accent}00`);
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, W, H);
-  // ince desen
-  ctx.strokeStyle = '#ffffff08';
-  ctx.lineWidth = 2;
-  for (let x = -H; x < W; x += 26) {
-    ctx.beginPath();
-    ctx.moveTo(x, H);
-    ctx.lineTo(x + H, 0);
-    ctx.stroke();
+  if (custom) {
+    // Mağaza arka planı + yazılar okunsun diye sol tarafı koyulaştıran perde
+    ctx.drawImage(custom, 0, 0, W, H);
+    const shade = ctx.createLinearGradient(0, 0, W, 0);
+    shade.addColorStop(0, '#0d0e12cc');
+    shade.addColorStop(0.55, '#0d0e1299');
+    shade.addColorStop(1, '#0d0e1266');
+    ctx.fillStyle = shade;
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    // Varsayılan: koyu degrade + vurgu rengi parıltısı
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#16181d');
+    bg.addColorStop(1, '#0d0e12');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+    const glow = ctx.createRadialGradient(W - 120, -40, 10, W - 120, -40, 520);
+    glow.addColorStop(0, `${accent}55`);
+    glow.addColorStop(1, `${accent}00`);
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+    // ince desen
+    ctx.strokeStyle = '#ffffff08';
+    ctx.lineWidth = 2;
+    for (let x = -H; x < W; x += 26) {
+      ctx.beginPath();
+      ctx.moveTo(x, H);
+      ctx.lineTo(x + H, 0);
+      ctx.stroke();
+    }
   }
   ctx.restore();
 
   // İç kart
-  ctx.fillStyle = '#ffffff0d';
+  ctx.fillStyle = custom ? '#00000033' : '#ffffff0d';
   roundRect(ctx, 20, 20, W - 40, H - 40, 22);
   ctx.fill();
 

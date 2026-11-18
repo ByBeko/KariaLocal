@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, AttachmentBuilder, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import { e } from '../../utils/emojis.js';
 import { rankCard } from '../../systems/cards.js';
+import { selectedBackground } from '../../systems/cardBackgrounds.js';
 import { getProfile, getRewards, progressBar, rankEmoji, totalXpFor } from '../../systems/levels.js';
 import { kariaEmbed, label } from '../../utils/embeds.js';
 
@@ -72,6 +73,7 @@ export default {
         current: p.current,
         needed: p.needed,
         nextReward: nextRole ? `@${nextRole.name} (seviye ${next.level})` : null,
+        background: selectedBackground(guild.id, user.id),
       });
       const file = new AttachmentBuilder(png, { name: 'seviye.png' });
       return await interaction.reply({ embeds: [embed.setImage('attachment://seviye.png')], files: [file], allowedMentions: { parse: [] } });
