@@ -3,6 +3,7 @@
 import { spawn, execFile } from 'node:child_process';
 import { e } from '../utils/emojis.js';
 import { createRequire } from 'node:module';
+import { rename } from 'node:fs/promises';
 import { PassThrough } from 'node:stream';
 import {
   joinVoiceChannel,
@@ -19,6 +20,7 @@ import ffmpegPath from 'ffmpeg-static';
 import { kariaEmbed } from '../utils/embeds.js';
 import { UserError } from '../utils/errors.js';
 import { isStaff } from '../utils/permissions.js';
+import { isExternalLink, readMusicLink } from './playlistImport.js';
 
 const require = createRequire(import.meta.url);
 // Sunucuda paketin Python sürümü çalışmayabilir: YOUTUBE_DL_PATH ile tek dosyalık yt-dlp gösterilir
@@ -50,7 +52,22 @@ export function formatTime(sec) {
   return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
 }
 
-const trackLink = (t) => `[${t.title.replaceAll('[', '(').replaceAll(']', ')').slice(0, 80)}](${t.url})`;
+const trackLink = (t) => {
+  const name = t.title.replaceAll('[', '(').replaceAll(']', ')').slice(0, 80);
+  return /^https?:\/\//.test(t.url ?? '') ? `[${name}](${t.url})` : `**${name}**`; // aktarılan şarkı çalınırken aranır, linki yok
+};
+
+/** yt-dlp'ye verilebilecek kaynak: izinli sitelerin linki ya da aktarılan şarkının YouTube araması */
+export function isPlayableSource(src) {
+  if (typeof src !== 'string' || src.length > 500) return false;
+  if (/^ytsearch1:[^\n\r]{1,220}$/.test(src)) return true;
+  try {
+    const url = new URL(src);
+    return url.protocol === 'https:' && ALLOWED_HOSTS.test(url.hostname);
+  } catch {
+    return false;
+  }
+}
 
 function runYtdlpOnce(args, timeout) {
   return new Promise((resolve, reject) => {
@@ -77,7 +94,7 @@ async function runYtdlp(args, timeout = 30_000) {
 export async function resolveQuery(query, requesterId) {
   const text = query.trim();
   let target;
-  let args = ['--flat-playlist', '--print', '%(id)s\t%(title)s\t%(duration)s\t%(uploader,channel)s\t%(webpage_url,url)s\t%(live_status)s'];
+  let args = ['--flat-playlist', '--print', '%(id)s\t%(title)s\t%(duration)s\t%(uploader,channel)s\t%(webpage_url,url)s\t%(live_status)s\t%(playlist_title)s'];
 
   if (/^https?:\/\//i.test(text)) {
     let url;
@@ -86,8 +103,11 @@ export async function resolveQuery(query, requesterId) {
     } catch {
       throw new UserError('Geçersiz link.');
     }
-    if (/spotify\.com$/i.test(url.hostname)) throw new UserError('Spotify linkleri çalınamıyor. Şarkının adını yaz, YouTube\'da bulayım.');
-    if (!ALLOWED_HOSTS.test(url.hostname)) throw new UserError('Sadece YouTube ve SoundCloud linkleri çalınabilir. Ya da şarkının adını yaz.');
+    if (isExternalLink(url)) {
+      const { name, tracks } = await readMusicLink(url, requesterId);
+      return { tracks, playlist: tracks.length > 1, name };
+    }
+    if (!ALLOWED_HOSTS.test(url.hostname)) throw new UserError('YouTube, YouTube Music, SoundCloud, Spotify, Deezer ve Apple Music linkleri çalınabilir. Ya da şarkının adını yaz.');
     const isPlaylist = url.searchParams.has('list') && (!url.searchParams.has('v') || url.pathname === '/playlist');
     if (!isPlaylist) args.push('--no-playlist');
     else args.push('--playlist-end', String(MAX_PLAYLIST));
@@ -97,9 +117,9 @@ export async function resolveQuery(query, requesterId) {
   }
 
   const out = await runYtdlp([...args, target]);
-  const tracks = out
-    .split('\n')
-    .filter(Boolean)
+  const lines = out.split('\n').filter(Boolean);
+  const listTitle = lines[0]?.split('\t')[6];
+  const tracks = lines
     .map((line) => {
       const [id, title, duration, uploader, url, live] = line.split('\t');
       const isYoutube = /^[\w-]{11}$/.test(id);
@@ -116,14 +136,16 @@ export async function resolveQuery(query, requesterId) {
     })
     .filter((t) => t.url && t.url !== 'NA' && !['[Private video]', '[Deleted video]'].includes(t.title));
   if (!tracks.length) throw new UserError('Hiçbir şey bulunamadı. Başka bir şekilde ara.');
-  return { tracks, playlist: tracks.length > 1 || /[?&]list=/.test(text) };
+  const name = listTitle && listTitle !== 'NA' ? listTitle.slice(0, 40) : '';
+  return { tracks, playlist: tracks.length > 1 || /[?&]list=/.test(text), name };
 }
 
 const MAX_ATTEMPTS = 3;
 
 /** YouTube şarkıyı sunucuya vermezse aynı şarkıyı SoundCloud'da arar: önizlemeleri eler, süresi en yakın olanı seçer */
 async function soundcloudAlternatives(track) {
-  const name = track.title.replace(/[([][^)\]]*(official|resmi|video|audio|lyric|klip)[^)\]]*[)\]]/gi, '').trim();
+  const base = track.url?.startsWith('ytsearch') ? track.url.replace(/^ytsearch\d*:/, '').replace(/ audio$/, '') : track.title;
+  const name = base.replace(/[([][^)\]]*(official|resmi|video|audio|lyric|klip)[^)\]]*[)\]]/gi, '').trim();
   const out = await runYtdlpOnce(['--flat-playlist', '--print', '%(url)s\t%(duration)s', `scsearch5:${name}`], 25_000).catch(() => '');
   const options = out
     .split('\n')
@@ -215,7 +237,7 @@ export function openStream(track) {
   };
   // YouTube az önce bu sunucuyu engellediyse boşuna denenmez, aynı şarkı hemen SoundCloud'da aranır
   (async () => {
-    if (Date.now() < ytBlockedUntil && /youtu\.?be/i.test(url)) {
+    if (Date.now() < ytBlockedUntil && /youtu\.?be|^ytsearch/i.test(url)) {
       alternatives = await soundcloudAlternatives(track);
       if (killed) return;
       const next = alternatives.shift();
@@ -235,6 +257,36 @@ export function openStream(track) {
     },
     error: () => errorText.split('\n').find((l) => l.startsWith('ERROR')) ?? null,
   };
+}
+
+/**
+ * Etkinlikte tarayıcıda çalmak için şarkıyı m4a (AAC) dosyası olarak indirir: her cihaz (iOS dahil) bunu çalabilir.
+ * YouTube sunucuyu engellerse aynı şarkı SoundCloud'da aranır. Dönüş: { id, duration, title, uploader }
+ */
+export async function downloadAudio(track, file) {
+  const temp = file.replace(/\.m4a$/, '.dl');
+  const args = ['--no-playlist', '--playlist-items', '1', '-f', 'bestaudio[ext=m4a]/bestaudio/best', '-x', '--audio-format', 'm4a', '-o', `${temp}.%(ext)s`,
+    '--print', 'after_move:%(id)s\t%(duration)s\t%(title)s\t%(uploader,channel)s'];
+  const isYoutube = /youtu\.?be|^ytsearch/i.test(track.url);
+  let sources = Date.now() < ytBlockedUntil && isYoutube ? await soundcloudAlternatives(track) : [track.url];
+  let triedAlternatives = sources[0] !== track.url;
+  let lastError = '';
+  for (let i = 0; i < sources.length; i++) {
+    try {
+      const out = await runYtdlpOnce([...args, '--', sources[i]], 180_000);
+      const [id, duration, title, uploader] = out.split('\n').find((l) => l.includes('\t'))?.split('\t') ?? [];
+      await rename(`${temp}.m4a`, file);
+      return { id: id ?? '', duration: Number(duration) || 0, title: title && title !== 'NA' ? title : '', uploader: uploader && uploader !== 'NA' ? uploader : '' };
+    } catch (error) {
+      lastError = String(error?.message ?? error);
+      if (/Sign in to confirm/i.test(lastError)) ytBlockedUntil = Date.now() + YT_BLOCK_MS;
+      if (i === sources.length - 1 && isYoutube && !triedAlternatives) {
+        triedAlternatives = true;
+        sources = [...sources, ...(await soundcloudAlternatives(track))];
+      }
+    }
+  }
+  throw new UserError(`Çalınamadı: ${lastError.replace(/^ERROR:\s*(\[[^\]]+\]\s*)?/, '').slice(0, 150) || 'şarkı bulunamadı.'}`);
 }
 
 // ───────────────────────── Sunucu sırası ─────────────────────────

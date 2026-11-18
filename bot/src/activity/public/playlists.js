@@ -1,6 +1,6 @@
 // Müzik bölümündeki kişisel çalma listeleri: oluştur, şarkı ekle, sırala, tek tıkla çal.
 export function initPlaylists(ctx) {
-  const { api, $, el, fmt, say, guarded, mmss, refreshMusic } = ctx;
+  const { api, $, el, fmt, say, guarded, mmss, refreshMusic, listen } = ctx;
   const box = $('playlist-box');
   let lists = [];
   let open = null; // açık liste
@@ -19,6 +19,7 @@ export function initPlaylists(ctx) {
     for (const b of document.querySelectorAll('[data-mtab]')) b.classList.toggle('active', b.dataset.mtab === name);
     $('music-list').hidden = name !== 'queue';
     box.hidden = name !== 'lists';
+    $('import-box').hidden = name !== 'import';
     if (name === 'lists') (open ? openList(open.id) : loadLists());
   }
   for (const b of document.querySelectorAll('[data-mtab]')) b.addEventListener('click', () => setTab(b.dataset.mtab));
@@ -30,10 +31,13 @@ export function initPlaylists(ctx) {
 
   const play = (id, shuffle) => guarded(async () => {
     say('Liste sıraya ekleniyor...');
+    if (listen.mode() !== 'bot') return listen.playList(id, shuffle); // burada ya da ortak dinlemede çalar
     const r = await api(`/playlists/${id}/play`, { shuffle });
     say(r.notice, 'win');
     refreshMusic();
   });
+  // Botsuz modlarda çalan şarkılar sunucuda değil bu cihazda/odadadır: bilgileri gönderilir
+  const nowSource = (which) => (listen.mode() === 'bot' ? { source: which } : { source: 'tracks', tracks: which === 'current' ? listen.current() : listen.queue() });
 
   function drawLists() {
     open = null;
@@ -95,7 +99,7 @@ export function initPlaylists(ctx) {
         loadLists();
       });
     }, 'pl-danger');
-    const query = el('input', { placeholder: 'Şarkı adı, YouTube linki ya da YouTube listesi', maxLength: 500 });
+    const query = el('input', { placeholder: 'Şarkı adı ya da link (YouTube, Spotify, Deezer, Apple Music)', maxLength: 500 });
     const add = el('form', { className: 'pl-new' }, query, el('button', { className: 'primary', textContent: 'Ekle' }));
     add.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -119,7 +123,7 @@ export function initPlaylists(ctx) {
       el('div', { className: 'pl-actions' },
         btn('▶ Çal', () => play(list.id, false), 'primary'),
         btn('⤨ Karışık', () => play(list.id, true)),
-        btn('Çalan sırayı ekle', () => change('add', { source: 'queue' })),
+        btn('Çalan sırayı ekle', () => change('add', nowSource('queue'))),
         del),
       add,
       songs.length ? el('ol', { className: 'pl-songs' }, ...songs) : el('p', { className: 'queue-empty', textContent: 'Liste boş. Yukarıdan şarkı ara ya da çalan şarkıyı çalardaki + düğmesiyle ekle.' }));
@@ -141,7 +145,7 @@ export function initPlaylists(ctx) {
         if (!newName.value.trim()) return;
         guarded(async () => {
           const made = await api('/playlists', { name: newName.value });
-          const r = await api(`/playlists/${made.list.id}/add`, { source: 'current' });
+          const r = await api(`/playlists/${made.list.id}/add`, nowSource('current'));
           say(`${made.list.name}: ${r.notice}`, 'win');
           closeMenu();
         });
@@ -149,7 +153,7 @@ export function initPlaylists(ctx) {
       menu = el('div', { className: 'pl-menu' },
         el('h5', { textContent: 'Çalan şarkıyı ekle' }),
         ...lists.map((l) => btn(`${l.name} (${l.count})`, () => guarded(async () => {
-          const r = await api(`/playlists/${l.id}/add`, { source: 'current' });
+          const r = await api(`/playlists/${l.id}/add`, nowSource('current'));
           say(`${l.name}: ${r.notice}`, 'win');
           closeMenu();
           if (open?.id === l.id && r.list) drawList(r.list);
@@ -162,5 +166,13 @@ export function initPlaylists(ctx) {
   });
   document.addEventListener('click', closeMenu);
 
-  return { setTab, refresh: () => { if (tab === 'lists') (open ? openList(open.id) : loadLists()); } };
+  return {
+    setTab,
+    refresh: () => { if (tab === 'lists') (open ? openList(open.id) : loadLists()); },
+    /** Aktarılan listeyi "Çalma Listelerim"de açar */
+    showList: (list) => {
+      open = list;
+      setTab('lists');
+    },
+  };
 }

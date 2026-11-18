@@ -8,7 +8,10 @@ import { getBalance, MIN_BET, MAX_BET } from '../systems/economy.js';
 import { slot, slotWins, blackjackStart, blackjackMove, activeBlackjack } from './games.js';
 import { startTables, tablesRoute } from './tables/index.js';
 import { playlistRoute } from './playlists.js';
+import { listenRoute, partyRoute, serveAudio, isKnownThumb } from './listen.js';
+import { accountsRoute, musicCallback } from './musicAccounts.js';
 import { getQueue, playQuery, requireVoice, voteSkip, stopMusic, goBack } from '../systems/music.js';
+import { coverSource } from '../systems/playlistImport.js';
 import { adminRoute, isPanelAdmin, isPanelStaff } from './admin.js';
 import { recordVote } from '../systems/monthlyGifts.js';
 import { receiveSupportMail } from '../components/ticket.js';
@@ -20,7 +23,7 @@ const API = 'https://discord.com/api/v10';
 const TOKEN_TTL = 10 * 60_000;
 const MIN_INTERVAL = 120;
 const MAX_BODY = 16 * 1024;
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
 
 // Sadece public klasöründeki bilinen dosyalar verilir; adres ile dosya yoluna çıkılamaz
 function loadStatic(dir = PUBLIC_DIR, base = '') {
@@ -81,13 +84,27 @@ const thumbs = new Map(); // video -> resim; Discord dış resimleri engellediğ
 async function trackThumb(guild, id) {
   const queue = getQueue(guild.id);
   if (!thumbs.has(id)) {
-    if (![queue?.current, ...(queue?.tracks ?? [])].some((t) => t && youtubeId(t) === id)) return null;
+    if (!isKnownThumb(id) && ![queue?.current, ...(queue?.tracks ?? [])].some((t) => t && youtubeId(t) === id)) return null;
     const res = await fetch(`https://i.ytimg.com/vi/${id}/hqdefault.jpg`, { signal: AbortSignal.timeout(8_000) }).catch(() => null);
     if (!res?.ok) return null;
     if (thumbs.size >= 50) thumbs.delete(thumbs.keys().next().value);
     thumbs.set(id, Buffer.from(await res.arrayBuffer()));
   }
   return thumbs.get(id);
+}
+
+const covers = new Map(); // aktarılan listelerin kapakları (Spotify, Deezer, Apple Music)
+
+async function trackCover(kind, key) {
+  const url = coverSource(kind, key);
+  if (!url) return null;
+  if (!covers.has(url)) {
+    const res = await fetch(url, { signal: AbortSignal.timeout(8_000) }).catch(() => null);
+    if (!res?.ok || !/^image\//.test(res.headers.get('content-type') ?? '')) return null;
+    if (covers.size >= 200) covers.delete(covers.keys().next().value);
+    covers.set(url, Buffer.from(await res.arrayBuffer()));
+  }
+  return covers.get(url);
 }
 
 const emojis = new Map(); // emoji -> resim; duyurulardaki sunucu emojileri Etkinlik içinde dış adresten yüklenemez
@@ -167,7 +184,7 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
     }
 
     if (req.method === 'GET' && pathname === '/state') {
-      return { user, isAdmin: isPanelAdmin(member), isStaff: isPanelStaff(member), balance: getBalance(guildId, id), blackjack: activeBlackjack(guildId, id), music: musicView(guild()) };
+      return { user, isAdmin: isPanelAdmin(member), isStaff: isPanelStaff(member), balance: getBalance(guildId, id), blackjack: activeBlackjack(guildId, id), music: { ...musicView(guild()), inVoice: Boolean(member.voice.channelId) } };
     }
     if (req.method === 'GET' && pathname === '/home') return homeView(guild(), member);
     const board = pathname.match(/^\/leaderboard\/(\w+)$/);
@@ -183,8 +200,11 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
     if (pathname.startsWith('/admin/')) return adminRoute(client, guild(), member, req.method, pathname, body);
     if (pathname === '/tables' || pathname.startsWith('/tables/')) return tablesRoute(req.method, pathname, body, query, { id, name: member.displayName });
     if (pathname === '/playlists' || pathname.startsWith('/playlists/')) return playlistRoute(req.method, pathname, body, member, guildId);
+    if (pathname.startsWith('/listen/')) return listenRoute(req.method, pathname, body, member);
+    if (pathname.startsWith('/party/')) return partyRoute(req.method, pathname, body, member, guildId);
+    if (pathname === '/music-accounts' || pathname.startsWith('/music-accounts/')) return accountsRoute(req.method, pathname, body, member, guildId);
     if (req.method === 'GET' && pathname === '/slot/feed') return { wins: slotWins() };
-    if (req.method === 'GET' && pathname === '/music') return musicView(guild());
+    if (req.method === 'GET' && pathname === '/music') return { ...musicView(guild()), inVoice: Boolean(member.voice.channelId) };
     if (req.method !== 'POST') return { __status: 405, error: 'Geçersiz istek.' };
 
     switch (pathname) {
@@ -245,6 +265,17 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
       const requestUrl = new URL(req.url, 'http://x');
       const pathname = decodeURIComponent(requestUrl.pathname).replace(/^\/\.proxy/, '') || '/';
       if (pathname.startsWith('/social/')) return await socialHttp(req, res, pathname, requestUrl.searchParams);
+      if (req.method === 'GET' && pathname.startsWith('/music/callback/')) return await musicCallback(res, pathname, requestUrl.searchParams);
+      // Etkinlikte çalınan ses: erişim bağlantıdaki imzayla denetlenir (<audio> başlık gönderemez)
+      const audio = ['GET', 'HEAD'].includes(req.method) && pathname.match(/^\/api\/audio\/([\w.-]+)$/);
+      if (audio) return serveAudio(req, res, audio[1]);
+      const cover = req.method === 'GET' && pathname.match(/^\/cover\/(sp|dz|am)\/([\w-]+)\.jpg$/);
+      if (cover) {
+        const image = await trackCover(cover[1], cover[2]);
+        if (!image) return send(404, { error: 'Bulunamadı.' });
+        res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=86400' });
+        return res.end(image);
+      }
       const avatar = req.method === 'GET' && pathname.match(/^\/avatar\/(\d{17,20})\.png$/);
       if (avatar) {
         const image = await memberAvatar(guild(), avatar[1]);

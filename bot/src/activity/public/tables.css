@@ -299,6 +299,41 @@
 .pl-menu .pl-new input{background:var(--bg)}
 @media (max-width:720px){.pl-tools{opacity:1}.pl-songs li{grid-template-columns:20px minmax(0,1fr) auto}.pl-songs em{display:none}}
 .pl-actions .primary{background:var(--accent);color:#07211c}
+/* Müzik: nerede çalsın (bot / burada / ortak) ve liste aktarma */
+.listen-modes{display:flex;gap:4px;margin:0 0 10px;padding:4px;border-radius:12px;background:var(--bg)}
+.listen-modes button{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:9px;padding:8px 6px;background:transparent;color:var(--muted);font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.listen-modes button[hidden]{display:none}
+.listen-modes button img{width:16px;height:16px;opacity:.7}
+.listen-modes button:hover{color:var(--fg)}
+.listen-modes button.active{background:rgba(79,207,180,.13);color:var(--accent)}
+.listen-modes button.active img{opacity:1}
+.imp-card{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:12px;background:var(--panel2)}
+.imp-card h5{margin:0;color:var(--accent);font-size:12px}
+.imp-card>small{color:var(--muted);font-size:12px;line-height:1.4}
+.imp-card .pl-new input{background:var(--bg)}
+.music-tabs{overflow-x:auto;scrollbar-width:none}
+.music-tabs button{flex:0 0 auto;white-space:nowrap}
+.imp-accs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.imp-accs .imp-acc{display:grid;grid-template-columns:32px minmax(0,1fr);gap:6px 10px;align-items:start;padding:4px 0}
+.imp-accs .imp-actions{grid-column:2}
+.imp-accs .imp-acc:hover{background:transparent}
+.imp-acc span{min-width:0}
+.imp-accs .imp-acc strong{display:block;white-space:normal}
+.imp-accs .imp-acc small{display:block;color:var(--muted);font-size:12px;line-height:1.35;white-space:normal}
+.imp-logo{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;font-style:normal;font-weight:900;font-size:14px;color:#fff}
+.imp-acc.spotify .imp-logo{background:#1db954;color:#04140a}
+.imp-acc.youtube .imp-logo{background:#ff0033}
+.imp-actions{display:flex;gap:6px;align-items:center}
+.imp-actions button,.imp-take{border:0;border-radius:9px;padding:7px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
+.imp-actions button:not(.primary){background:var(--bg)}
+.imp-actions .pl-danger{color:var(--lose)}
+.imp-accs .imp-actions em{color:var(--dim);font-size:12px;font-style:normal;white-space:nowrap}
+.imp-take{background:var(--panel2);color:var(--accent)}
+.imp-take:hover{background:var(--accent);color:#062a26}
+.imp-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#import-box .pl-row{cursor:default}
+#import-box .pl-row img{border-radius:6px;object-fit:cover}
+@media (max-width:720px){.listen-modes button{font-size:11.5px}}
 /* Bot oyuncular */
 .seat-avatar.bot img{object-fit:contain;padding:6px;background:#0b2f2b}
 .room-root button.bot-add{color:#bff7ec;border-color:#4fcfb4}

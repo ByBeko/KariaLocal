@@ -2,6 +2,8 @@
 import { sfx } from './sfx.js';
 import { initTables } from './tables.js';
 import { initPlaylists } from './playlists.js';
+import { initListen } from './listen.js';
+import { initMusicImport } from './musicImport.js';
 
 const ON_SITE = location.hostname === 'activity.karia.live'; // Tarayıcıda açıldı: oturum karia.live Discord girişinden gelir
 const API = location.hostname.endsWith('discordsays.com') ? '/.proxy/api' : '/api';
@@ -306,20 +308,22 @@ function drawProgress() {
   $('music-fill').style.width = c ? (c.duration ? `${Math.min(100, (shown / c.duration) * 100)}%` : '100%') : '0%';
 }
 
-function setCover(id) {
-  const src = id ? `thumb/${id}.jpg` : 'emojis/kulaklik.png';
+// Kapak: YouTube videosu (thumb/) ya da aktarılan listenin kapağı (cover/: Spotify, Deezer, Apple Music)
+function setCover(track) {
+  const image = track?.cover || (track?.thumb ? `thumb/${track.thumb}.jpg` : null);
+  const src = image ?? 'emojis/kulaklik.png';
   if ($('music-cover').getAttribute('src') !== src) {
     $('music-cover').src = src;
-    $('music-backdrop').style.backgroundImage = id ? `url("${src}")` : '';
+    $('music-backdrop').style.backgroundImage = image ? `url("${src}")` : '';
   }
 }
 $('music-cover').addEventListener('error', () => { $('music-cover').src = 'emojis/kulaklik.png'; });
 
 function drawMusic(m) {
   $('music-title').textContent = m.playing ? m.current.title : 'Bir şarkı aç';
-  $('music-artist').textContent = m.playing ? (m.paused ? 'Duraklatıldı' : m.current.artist || 'Çalıyor') : 'Şu an çalmıyor';
+  $('music-artist').textContent = m.playing ? (m.loading ? 'Hazırlanıyor...' : m.paused ? 'Duraklatıldı' : m.current.artist || 'Çalıyor') : 'Şu an çalmıyor';
   document.querySelector('.now-card').classList.toggle('live', m.playing && !m.paused);
-  setCover(m.playing ? m.current.thumb : null);
+  setCover(m.playing ? m.current : null);
   $('music-pause-icon').src = m.playing && !m.paused ? 'emojis/duraklat.png' : 'emojis/oynat.png';
   for (const id of ['music-pause', 'music-skip', 'music-stop', 'music-loop', 'music-volume', 'music-save']) $(id).disabled = !m.playing;
   $('music-prev').disabled = !m.canBack;
@@ -339,9 +343,12 @@ function drawMusic(m) {
   if (m.notice) say(m.notice);
 }
 
+// Çalar düğmeleri seçili dinleme yerine gider: bot, bu cihaz ya da ortak oda (listen.js)
+let listen = null;
+
 async function refreshMusic() {
   try {
-    drawMusic(await api('/music'));
+    await listen?.refresh();
   } catch {}
 }
 
@@ -351,19 +358,19 @@ $('music-form').addEventListener('submit', (event) => {
     const input = $('music-query');
     if (!input.value.trim()) return;
     say('Şarkı aranıyor...');
-    drawMusic(await api('/music/play', { query: input.value }));
+    const notice = await listen.search(input.value);
     input.value = '';
-    say('Sıraya eklendi.', 'win');
+    if (notice) say(notice, 'win');
   });
 });
 for (const [id, path] of [['music-pause', 'pause'], ['music-skip', 'skip'], ['music-stop', 'stop'], ['music-prev', 'previous'], ['music-shuffle', 'shuffle'], ['music-loop', 'loop']]) {
-  $(id).addEventListener('click', () => guarded(async () => drawMusic(await api(`/music/${path}`, {}))));
+  $(id).addEventListener('click', () => guarded(() => listen.action(path)));
 }
 
 $('music-volume').addEventListener('pointerdown', () => { volumeBusy = true; });
 $('music-volume').addEventListener('change', () => guarded(async () => {
   try {
-    drawMusic(await api('/music/volume', { level: Number($('music-volume').value) }));
+    await listen.action('volume', { level: Number($('music-volume').value) });
   } finally {
     volumeBusy = false;
   }
@@ -1626,7 +1633,10 @@ tables = initTables({
   api, $, el, fmt, say, setBalance, sfx, cardEl, avatarImg, betValue, guarded,
   limits: () => limits, balance: () => balance, myId: () => myId, autoSide,
 });
-initPlaylists({ api, $, el, fmt, say, guarded, mmss, refreshMusic });
+// Ortak dinleme odası Discord etkinlik odasıdır; yerel testte ?room= ile verilir
+listen = initListen({ api, API, $, say, drawMusic, getInstance: () => sdk?.instanceId ?? (devId ? params.get('room') : null) });
+const playlists = initPlaylists({ api, $, el, fmt, say, guarded, mmss, refreshMusic, listen });
+initMusicImport({ api, $, el, say, guarded, openLink, showList: playlists.showList });
 $('set-search').addEventListener('input', drawSettings);
 $('cmd-search').addEventListener('input', drawCommandList);
 $('cmd-select').addEventListener('change', drawCommandForm);
@@ -1732,7 +1742,7 @@ async function start() {
       if (adminUser) api('/admin/social/mails').then(drawMails).catch(() => {});
     }
     if (state.blackjack) drawBlackjack({ ...state.blackjack, balance: state.balance });
-    if (state.music) drawMusic(state.music);
+    listen.boot(state.music); // ses kanalında değilsen müzik bu cihazda çalar
     $('boot').hidden = true;
     $('app').hidden = false;
     $('site-back').hidden = false;

@@ -60,14 +60,14 @@ if (!db.prepare('PRAGMA table_info(social_posts)').all().some((c) => c.name === 
 // ── Anahtarların saklanması ──
 const cipherKey = () => createHash('sha256').update(process.env.SOCIAL_TOKEN_KEY ?? '').digest();
 
-function seal(value) {
+export function seal(value) {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', cipherKey(), iv);
   const body = Buffer.concat([cipher.update(JSON.stringify(value), 'utf8'), cipher.final()]);
   return Buffer.concat([iv, cipher.getAuthTag(), body]).toString('base64');
 }
 
-function unseal(text) {
+export function unseal(text) {
   const raw = Buffer.from(text, 'base64');
   const decipher = createDecipheriv('aes-256-gcm', cipherKey(), raw.subarray(0, 12));
   decipher.setAuthTag(raw.subarray(12, 28));
@@ -570,7 +570,7 @@ export function socialView() {
 }
 
 // ── Tünelden doğrudan gelen istekler: bağlanma dönüşü, video parçaları, Instagram'ın indireceği adres ──
-function page(res, status, title, text) {
+export function page(res, status, title, text) {
   const escape = (value) => String(value).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
   res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'", 'Referrer-Policy': 'no-referrer' });
   res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)}</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#08090b;color:#f0f3f4;font:16px system-ui;text-align:center;padding:16px"><main><h1 style="font-size:22px;color:#4fcfb4">${escape(title)}</h1><p>${escape(text)}</p></main></body>`);

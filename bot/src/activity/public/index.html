@@ -224,17 +224,25 @@
           </div>
         </div>
         <div class="music-side">
+          <div class="listen-modes" role="group" aria-label="Müzik nerede çalsın">
+            <button type="button" data-lmode="bot" title="Bulunduğun ses kanalında bot çalar"><img src="emojis/bot.png" alt="">Ses kanalında</button>
+            <button type="button" data-lmode="local" title="Sadece bu cihazda çalar, ses kanalı gerekmez"><img src="emojis/kulaklik.png" alt="">Burada dinle</button>
+            <button type="button" data-lmode="party" id="lmode-party" title="Bu etkinlikteki herkes aynı anda dinler" hidden><img src="emojis/arkadaslar.png" alt="">Ortak dinle</button>
+          </div>
           <form id="music-form" class="music-form">
-            <input id="music-query" placeholder="Şarkı adı ya da YouTube linki" maxlength="500" autocomplete="off">
+            <input id="music-query" placeholder="Şarkı adı ya da link" maxlength="500" autocomplete="off">
             <button class="primary">Çal</button>
           </form>
           <div class="music-tabs" role="tablist">
             <button type="button" data-mtab="queue" class="active">Sıradaki Şarkılar <span id="music-count" class="queue-count"></span></button>
             <button type="button" data-mtab="lists">Çalma Listelerim</button>
+            <button type="button" data-mtab="import">Aktar</button>
           </div>
           <ol id="music-list" class="queue"></ol>
           <div id="playlist-box" class="queue plbox" hidden></div>
-          <p class="hint">Ses, bulunduğun ses kanalında bot üzerinden çalar.</p>
+          <div id="import-box" class="queue plbox" hidden></div>
+          <audio id="music-audio" preload="auto" hidden></audio>
+          <p id="music-hint" class="hint">Ses, bulunduğun ses kanalında bot üzerinden çalar.</p>
         </div>
       </div>
     </section>

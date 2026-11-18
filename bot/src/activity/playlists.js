@@ -2,10 +2,12 @@
 // GET  /playlists                 → listelerim
 // GET  /playlists/:id             → listedeki şarkılar
 // POST /playlists {name}          → yeni liste
-// POST /playlists/:id/:hamle      → add {source: current|queue|query, query}, remove {index}, rename {name}, delete, play {shuffle}
+// POST /playlists/import {url}     → linkteki listeyi (YouTube, Spotify, Deezer, Apple Music, SoundCloud) yeni liste olarak aktarır
+// POST /playlists/:id/:hamle      → add {source: current|queue|query|tracks, query, tracks}, remove {index}, rename {name}, delete, play {shuffle}
 import { db } from '../core/database.js';
 import { UserError } from '../utils/errors.js';
-import { getQueue, resolveQuery, playTracks } from '../systems/music.js';
+import { getQueue, resolveQuery, playTracks, isPlayableSource } from '../systems/music.js';
+import { coverPath } from '../systems/playlistImport.js';
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS playlists (
@@ -59,8 +61,45 @@ function own(guildId, userId, id) {
 const ytId = (url) => url.match(/[?&]v=([\w-]{11})/)?.[1] ?? null;
 
 function view(list) {
-  const tracks = q.tracks.all(list.id).map((t) => ({ title: t.title, artist: t.uploader, duration: Number(t.duration), yt: ytId(t.url) }));
+  const tracks = q.tracks.all(list.id).map((t) => ({ title: t.title, artist: t.uploader, duration: Number(t.duration), yt: ytId(t.url), src: t.url, cover: coverPath(t.thumbnail), thumbnail: t.thumbnail }));
   return { id: list.id, name: list.name, tracks, duration: tracks.reduce((s, t) => s + t.duration, 0) };
+}
+
+/** Etkinlikte (bot olmadan) çalınan şarkılar istemciden gelir: kaynak ve kapak denetlenir */
+function clientTracks(raw) {
+  if (!Array.isArray(raw) || !raw.length) throw new UserError('Eklenecek şarkı yok.');
+  const tracks = raw.slice(0, MAX_TRACKS).filter((t) => isPlayableSource(t?.src)).map((t) => {
+    const thumbnail = typeof t.thumbnail === 'string' && (coverPath(t.thumbnail) || /^https:\/\/i\.ytimg\.com\/vi\/[\w-]{11}\/hqdefault\.jpg$/.test(t.thumbnail)) ? t.thumbnail : null;
+    return { title: String(t.title ?? '').slice(0, 200) || 'Bilinmeyen şarkı', uploader: String(t.artist ?? '').slice(0, 200), duration: Math.max(0, Math.trunc(Number(t.duration) || 0)), url: t.src, thumbnail };
+  });
+  if (!tracks.length) throw new UserError('Bu şarkılar listeye eklenemez.');
+  return tracks;
+}
+
+/** Listedeki şarkılar, çalma sırasına eklenecek biçimde */
+export function listTracks(guildId, userId, id, requesterId = userId) {
+  const list = own(guildId, userId, id);
+  const rows = q.tracks.all(list.id);
+  if (!rows.length) throw new UserError('Liste boş, önce şarkı ekle.');
+  const tracks = rows.map((t) => {
+    const yt = ytId(t.url);
+    return { id: yt ?? t.url, title: t.title, duration: Number(t.duration), uploader: t.uploader, url: t.url, thumbnail: t.thumbnail ?? (yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : null), live: false, requesterId };
+  });
+  return { list, tracks };
+}
+
+/** Dışarıdan gelen şarkılarla yeni liste açar (link ya da bağlı hesap aktarımı) */
+export function importList(guildId, userId, name, tracks) {
+  if (Number(q.count.get(guildId, userId).n) >= MAX_LISTS) throw new UserError(`En fazla ${MAX_LISTS} çalma listen olabilir. Önce birini sil.`);
+  const id = Number(q.create.run(guildId, userId, cleanName(name || 'Aktarılan liste'), Date.now()).lastInsertRowid);
+  const list = own(guildId, userId, id);
+  try {
+    const added = addTracks(list, tracks);
+    return { list: view(list), notice: `${list.name}: ${added} şarkı aktarıldı.` };
+  } catch (error) {
+    q.remove.run(id); // boş liste kalmasın
+    throw error;
+  }
 }
 
 /** Şarkıları sırayla yeniden yazar (silme ve eklemede sıra boşluksuz kalır) */
@@ -99,6 +138,14 @@ export async function playlistRoute(method, path, body, member, guildId) {
     return { list: view(own(guildId, userId, id)) };
   }
 
+  if (path === '/playlists/import') {
+    if (method !== 'POST') return { __status: 405, error: 'Geçersiz istek.' };
+    const url = String(body.url ?? '').trim().slice(0, 500);
+    if (!/^https?:\/\//i.test(url)) throw new UserError('Listenin linkini yapıştır.');
+    const { tracks, name } = await resolveQuery(url, userId);
+    return importList(guildId, userId, name, tracks);
+  }
+
   const match = path.match(/^\/playlists\/(\d+)(?:\/(\w+))?$/);
   if (!match) return { __status: 404, error: 'Bulunamadı.' };
   const list = own(guildId, userId, match[1]);
@@ -113,6 +160,8 @@ export async function playlistRoute(method, path, body, member, guildId) {
         const queue = getQueue(guildId);
         if (!queue?.current) throw new UserError('Şu an bir şey çalmıyor.');
         incoming = body.source === 'current' ? [queue.current] : [queue.current, ...queue.tracks];
+      } else if (body.source === 'tracks') {
+        incoming = clientTracks(body.tracks);
       } else {
         const query = String(body.query ?? '').trim().slice(0, 500);
         if (!query) throw new UserError('Şarkı adı ya da link yaz.');
@@ -146,12 +195,7 @@ export async function playlistRoute(method, path, body, member, guildId) {
       q.remove.run(list.id);
       return { ok: true };
     case 'play': {
-      const rows = q.tracks.all(list.id);
-      if (!rows.length) throw new UserError('Liste boş, önce şarkı ekle.');
-      const tracks = rows.map((t) => {
-        const yt = ytId(t.url);
-        return { id: yt ?? t.url, title: t.title, duration: Number(t.duration), uploader: t.uploader, url: t.url, thumbnail: t.thumbnail ?? (yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : null), live: false, requesterId: userId };
-      });
+      const { tracks } = listTracks(guildId, userId, list.id);
       if (body.shuffle) {
         for (let i = tracks.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
