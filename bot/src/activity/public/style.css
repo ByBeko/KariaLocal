@@ -56,7 +56,7 @@ button:disabled{opacity:.45;cursor:default}
   .content.game #game-switch{grid-column:1;grid-row:1;width:100%;margin:0}
   .content.game #game-switch button{flex:1;flex-direction:column;gap:2px;padding:8px 2px;font-size:12px}
   .content.game .betbar{grid-column:1;grid-row:2;display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:14px;margin:0;padding:18px 16px}
-  .content.game .game-info{display:block;margin-top:auto}
+  .content.game .game-info{display:none} /* ödüller zaten ? (Nasıl oynanır) penceresinde */
   .content.game .bet-input{flex:none;flex-direction:column;align-items:stretch}
   .content.game .bet-input input{padding:11px 12px;font-size:18px}
   .content.game .chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -299,7 +299,7 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
 .podium-col.me .podium-block{outline:3px solid #ffd479}
 .runners-box{display:flex;flex-direction:column;min-height:0;padding:14px;border-radius:18px;background:var(--bg)}
 .runners-box h4{margin:0 0 8px}
-.runners{flex:1;list-style:none;margin:0;padding:0;overflow-y:auto;max-height:calc(100vh - 240px);scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.runners{flex:1;list-style:none;margin:0;padding:0}
 .runners li{display:grid;grid-template-columns:28px 36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 10px;border-radius:10px}
 .runners li:nth-child(odd){background:var(--panel2)}
 .runners li.me{outline:1px solid var(--accent)}
@@ -582,8 +582,9 @@ textarea::-webkit-scrollbar{display:none}
   .content.game{height:calc(100vh - 32px);min-height:0;display:flex;flex-direction:column}
   .content.game .page-title{margin:0 auto 10px;flex:none}
   .content.game main{flex:1;min-height:0}
-  .content.game .panel:not([hidden]),.content.game .betbar{min-height:0;overflow-y:auto;scrollbar-width:none}
-  .content.game .panel:not([hidden])::-webkit-scrollbar,.content.game .betbar::-webkit-scrollbar{display:none}
+  .content.game .panel:not([hidden]){min-height:0;overflow-y:auto;scrollbar-width:none}
+  .content.game .panel:not([hidden])::-webkit-scrollbar{display:none}
+  .content.game .betbar{min-height:0;overflow:hidden} /* sağ bahis paneli sabit, kaymaz */
   .content.game .table{flex:1;min-height:0}
   .content.game .felt-art{flex:1 1 0;min-height:0;height:auto}
   .content.game .hand,.content.game .table .actions{flex:none}

@@ -233,6 +233,9 @@ export function initListen(ctx) {
 
   function paint() {
     for (const b of document.querySelectorAll('[data-lmode]')) b.classList.toggle('active', b.dataset.lmode === mode);
+    const on = document.querySelector(`[data-lmode="${mode}"]`);
+    $('lmode-label').textContent = on.querySelector('b').textContent;
+    $('lmode-icon').src = on.querySelector('img').getAttribute('src');
     $('music-hint').textContent = HINTS[mode];
     filterBox.hidden = mode !== 'bot' || !filtersOn;
     $('music-query').placeholder = mode === 'bot' ? 'Şarkı adı ya da link' : 'Şarkı adı ya da link (burada çalar)';
@@ -268,6 +271,11 @@ export function initListen(ctx) {
     refresh().catch(() => {});
   }
   for (const b of document.querySelectorAll('[data-lmode]')) b.addEventListener('click', () => setMode(b.dataset.lmode));
+  // Mod seçici: küçük açılır menü
+  const modeToggle = $('lmode-toggle');
+  const modeMenu = (open) => { $('lmode-menu').hidden = !open; modeToggle.setAttribute('aria-expanded', String(open)); };
+  modeToggle.addEventListener('click', (event) => { event.stopPropagation(); modeMenu($('lmode-menu').hidden); });
+  document.addEventListener('click', () => modeMenu(false));
 
   async function refresh() {
     if (mode === 'bot') drawMusic(await api('/music'));

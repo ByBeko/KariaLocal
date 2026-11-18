@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Karia</title>
 <link rel="icon" href="logo.png">
-<link rel="stylesheet" href="style.css?v=7">
-<link rel="stylesheet" href="tables.css?v=31">
+<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="tables.css?v=32">
 <link rel="stylesheet" href="panel.css?v=1">
 </head>
 <body>
@@ -204,6 +204,7 @@
         <div class="now-card player">
           <div id="music-backdrop" class="now-backdrop"></div>
           <div class="now-cover"><img id="music-cover" src="emojis/kulaklik.png" alt=""></div>
+          <div id="lyrics-box" class="lyrics now-lyrics" hidden></div>
           <div class="now-text">
             <small class="now-label"><i class="eq" aria-hidden="true"><b></b><b></b><b></b></i>Şimdi çalıyor</small>
             <strong id="music-title">Bir şarkı aç</strong>
@@ -218,6 +219,7 @@
             <button id="music-loop" aria-label="Döngü" title="Döngü: kapalı" disabled><img src="emojis/yenile.png" alt=""><b id="music-loop-one" hidden>1</b></button>
           </div>
           <div class="player-right">
+            <button id="music-lyrics" class="ly-toggle" aria-label="Sözleri göster" title="Sözler" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
             <button id="music-save" aria-label="Çalan şarkıyı listeye ekle" title="Listeye ekle" disabled><img src="emojis/arti_rozet.png" alt=""></button>
             <button id="music-stop" aria-label="Müziği durdur" title="Durdur" disabled><img src="emojis/durdur.png" alt=""></button>
             <img class="vol-icon" src="emojis/kulaklik.png" alt="">
@@ -225,25 +227,30 @@
           </div>
         </div>
         <div class="music-side">
-          <div class="listen-modes" role="group" aria-label="Müzik nerede çalsın">
-            <button type="button" data-lmode="bot" title="Bulunduğun ses kanalında bot çalar"><img src="emojis/bot.png" alt="">Ses kanalında</button>
-            <button type="button" data-lmode="local" title="Sadece bu cihazda çalar, ses kanalı gerekmez"><img src="emojis/kulaklik.png" alt="">Burada dinle</button>
-            <button type="button" data-lmode="party" id="lmode-party" title="Bu etkinlikteki herkes aynı anda dinler" hidden><img src="emojis/arkadaslar.png" alt="">Ortak dinle</button>
+          <div class="music-top">
+            <form id="music-form" class="music-form">
+              <input id="music-query" placeholder="Şarkı adı ya da link" maxlength="500" autocomplete="off">
+              <button class="primary">Çal</button>
+            </form>
+            <div class="pop-wrap">
+              <button type="button" id="lmode-toggle" class="pop-toggle" aria-haspopup="true" aria-expanded="false" title="Müzik nerede çalsın"><img id="lmode-icon" src="emojis/bot.png" alt=""><span id="lmode-label">Ses kanalında</span><i aria-hidden="true">▾</i></button>
+              <div id="lmode-menu" class="pop-menu listen-modes" role="menu" hidden>
+                <button type="button" data-lmode="bot" role="menuitem"><img src="emojis/bot.png" alt=""><span><b>Ses kanalında</b><small>Bot bulunduğun kanalda çalar</small></span></button>
+                <button type="button" data-lmode="local" role="menuitem"><img src="emojis/kulaklik.png" alt=""><span><b>Burada dinle</b><small>Sadece bu cihazda çalar</small></span></button>
+                <button type="button" data-lmode="party" id="lmode-party" role="menuitem" hidden><img src="emojis/arkadaslar.png" alt=""><span><b>Ortak dinle</b><small>Etkinlikteki herkes aynı anda dinler</small></span></button>
+              </div>
+            </div>
           </div>
-          <form id="music-form" class="music-form">
-            <input id="music-query" placeholder="Şarkı adı ya da link" maxlength="500" autocomplete="off">
-            <button class="primary">Çal</button>
-          </form>
           <div class="music-tabs" role="tablist">
             <button type="button" data-mtab="queue" class="active">Sıradaki Şarkılar <span id="music-count" class="queue-count"></span></button>
             <button type="button" data-mtab="lists">Çalma Listelerim</button>
-            <button type="button" data-mtab="lyrics">Sözler</button>
-            <button type="button" data-mtab="import">Aktar</button>
+            <div class="pop-wrap imp-wrap">
+              <button type="button" id="import-toggle" class="imp-toggle" aria-haspopup="true" aria-expanded="false" title="Başka bir uygulamadan liste aktar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Aktar</button>
+              <div id="import-box" class="pop-menu imp-menu" hidden></div>
+            </div>
           </div>
           <ol id="music-list" class="queue"></ol>
           <div id="playlist-box" class="queue plbox" hidden></div>
-          <div id="lyrics-box" class="queue plbox lyrics" hidden></div>
-          <div id="import-box" class="queue plbox" hidden></div>
           <audio id="music-audio" preload="auto" hidden></audio>
           <p id="music-hint" class="hint">Ses, bulunduğun ses kanalında bot üzerinden çalar.</p>
         </div>
@@ -379,6 +386,6 @@
   </main>
   </div>
 </div>
-<script type="module" src="app.js?v=27"></script>
+<script type="module" src="app.js?v=28"></script>
 </body>
 </html>

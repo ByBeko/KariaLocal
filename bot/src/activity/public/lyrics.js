@@ -1,9 +1,9 @@
-// Müzik > Sözler: çalan şarkının sözleri (LRCLIB). Zaman damgalı sözlerde o anki satır vurgulanır ve ortada tutulur.
+// Müzik > Sözler (sağdaki çalar kartında açılıp kapanır): çalan şarkının sözleri (LRCLIB). Zaman damgalı sözlerde o anki satır vurgulanır ve ortada tutulur.
 // Bot, burada dinleme ve ortak dinleme modlarının hepsinde çalışır; konum app.js'ten gelir.
 export function initLyrics(ctx) {
   const { api, $, el, nowPlaying, position } = ctx;
   const box = $('lyrics-box');
-  let key = ''; // sözleri gösterilen şarkı
+  let key = null; // sözleri gösterilen şarkı (null: henüz bakılmadı)
   let data = null;
   let rows = [];
   let active = -1;
@@ -73,6 +73,20 @@ export function initLyrics(ctx) {
     if (Date.now() - userScrollAt > 4000) box.scrollTo({ top: row.offsetTop - box.clientHeight / 2 + row.offsetHeight / 2, behavior: 'smooth' });
   }
 
+  // Sağdaki çalar kartında kapak ile sözler arasında geçiş
+  const toggle = $('music-lyrics');
+  const card = box.closest('.now-card');
+  function setOpen(open) {
+    box.hidden = !open;
+    card.classList.toggle('show-lyrics', open);
+    toggle.classList.toggle('on', open);
+    toggle.setAttribute('aria-pressed', String(open));
+    toggle.setAttribute('aria-label', open ? 'Sözleri gizle' : 'Sözleri göster');
+    try { localStorage.setItem('karia-lyrics', open ? '1' : ''); } catch {}
+    if (open) setTimeout(tick);
+  }
+  toggle.addEventListener('click', () => setOpen(box.hidden));
+  try { if (localStorage.getItem('karia-lyrics')) setOpen(true); } catch {}
+
   setInterval(tick, 250);
-  for (const b of document.querySelectorAll('[data-mtab]')) b.addEventListener('click', () => { if (b.dataset.mtab === 'lyrics') setTimeout(tick); });
 }

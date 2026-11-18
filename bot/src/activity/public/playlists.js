@@ -19,8 +19,6 @@ export function initPlaylists(ctx) {
     for (const b of document.querySelectorAll('[data-mtab]')) b.classList.toggle('active', b.dataset.mtab === name);
     $('music-list').hidden = name !== 'queue';
     box.hidden = name !== 'lists';
-    $('import-box').hidden = name !== 'import';
-    $('lyrics-box').hidden = name !== 'lyrics';
     if (name === 'lists') (open ? openList(open.id) : loadLists());
   }
   for (const b of document.querySelectorAll('[data-mtab]')) b.addEventListener('click', () => setTab(b.dataset.mtab));
@@ -52,16 +50,28 @@ export function initPlaylists(ctx) {
         drawList(r.list);
       });
     });
-    const rows = lists.map((l) => {
-      const row = el('li', { className: 'pl-row' },
-        el('img', { src: 'emojis/muzik.png', alt: '' }),
-        el('span', {}, el('strong', { textContent: l.name }), el('small', { textContent: `${l.count} şarkı${l.count ? ` • ${long(l.duration)}` : ''}` })),
-        btn('▶', (e) => { e.stopPropagation(); play(l.id, false); }, 'pl-icon', 'Çal'),
-        btn('⤨', (e) => { e.stopPropagation(); play(l.id, true); }, 'pl-icon', 'Karışık çal'));
-      row.addEventListener('click', () => openList(l.id));
-      return row;
+    // Kart ızgarası: kapak (4 farklı kapak varsa dörtlü), üstünde çal düğmesi, altında ad ve şarkı sayısı
+    const art = (covers = []) => {
+      const shown = covers.length >= 4 ? covers.slice(0, 4) : covers.slice(0, 1);
+      const imgs = shown.map((src) => {
+        const img = el('img', { src, alt: '', loading: 'lazy' });
+        img.addEventListener('error', () => img.remove(), { once: true });
+        return img;
+      });
+      return el('div', { className: `pl-art${shown.length === 4 ? ' mosaic' : ''}` }, ...imgs);
+    };
+    const cards = lists.map((l) => {
+      const cover = art(l.covers);
+      cover.append(btn('▶', (e) => { e.stopPropagation(); play(l.id, false); }, 'pl-play', 'Çal'));
+      const card = el('li', { className: 'pl-card', tabIndex: 0, title: l.name },
+        cover,
+        el('strong', { textContent: l.name }),
+        el('small', { textContent: `Çalma listesi • ${l.count} şarkı${l.count ? ` • ${long(l.duration)}` : ''}` }));
+      card.addEventListener('click', () => openList(l.id));
+      card.addEventListener('keydown', (e) => { if (e.key === 'Enter') openList(l.id); });
+      return card;
     });
-    box.replaceChildren(form, ...(rows.length ? [el('ul', { className: 'pl-list' }, ...rows)] : [el('p', { className: 'queue-empty', textContent: 'Henüz çalma listen yok. Bir ad yazıp oluştur.' })]));
+    box.replaceChildren(form, ...(cards.length ? [el('ul', { className: 'pl-grid' }, ...cards)] : [el('p', { className: 'queue-empty', textContent: 'Henüz çalma listen yok. Bir ad yazıp oluştur.' })]));
   }
 
   async function openList(id) {

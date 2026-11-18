@@ -894,3 +894,67 @@
 .okf.okf-101{position:relative}
 .ok-felt{z-index:0}
 .okf-101>*:not(.felt-mark){position:relative;z-index:1}
+/* ── Müzik sadeleştirme: arama + mod seçici tek satır, Aktar küçük açılır menü, sözler sağdaki çalar kartında ── */
+.music-top{display:flex;gap:8px;align-items:stretch}
+.music-top .music-form{flex:1;min-width:0}
+.pop-wrap{position:relative;flex:none}
+.pop-toggle{display:flex;align-items:center;gap:7px;height:100%;min-height:40px;padding:0 12px;border:1px solid var(--pl-line2,var(--line));border-radius:12px;background:rgba(255,255,255,.03);color:var(--fg);font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.pop-toggle:hover{border-color:var(--pl-edge,var(--accent))}
+.pop-toggle img{width:16px;height:16px}
+.pop-toggle i{font-style:normal;color:var(--muted);font-size:11px}
+.pop-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:270px;padding:6px;border:1px solid var(--pl-line2,var(--line));border-radius:14px;background:#101416;box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.pop-menu[hidden]{display:none!important}
+.pop-menu.listen-modes{display:flex;flex-direction:column;gap:2px;margin:0;padding:6px;background:#101416;border:1px solid var(--pl-line2,var(--line));border-radius:14px}
+.pop-menu.listen-modes button{flex:none;justify-content:flex-start;gap:10px;padding:8px 10px;text-align:left;white-space:normal}
+.pop-menu.listen-modes button img{width:20px;height:20px;flex:none}
+.pop-menu.listen-modes button span{display:flex;flex-direction:column;min-width:0}
+.pop-menu.listen-modes button b{color:var(--fg);font-size:13px}
+.pop-menu.listen-modes button small{color:var(--muted);font-size:11.5px;font-weight:500}
+.music-tabs{align-items:center;overflow:visible}
+.music-tabs .imp-wrap{margin-left:auto}
+.music-tabs .imp-toggle{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--pl-line2,var(--line));border-radius:999px;background:transparent;color:var(--muted);font-weight:700;font-size:12px;cursor:pointer}
+.imp-toggle svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.music-tabs .imp-toggle:hover,.music-tabs .imp-toggle.active{background:transparent;box-shadow:none;color:var(--accent);border-color:var(--pl-edge,var(--accent))}
+.imp-menu{width:340px;max-width:calc(100vw - 40px);display:flex;flex-direction:column;gap:8px;padding:12px}
+.imp-menu h5{margin:0;color:var(--accent);font-size:12px}
+.imp-menu small{color:var(--muted);font-size:12px}
+.imp-menu .pl-new input{background:var(--bg)}
+.music-tabs .imp-menu .pl-new button{padding:8px 14px;border-radius:10px;background:var(--accent);color:#07211c;font-size:13px}
+/* Çalma listeleri: kart ızgarası */
+.pl-grid{list-style:none;margin:0;padding:2px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:18px 14px}
+.queue .pl-card{display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0;padding:0;border-radius:0;cursor:pointer;outline:none}
+.queue .pl-card:hover{background:transparent}
+.pl-art{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;margin-bottom:6px;background:url(emojis/muzik.png) center/38% no-repeat,linear-gradient(135deg,#1f6f63,#0b2c28)}
+.pl-art img{width:100%;height:100%;object-fit:cover;display:block}
+.pl-art.mosaic{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.pl-art.mosaic img{min-width:0;min-height:0}
+.pl-play{position:absolute;right:8px;bottom:8px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:14px;cursor:pointer;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}
+.pl-card:hover .pl-play,.pl-card:focus-visible .pl-play{opacity:1;transform:none}
+.pl-play:hover{background:var(--accent);color:#04211e}
+.pl-card:hover .pl-art,.pl-card:focus-visible .pl-art{box-shadow:0 0 0 2px var(--pl-edge,var(--accent))}
+.queue .pl-card strong{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.queue .pl-card small{white-space:normal;color:var(--muted);font-size:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media (hover:none){.pl-play{opacity:1;transform:none}}
+/* Sözler: çalar kartında kapak yerine açılır, o anki satır ortada akar */
+.ly-toggle svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.now-lyrics{flex:1;min-height:240px;overflow-y:auto;scrollbar-width:none;padding:6px 2px;-webkit-mask-image:linear-gradient(transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(transparent,#000 12%,#000 88%,transparent)}
+.now-lyrics::-webkit-scrollbar{display:none}
+.now-lyrics[hidden]{display:none}
+.now-lyrics .ly-head{display:none}
+.now-lyrics .ly-lines{padding:40% 0}
+.now-lyrics .ly-line{color:#e8fbf7;font-size:15px}
+.now-lyrics .ly-lines.synced .ly-line{color:#cfe7e1;opacity:.45}
+.now-lyrics .ly-lines.synced .ly-line.on{color:#fff;opacity:1}
+.now-lyrics .queue-empty{display:block;margin:auto;padding:30px 10px;color:#cfe7e1;text-align:center;font-size:13px}
+.now-card.show-lyrics .now-cover{display:none}
+@media (min-width:901px){
+  .content.fit .now-card.player.show-lyrics{overflow:hidden}
+  .content.fit .now-card.show-lyrics .now-lyrics{min-height:0}
+}
+@media (max-width:900px){
+  .now-card.player.show-lyrics{grid-template-columns:minmax(0,1fr)}
+  .now-card.show-lyrics .now-text{text-align:center}
+  .now-card.show-lyrics .now-lyrics{grid-column:1/-1;min-height:0;max-height:300px}
+  .now-card.show-lyrics .now-lyrics .ly-lines{padding:30px 0}
+}
+@media (max-width:600px){.music-top{flex-wrap:wrap}.music-top .pop-wrap{flex:1 1 100%}.pop-toggle{width:100%;min-height:38px}.pop-menu{left:0;right:0;width:auto}}

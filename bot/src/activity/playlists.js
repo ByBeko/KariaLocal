@@ -42,6 +42,7 @@ const q = {
   rename: db.prepare('UPDATE playlists SET name=? WHERE id=?'),
   remove: db.prepare('DELETE FROM playlists WHERE id=?'),
   tracks: db.prepare('SELECT * FROM playlist_tracks WHERE playlist_id=? ORDER BY pos'),
+  firstTracks: db.prepare('SELECT url, thumbnail FROM playlist_tracks WHERE playlist_id=? ORDER BY pos LIMIT 12'),
   clearTracks: db.prepare('DELETE FROM playlist_tracks WHERE playlist_id=?'),
   addTrack: db.prepare('INSERT INTO playlist_tracks (playlist_id, pos, title, uploader, duration, url, thumbnail) VALUES (?, ?, ?, ?, ?, ?, ?)'),
 };
@@ -59,6 +60,18 @@ function own(guildId, userId, id) {
 }
 
 const ytId = (url) => url.match(/[?&]v=([\w-]{11})/)?.[1] ?? null;
+
+// Liste kartı kapağı: ilk şarkıların farklı kapaklarından en çok 4'ü (aktarılan kapak ya da YouTube küçük resmi)
+function listCovers(listId) {
+  const covers = [];
+  for (const t of q.firstTracks.all(listId)) {
+    const yt = ytId(t.url) ?? t.thumbnail?.match(/^https:\/\/i\.ytimg\.com\/vi\/([\w-]{11})\//)?.[1];
+    const src = coverPath(t.thumbnail) ?? (yt ? `thumb/${yt}.jpg` : null);
+    if (src && !covers.includes(src)) covers.push(src);
+    if (covers.length === 4) break;
+  }
+  return covers;
+}
 
 function view(list) {
   const tracks = q.tracks.all(list.id).map((t) => ({ title: t.title, artist: t.uploader, duration: Number(t.duration), yt: ytId(t.url), src: t.url, cover: coverPath(t.thumbnail), thumbnail: t.thumbnail }));
@@ -131,7 +144,7 @@ export async function playlistRoute(method, path, body, member, guildId) {
   const userId = member.id;
 
   if (path === '/playlists') {
-    if (method === 'GET') return { lists: q.lists.all(guildId, userId).map((l) => ({ id: l.id, name: l.name, count: Number(l.count), duration: Number(l.duration) })) };
+    if (method === 'GET') return { lists: q.lists.all(guildId, userId).map((l) => ({ id: l.id, name: l.name, count: Number(l.count), duration: Number(l.duration), covers: listCovers(l.id) })) };
     if (method !== 'POST') return { __status: 405, error: 'Geçersiz istek.' };
     if (Number(q.count.get(guildId, userId).n) >= MAX_LISTS) throw new UserError(`En fazla ${MAX_LISTS} çalma listen olabilir.`);
     const id = Number(q.create.run(guildId, userId, cleanName(body.name), Date.now()).lastInsertRowid);
