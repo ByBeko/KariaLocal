@@ -7,7 +7,7 @@ import { UserError } from '../utils/errors.js';
 import { getBalance, MIN_BET, MAX_BET } from '../systems/economy.js';
 import { slot, slotWins, blackjackStart, blackjackMove, activeBlackjack } from './games.js';
 import { startTables, tablesRoute } from './tables/index.js';
-import { playlistRoute } from './playlists.js';
+import { playlistRoute, listCoverImage } from './playlists.js';
 import { listenRoute, partyRoute, serveAudio, isKnownThumb } from './listen.js';
 import { accountsRoute, musicCallback } from './musicAccounts.js';
 import { lyricsRoute } from './lyrics.js';
@@ -291,6 +291,13 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
         const image = await memberAvatar(guild(), avatar[1]);
         if (!image) return send(404, { error: 'Bulunamadı.' });
         res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=3600' });
+        return res.end(image);
+      }
+      const plcover = req.method === 'GET' && pathname.match(/^\/plcover\/(\d+)\.jpg$/);
+      if (plcover) {
+        const image = listCoverImage(plcover[1]);
+        if (!image) return send(404, { error: 'Bulunamadı.' });
+        res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=86400' });
         return res.end(image);
       }
       const thumb = req.method === 'GET' && pathname.match(/^\/thumb\/([\w-]{11})\.jpg$/);

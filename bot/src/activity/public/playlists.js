@@ -32,16 +32,51 @@ export function initPlaylists(ctx) {
   // Botsuz modlarda çalan şarkılar sunucuda değil bu cihazda/odadadır: bilgileri gönderilir
   const nowSource = (which) => (listen.mode() === 'bot' ? { source: which } : { source: 'tracks', tracks: which === 'current' ? listen.current() : listen.queue() });
 
+  // Liste kapağı (profil resmi): seçilen resim kare kırpılıp 192px JPEG'e küçültülür (sunucu en çok 12 KB alır)
+  const CAMERA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+  function pickImage() {
+    return new Promise((resolve) => {
+      const file = el('input', { type: 'file', accept: 'image/*' });
+      file.addEventListener('change', () => resolve(file.files[0] ?? null), { once: true });
+      file.addEventListener('cancel', () => resolve(null), { once: true }); // seçim iptal: kilit (guarded) dışında beklenir
+      file.click();
+    });
+  }
+  async function toJpeg(file) {
+    const image = await createImageBitmap(file).catch(() => null);
+    if (!image) throw new Error('Bu dosya açılamadı, başka bir resim seç.');
+    const side = Math.min(image.width, image.height);
+    const canvas = el('canvas', { width: 192, height: 192 });
+    canvas.getContext('2d').drawImage(image, (image.width - side) / 2, (image.height - side) / 2, side, side, 0, 0, 192, 192);
+    for (const quality of [0.82, 0.7, 0.58, 0.45, 0.32]) {
+      const url = canvas.toDataURL('image/jpeg', quality);
+      if (url.length < 15_500) return url;
+    }
+    throw new Error('Resim çok ayrıntılı, başka bir resim seç.');
+  }
+  const setCover = (id, image) => api(`/playlists/${id}/cover`, { image });
+
   function drawLists() {
     open = null;
+    let chosen = null; // yeni listenin kapağı
     const input = el('input', { placeholder: 'Yeni liste adı', maxLength: 40 });
-    const form = el('form', { className: 'pl-new' }, input, el('button', { className: 'primary', textContent: 'Oluştur' }));
+    const pick = el('button', { type: 'button', className: 'pl-pick', title: 'Kapak resmi seç', innerHTML: CAMERA });
+    pick.setAttribute('aria-label', 'Kapak resmi seç');
+    pick.addEventListener('click', async () => {
+      const file = await pickImage();
+      if (file) guarded(async () => {
+        chosen = await toJpeg(file);
+        pick.replaceChildren(el('img', { src: chosen, alt: '' }));
+      });
+    });
+    const form = el('form', { className: 'pl-new' }, pick, input, el('button', { className: 'primary', textContent: 'Oluştur' }));
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       guarded(async () => {
         if (!input.value.trim()) throw new Error('Listeye bir ad ver.');
-        const r = await api('/playlists', { name: input.value });
-        drawList(r.list);
+        let { list } = await api('/playlists', { name: input.value });
+        if (chosen) list = (await setCover(list.id, chosen)).list;
+        drawList(list);
       });
     });
     // Kart ızgarası: kapak (4 farklı kapak varsa dörtlü), üstünde çal düğmesi, altında ad ve şarkı sayısı
@@ -55,7 +90,7 @@ export function initPlaylists(ctx) {
       return el('div', { className: `pl-art${shown.length === 4 ? ' mosaic' : ''}` }, ...imgs);
     };
     const cards = lists.map((l) => {
-      const cover = art(l.covers);
+      const cover = art(l.image ? [l.image] : l.covers);
       cover.append(btn('▶', (e) => { e.stopPropagation(); play(l.id, false); }, 'pl-play', 'Çal'));
       const card = el('li', { className: 'pl-card', tabIndex: 0, title: l.name },
         cover,
@@ -120,15 +155,29 @@ export function initPlaylists(ctx) {
         btn('↑', () => change('move', { index: i, dir: 'up' }), '', 'Yukarı'),
         btn('↓', () => change('move', { index: i, dir: 'down' }), '', 'Aşağı'),
         btn('✕', () => change('remove', { index: i }), 'x', 'Listeden çıkar'))));
+    // Kapak: tıklayınca yeni resim seçilir
+    const face = el('button', { type: 'button', className: 'pl-pick pl-face', title: list.image ? 'Kapağı değiştir' : 'Kapak resmi ekle' });
+    face.setAttribute('aria-label', face.title);
+    if (list.image) face.append(el('img', { src: list.image, alt: '' }));
+    else face.innerHTML = CAMERA;
+    face.addEventListener('click', async () => {
+      const file = await pickImage();
+      if (file) guarded(async () => {
+        drawList((await setCover(list.id, await toJpeg(file))).list);
+        say('Kapak güncellendi.', 'win');
+      });
+    });
     box.replaceChildren(
       el('div', { className: 'pl-head' },
         btn('‹', () => { open = null; loadLists(); }, 'pl-back', 'Listelerim'),
+        face,
         title,
         el('small', { textContent: `${list.tracks.length} şarkı${list.tracks.length ? ` • ${long(list.duration)}` : ''}` })),
       el('div', { className: 'pl-actions' },
         btn('▶ Çal', () => play(list.id, false), 'primary'),
         btn('⤨ Karışık', () => play(list.id, true)),
         btn('Çalan sırayı ekle', () => change('add', nowSource('queue'))),
+        ...(list.image ? [btn('Kapağı kaldır', () => change('cover', { image: null }))] : []),
         del),
       add,
       songs.length ? el('ol', { className: 'pl-songs' }, ...songs) : el('p', { className: 'queue-empty', textContent: 'Liste boş. Yukarıdan şarkı ara ya da çalan şarkıyı çalardaki + düğmesiyle ekle.' }));

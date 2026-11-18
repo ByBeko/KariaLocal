@@ -3,7 +3,8 @@
 // GET  /playlists/:id             → listedeki şarkılar
 // POST /playlists {name}          → yeni liste
 // POST /playlists/import {url}     → linkteki listeyi (YouTube, Spotify, Deezer, Apple Music, SoundCloud) yeni liste olarak aktarır
-// POST /playlists/:id/:hamle      → add {source: current|queue|query|tracks, query, tracks}, remove {index}, rename {name}, delete, play {shuffle}
+// POST /playlists/:id/:hamle      → add {source: current|queue|query|tracks, query, tracks}, remove {index}, rename {name}, cover {image: jpeg data URL | null}, delete, play {shuffle}
+// GET  /plcover/:id.jpg (server.js) → listenin kendi kapağı (listCoverImage)
 import { db } from '../core/database.js';
 import { UserError } from '../utils/errors.js';
 import { getQueue, resolveQuery, playTracks, isPlayableSource } from '../systems/music.js';
@@ -29,17 +30,26 @@ db.exec(`
   );
 `);
 
+// Listenin kendi kapağı (profil resmi): istemcide 192px JPEG'e küçültülür, burada saklanır
+if (!db.prepare('PRAGMA table_info(playlists)').all().some((column) => column.name === 'image')) {
+  db.exec('ALTER TABLE playlists ADD COLUMN image BLOB');
+  db.exec('ALTER TABLE playlists ADD COLUMN image_at INTEGER');
+}
+const MAX_COVER = 12 * 1024;
+
 const MAX_LISTS = 20;
 const MAX_TRACKS = 200;
 
 const q = {
-  lists: db.prepare(`SELECT p.id, p.name, COUNT(t.pos) AS count, COALESCE(SUM(t.duration), 0) AS duration
+  lists: db.prepare(`SELECT p.id, p.name, p.image_at, COUNT(t.pos) AS count, COALESCE(SUM(t.duration), 0) AS duration
     FROM playlists p LEFT JOIN playlist_tracks t ON t.playlist_id = p.id
     WHERE p.guild_id=? AND p.user_id=? GROUP BY p.id ORDER BY p.created_at DESC`),
   count: db.prepare('SELECT COUNT(*) AS n FROM playlists WHERE guild_id=? AND user_id=?'),
   get: db.prepare('SELECT * FROM playlists WHERE id=? AND guild_id=? AND user_id=?'),
   create: db.prepare('INSERT INTO playlists (guild_id, user_id, name, created_at) VALUES (?, ?, ?, ?)'),
   rename: db.prepare('UPDATE playlists SET name=? WHERE id=?'),
+  setImage: db.prepare('UPDATE playlists SET image=?, image_at=? WHERE id=?'),
+  image: db.prepare('SELECT image FROM playlists WHERE id=?'),
   remove: db.prepare('DELETE FROM playlists WHERE id=?'),
   tracks: db.prepare('SELECT * FROM playlist_tracks WHERE playlist_id=? ORDER BY pos'),
   firstTracks: db.prepare('SELECT url, thumbnail FROM playlist_tracks WHERE playlist_id=? ORDER BY pos LIMIT 12'),
@@ -75,7 +85,14 @@ function listCovers(listId) {
 
 function view(list) {
   const tracks = q.tracks.all(list.id).map((t) => ({ title: t.title, artist: t.uploader, duration: Number(t.duration), yt: ytId(t.url), src: t.url, cover: coverPath(t.thumbnail), thumbnail: t.thumbnail }));
-  return { id: list.id, name: list.name, tracks, duration: tracks.reduce((s, t) => s + t.duration, 0) };
+  return { id: list.id, name: list.name, image: imageUrl(list), tracks, duration: tracks.reduce((s, t) => s + t.duration, 0) };
+}
+
+const imageUrl = (list) => (list.image_at ? `plcover/${list.id}.jpg?v=${list.image_at}` : null);
+
+/** Kapak resmi (server.js /plcover/:id.jpg); liste kimliği tahmin edilse bile yalnızca resim döner */
+export function listCoverImage(id) {
+  return q.image.get(Number(id))?.image ?? null;
 }
 
 /** Etkinlikte (bot olmadan) çalınan şarkılar istemciden gelir: kaynak ve kapak denetlenir */
@@ -144,7 +161,7 @@ export async function playlistRoute(method, path, body, member, guildId) {
   const userId = member.id;
 
   if (path === '/playlists') {
-    if (method === 'GET') return { lists: q.lists.all(guildId, userId).map((l) => ({ id: l.id, name: l.name, count: Number(l.count), duration: Number(l.duration), covers: listCovers(l.id) })) };
+    if (method === 'GET') return { lists: q.lists.all(guildId, userId).map((l) => ({ id: l.id, name: l.name, count: Number(l.count), duration: Number(l.duration), covers: listCovers(l.id), image: imageUrl(l) })) };
     if (method !== 'POST') return { __status: 405, error: 'Geçersiz istek.' };
     if (Number(q.count.get(guildId, userId).n) >= MAX_LISTS) throw new UserError(`En fazla ${MAX_LISTS} çalma listen olabilir.`);
     const id = Number(q.create.run(guildId, userId, cleanName(body.name), Date.now()).lastInsertRowid);
@@ -203,6 +220,17 @@ export async function playlistRoute(method, path, body, member, guildId) {
     case 'rename':
       q.rename.run(cleanName(body.name), list.id);
       return { list: view(own(guildId, userId, list.id)) };
+    case 'cover': {
+      if (body.image == null) {
+        q.setImage.run(null, null, list.id);
+      } else {
+        const m = String(body.image).match(/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/);
+        const image = m ? Buffer.from(m[1], 'base64') : null;
+        if (!image || image.length > MAX_COVER || image[0] !== 0xff || image[1] !== 0xd8) throw new UserError('Resim yüklenemedi, başka bir resim dene.');
+        q.setImage.run(image, Date.now(), list.id);
+      }
+      return { list: view(own(guildId, userId, list.id)) };
+    }
     case 'delete':
       q.clearTracks.run(list.id);
       q.remove.run(list.id);

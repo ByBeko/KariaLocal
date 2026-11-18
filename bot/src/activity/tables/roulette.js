@@ -142,7 +142,7 @@ export class RouletteRoom extends Room {
   view(userId) {
     const mine = this.bets.get(userId);
     const reveal = this.phase === 'spinning' || this.phase === 'result';
-    const players = [...this.bets].map(([id, b]) => ({ id, name: b.name, total: b.total, payout: this.phase === 'result' ? b.payout ?? 0 : null }));
+    const players = [...this.bets].map(([id, b]) => ({ id, name: b.name, total: b.total, bets: Object.fromEntries(b.cells), payout: this.phase === 'result' ? b.payout ?? 0 : null })); // bets: kimin nereye ne koyduğu
     for (const id of this.present()) {
       if (!this.bets.has(id)) players.push({ id, name: this.names?.get(id) ?? 'Oyuncu', total: 0, payout: null });
     }

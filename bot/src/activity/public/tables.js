@@ -801,9 +801,22 @@ export function initTables(ctx) {
   const pendingTotal = () => [...rl.pending.values()].reduce((a, b) => a + b, 0);
   const locked = () => ['spinning', 'result'].includes(rl.room?.phase);
 
+  // Bahis kutusunun adı: oyuncu şeridinde ve ipuçlarında
+  const BET_NAME = { red: 'Kırmızı', black: 'Siyah', even: 'Çift', odd: 'Tek', low: '1-18', high: '19-36', d1: '1-12', d2: '13-24', d3: '25-36', c1: '1. sütun', c2: '2. sütun', c3: '3. sütun' };
+  const betName = (key) => (key[0] === 'n' ? key.slice(1) : key[0] === 'g' ? `${KIND_NAME[groupNums(key).length]} ${groupNums(key).join('-')}` : BET_NAME[key] ?? key);
+
   function renderRouletteBets() {
     const mine = rl.room?.mine ?? {};
     const others = rl.room?.table ?? {};
+    // Başkalarının kutu kutu bahisleri: kutuda ilk oynayanın avatarı, üstüne gelince kim ne koydu
+    const who = new Map();
+    for (const p of rl.room?.players ?? []) {
+      if (p.id === myId()) continue;
+      for (const [key, amount] of Object.entries(p.bets ?? {})) {
+        if (!who.has(key)) who.set(key, []);
+        who.get(key).push({ id: p.id, name: p.name, amount });
+      }
+    }
     for (const b of $('roulette-board').children) {
       const key = b.dataset.key;
       const amount = (rl.pending.get(key) ?? 0) + (mine[key] ?? 0);
@@ -811,6 +824,17 @@ export function initTables(ctx) {
       else delete b.dataset.bet;
       b.classList.toggle('placed', Boolean(mine[key]));
       b.classList.toggle('others', (others[key] ?? 0) > (mine[key] ?? 0));
+      const list = who.get(key) ?? [];
+      b.title = list.length ? list.map((x) => `${x.name}: ${fmt(x.amount)}`).join(' • ') : '';
+      let face = b.querySelector('.rc-who');
+      if (list.length && face?.dataset.id !== list[0].id) {
+        face?.remove();
+        face = avatarImg(list[0].id, 'rc-who');
+        face.dataset.id = list[0].id;
+        b.append(face);
+      } else if (!list.length) face?.remove();
+      if (face) face.dataset.more = list.length > 1 ? `+${list.length - 1}` : '';
+      b.classList.toggle('who', list.length > 0);
       b.classList.toggle('hit', rl.room?.phase === 'result' && rl.room.result && winsOn(key, rl.room.result.result));
     }
     // Grup bahisleri: kapsadığı sayılar işaretlenir, altta liste olarak durur (sağ tık / × ile silinir)
@@ -958,7 +982,8 @@ export function initTables(ctx) {
     else if (room.result) status.replaceChildren(el('span', { textContent: `${room.result.result} ${COLOR_TR[room.result.color]} geldi.` }));
 
     $('roulette-players').replaceChildren(...room.players.map((p) => el('span', { className: `rp${p.id === myId() ? ' me' : ''}${p.payout ? ' won' : p.payout === 0 ? ' lost' : ''}` },
-      avatarImg(p.id, ''), el('b', { textContent: p.name }), el('em', { textContent: p.payout != null ? (p.payout ? `+${fmt(p.payout)}` : fmt(-p.total)) : p.total ? fmt(p.total) : 'Masada' }))));
+      avatarImg(p.id, ''), el('b', { textContent: p.name }), el('em', { textContent: p.payout != null ? (p.payout ? `+${fmt(p.payout)}` : fmt(-p.total)) : p.total ? fmt(p.total) : 'Masada' }),
+      ...(Object.keys(p.bets ?? {}).length ? [el('small', { className: 'rp-bets', textContent: Object.entries(p.bets).map(([key, amount]) => `${betName(key)} ${short(amount)}`).join(' · ') })] : []))));
     $('roulette-history').replaceChildren(...room.history.map((h) => el('span', { className: `rh ${h.color}`, textContent: String(h.result) })));
 
     if ((room.phase === 'spinning' || room.phase === 'result') && room.spinAt && rl.spunAt !== room.spinAt) {

@@ -981,3 +981,16 @@
   .music-layout>.queue-side{order:1}
 }
 @media (max-width:900px){.queue-side .queue{max-height:360px}}
+/* Rulet: kimin nereye oynadığı (kutuda avatar, şeritte döküm) */
+.rc.who.others::before{display:none}
+.rc .rc-who{position:absolute;left:-5px;bottom:-5px;width:16px;height:16px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px #0d3a33;pointer-events:none}
+.rc .rc-who[data-more]:not([data-more=""]){box-shadow:0 0 0 2px #bff7ec}
+.rp{flex-wrap:wrap;max-width:100%}
+.rp-bets{flex-basis:100%;padding:0 4px 2px 28px;color:#cfe7e1;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+/* Liste kapağı seçici (oluştur formu ve liste başlığı) */
+.pl-pick{flex:none;display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px dashed var(--pl-line2,var(--line));border-radius:10px;background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;overflow:hidden}
+.pl-pick:hover{border-color:var(--pl-edge,var(--accent));color:var(--accent)}
+.pl-pick svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.pl-pick img{width:100%;height:100%;object-fit:cover}
+.pl-pick:has(img){border-style:solid}
+.pl-face{width:52px;height:52px;border-radius:12px}
