@@ -121,7 +121,7 @@ $('side-toggle').addEventListener('click', () => setSide(!document.querySelector
 
 function openTab(name) {
   const isGame = GAMES.includes(name);
-  if (name !== 'cardshop' && shopPick !== undefined) { shopPick = undefined; refreshSideCard(); }
+  if (name !== 'cardshop' && shopPick !== undefined) { shopPick = undefined; applyCardBg(); }
   autoSide(`tab-${name}`, false);
   const sideName = isGame ? 'blackjack' : name;
   for (const t of document.querySelectorAll('.tab')) t.classList.toggle('active', t.dataset.tab === sideName);
@@ -1228,6 +1228,7 @@ async function loadHome() {
           el('div', { className: 'box' }, el('h4', { textContent: 'Şikayet Et' }), report),
           el('div', { className: 'box' }, el('h4', { textContent: 'Öneri Gönder' }), send))),
     );
+    applyCardBg();
   } catch (error) {
     say(error.message, 'lose');
   }
@@ -1312,11 +1313,13 @@ function drawMembership(data) {
 const loadMembership = () => guarded(async () => drawMembership(await api('/admin/membership')));
 
 // ── Kart Mağazası (seviye kartı arka planları) ──
-/** Sol alttaki kullanıcı kutusunda seviye kartı; mağazada tıklanan kart da burada önizlenir */
-function refreshSideCard(id = null) {
-  return showCardImage($('side-card'), null, id).then(() => {
-    document.querySelector('.side-user').classList.toggle('card-on', !$('side-card').hidden);
-  });
+/** Taktığın kartın arka planı: sol alttaki kullanıcı kutusu ve ana sayfadaki karşılama kutusu */
+let myCardBg = null;
+function applyCardBg(id = myCardBg) {
+  for (const node of document.querySelectorAll('.side-user, #home .hero')) {
+    node.classList.toggle('has-card', Boolean(id));
+    node.style.setProperty('--card-bg', id ? `url("cardbg/${id}.jpg")` : 'none');
+  }
 }
 
 /** id: null → üyenin taktığı kart, 0 → varsayılan, sayı → o arka plan */
@@ -1357,6 +1360,8 @@ function cardTile(c) {
 
 function drawCardShop(data) {
   shopData = data;
+  myCardBg = data.selected;
+  applyCardBg(shopPick === undefined ? myCardBg : shopPick);
   setBalance(data.balance);
   const def = { id: null, name: 'Varsayılan', price: 0, owned: true, selected: !data.selected, image: null };
   const mine = [def, ...data.items.filter((c) => c.owned)];
@@ -1378,14 +1383,13 @@ function drawStageBar() {
       shopPick = undefined;
       drawCardShop(await api(path, { id: c.id }));
       say(msg, 'win');
-      refreshSideCard();
     }));
     return b;
   };
   $('cs-stage-bar').hidden = !c; // satır yalnızca bir kart önizlenirken görünür
   if (c) {
     $('cs-stage-title').textContent = c.name;
-    $('cs-stage-note').textContent = c.selected ? 'Şu an bu kartı kullanıyorsun.' : c.owned ? 'Bu karta sahipsin. Önizleme sol altta.' : 'Önizleme sol altta: satın alınca kartın böyle görünür.';
+    $('cs-stage-note').textContent = c.selected ? 'Şu an bu kartı kullanıyorsun.' : c.owned ? 'Bu karta sahipsin. Arka plan sol altta önizleniyor.' : 'Arka plan sol altta önizleniyor.';
     if (!c.selected && c.owned) actions.push(act('Kullan', '/cards/use', `${c.name} takıldı.`, true));
     if (!c.owned) actions.push(act(c.price ? `Satın Al · ${fmt(c.price)} coin` : 'Ücretsiz Al', '/cards/buy', `${c.name} satın alındı ve takıldı.`, true));
     const back = el('button', { type: 'button', textContent: 'Kartıma dön' });
@@ -1399,7 +1403,6 @@ function pickCard(c) {
   if ($('cs-mine-dialog').open) $('cs-mine-dialog').close();
   shopPick = c === undefined ? undefined : c.id;
   drawCardShop(shopData);
-  refreshSideCard(shopPick === undefined ? null : shopPick ?? 0);
 }
 
 /** Yönetimde kart önizlemesi (pencere) */
@@ -1919,7 +1922,8 @@ async function start() {
     sideAvatar.alt = '';
     sideAvatar.onload = () => $('avatar-letter').replaceChildren(sideAvatar);
     sideAvatar.src = `avatar/${myId}.png`;
-    refreshSideCard();
+    myCardBg = state.cardBg ?? null;
+    applyCardBg();
     $('role-badge').textContent = state.isAdmin ? 'Yönetici' : staffUser ? 'Yetkili' : 'Üye';
     $('role-badge').classList.toggle('admin', staffUser);
     if (staffUser) { // menü kapalıyken de bekleyen işler görünsün

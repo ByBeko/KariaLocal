@@ -734,7 +734,5 @@ textarea::-webkit-scrollbar{display:none}
 .cs-head-row{display:flex;align-items:center;gap:12px;margin:18px 0 10px}
 .cs-head-row .cs-head{margin:0}
 #cs-mine-dialog .cs-grid{margin-top:12px;max-height:60vh;overflow-y:auto}
-.side-card{display:block;width:100%;border-radius:10px;transition:opacity .2s}
-.side-card.loading{opacity:.45}
-.side-user.card-on{padding:4px}
-.side-user.card-on>:not(.side-card){display:none}
+.side-user.has-card{background:linear-gradient(90deg,rgba(8,9,11,.8),rgba(8,9,11,.3)),var(--card-bg) center/cover no-repeat}
+#home .hero.has-card{background:linear-gradient(90deg,rgba(15,17,20,.88) 30%,rgba(15,17,20,.45)),var(--card-bg) right center/cover no-repeat}
