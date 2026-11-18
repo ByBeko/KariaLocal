@@ -336,7 +336,7 @@ select.field option,select.field optgroup{background:var(--panel2);color:var(--f
   .player{grid-template-columns:minmax(0,1fr);gap:10px}
   .player-right{justify-content:center}
   .board{grid-template-columns:minmax(0,1fr)}
-  .runners{max-height:320px}
+  .runners{max-height:none}
   .podium{min-height:380px;gap:6px;padding:20px 8px 0}
   .p1 .podium-block{height:220px}.p2 .podium-block{height:180px}.p3 .podium-block{height:150px}
   .lever{display:none}

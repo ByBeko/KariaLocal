@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Karia</title>
 <link rel="icon" href="logo.png">
-<link rel="stylesheet" href="style.css?v=8">
-<link rel="stylesheet" href="tables.css?v=32">
+<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="tables.css?v=33">
 <link rel="stylesheet" href="panel.css?v=1">
 </head>
 <body>
@@ -240,14 +240,14 @@
                 <button type="button" data-lmode="party" id="lmode-party" role="menuitem" hidden><img src="emojis/arkadaslar.png" alt=""><span><b>Ortak dinle</b><small>Etkinlikteki herkes aynı anda dinler</small></span></button>
               </div>
             </div>
-          </div>
-          <div class="music-tabs" role="tablist">
-            <button type="button" data-mtab="queue" class="active">Sıradaki Şarkılar <span id="music-count" class="queue-count"></span></button>
-            <button type="button" data-mtab="lists">Çalma Listelerim</button>
             <div class="pop-wrap imp-wrap">
-              <button type="button" id="import-toggle" class="imp-toggle" aria-haspopup="true" aria-expanded="false" title="Başka bir uygulamadan liste aktar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Aktar</button>
+              <button type="button" id="import-toggle" class="imp-toggle" aria-haspopup="true" aria-expanded="false" title="Liste aktar" aria-label="Liste aktar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
               <div id="import-box" class="pop-menu imp-menu" hidden></div>
             </div>
+          </div>
+          <div class="music-tabs seg" role="tablist">
+            <button type="button" data-mtab="queue" class="active">Sıradaki Şarkılar <span id="music-count" class="queue-count"></span></button>
+            <button type="button" data-mtab="lists">Çalma Listelerim</button>
           </div>
           <ol id="music-list" class="queue"></ol>
           <div id="playlist-box" class="queue plbox" hidden></div>
@@ -386,6 +386,6 @@
   </main>
   </div>
 </div>
-<script type="module" src="app.js?v=28"></script>
+<script type="module" src="app.js?v=29"></script>
 </body>
 </html>

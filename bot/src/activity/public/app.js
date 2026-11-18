@@ -132,7 +132,7 @@ function openTab(name) {
   if (isGame) drawGameInfo(name);
   document.querySelector('.content').classList.toggle('fill', isGame || ['home', 'music', 'leaderboard', 'tickets'].includes(name));
   document.querySelector('.content').classList.toggle('game', isGame);
-  document.querySelector('.content').classList.toggle('fit', name === 'music'); // müzik de ekrana sığar, sayfa kaymaz
+  document.querySelector('.content').classList.toggle('fit', name === 'music' || name === 'leaderboard'); // müzik ve sıralama ekrana sığar, sayfa kaymaz
   const active = document.querySelector(`.tab[data-tab="${sideName}"]`);
   if ($('admin-links').contains(active)) setAdminOpen(true);
   $('page-title').textContent = [...active.childNodes].find((n) => n.nodeType === 3)?.textContent.trim() ?? '';
