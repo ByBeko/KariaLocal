@@ -62,6 +62,9 @@ export function backgroundImage(id) {
   return imageCache.get(key);
 }
 
+/** Üyenin taktığı arka planın id'si (yoksa null) */
+export const selectedId = (guildId, userId) => Number(q.selected.get(guildId, userId)?.bg_id ?? 0) || null;
+
 /** Üyenin kartında kullandığı arka plan resmi (yoksa null) */
 export function selectedBackground(guildId, userId) {
   const row = q.selected.get(guildId, userId);

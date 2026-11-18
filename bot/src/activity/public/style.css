@@ -734,9 +734,8 @@ textarea::-webkit-scrollbar{display:none}
 .cs-mine-tile{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--fg);font-size:13px;font-weight:600;cursor:pointer;transition:border-color .15s}
 .cs-mine-tile:hover{border-color:var(--accent)}
 .cs-mine-tile small{min-width:20px;padding:1px 6px;border-radius:999px;background:var(--panel2);color:var(--accent);font-size:11px;text-align:center}
-.cs-mine-stack{display:block;width:46px;height:14px}
-.cs-mine-stack>*{display:block;width:46px;height:14px;border-radius:4px;object-fit:cover;border:1px solid rgba(255,255,255,.18)}
-.cs-mine-stack i.cs-default{font-size:0}
 .cs-head-row{display:flex;align-items:center;gap:12px;margin:18px 0 10px}
 .cs-head-row .cs-head{margin:0}
 #cs-mine-dialog .cs-grid{margin-top:12px;max-height:60vh;overflow-y:auto}
+.side-user.has-card{position:relative;overflow:hidden;background:linear-gradient(90deg,rgba(8,9,11,.82),rgba(8,9,11,.35)),var(--side-card) center/cover no-repeat}
+.side-user.has-card>*{position:relative}

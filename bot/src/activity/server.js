@@ -14,7 +14,7 @@ import { lyricsRoute } from './lyrics.js';
 import { getQueue, playQuery, requireVoice, voteSkip, stopMusic, goBack } from '../systems/music.js';
 import { coverSource } from '../systems/playlistImport.js';
 import { adminRoute, isPanelAdmin, isPanelStaff } from './admin.js';
-import { shopView, buyBackground, useBackground, cardPreview, backgroundImage } from '../systems/cardBackgrounds.js';
+import { shopView, buyBackground, useBackground, cardPreview, backgroundImage, selectedId } from '../systems/cardBackgrounds.js';
 import { recordVote } from '../systems/monthlyGifts.js';
 import { receiveSupportMail } from '../components/ticket.js';
 import { socialHttp, startSocial } from '../systems/social.js';
@@ -188,7 +188,7 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
     }
 
     if (req.method === 'GET' && pathname === '/state') {
-      return { user, isAdmin: isPanelAdmin(member), isStaff: isPanelStaff(member), balance: getBalance(guildId, id), blackjack: activeBlackjack(guildId, id), music: { ...musicView(guild()), inVoice: Boolean(member.voice.channelId) } };
+      return { user, isAdmin: isPanelAdmin(member), isStaff: isPanelStaff(member), balance: getBalance(guildId, id), cardBg: selectedId(guildId, id), blackjack: activeBlackjack(guildId, id), music: { ...musicView(guild()), inVoice: Boolean(member.voice.channelId) } };
     }
     if (req.method === 'GET' && pathname === '/home') return homeView(guild(), member);
     const board = pathname.match(/^\/leaderboard\/(\w+)$/);
