@@ -291,10 +291,16 @@
     </section>
 
     <section class="panel" data-panel="cardshop" hidden>
-      <div class="cs-mine">
-        <img id="cs-current" class="cs-card" alt="Seviye kartın">
-        <p class="hint left">Kartın <b>/seviye</b> komutunda böyle görünür. Mağazadan bir arka plana tıklayıp kendi kartınla önizleyebilirsin.</p>
+      <div class="cs-stage">
+        <div class="cs-stage-frame"><img id="cs-current" class="cs-card" alt="Seviye kartın" hidden><span id="cs-current-loading" class="hint">Kartın hazırlanıyor...</span></div>
+        <div class="cs-stage-bar">
+          <div><strong id="cs-stage-title">Şu anki kartın</strong><small id="cs-stage-note">Aşağıdan bir karta bas, burada kendi kartınla önizle.</small></div>
+          <div id="cs-stage-actions" class="item-actions"></div>
+        </div>
       </div>
+      <h4 class="cs-head">Kartlarım</h4>
+      <div id="cs-mine" class="cs-grid"></div>
+      <h4 class="cs-head">Mağaza</h4>
       <div id="cs-grid" class="cs-grid"></div>
     </section>
 

@@ -1315,8 +1315,9 @@ const loadMembership = () => guarded(async () => drawMembership(await api('/admi
 async function showCardImage(img, loading, id) {
   const seq = String(Number(img.dataset.seq ?? 0) + 1);
   img.dataset.seq = seq;
-  img.hidden = true;
-  if (loading) loading.hidden = false;
+  const shown = !img.hidden && img.src; // önceki kart, yenisi gelene kadar soluk durur
+  if (shown) img.classList.add('loading');
+  else if (loading) loading.hidden = false;
   try {
     const { image } = await api('/cards/preview', { id });
     if (img.dataset.seq !== seq) return; // bu arada başka kart açıldı
@@ -1325,50 +1326,86 @@ async function showCardImage(img, loading, id) {
   } catch (error) {
     say(error.message, 'lose');
   } finally {
-    if (loading && img.dataset.seq === seq) loading.hidden = true;
+    if (img.dataset.seq === seq) {
+      img.classList.remove('loading');
+      if (loading) loading.hidden = true;
+    }
   }
 }
 
-function drawCardShop(data) {
-  setBalance(data.balance);
-  const def = { id: null, name: 'Varsayılan', price: 0, owned: true, selected: !data.selected, image: null };
-  $('cs-grid').replaceChildren(...[def, ...data.items].map((c) => {
-    const thumb = c.image ? el('img', { src: c.image, alt: '', loading: 'lazy' }) : el('div', { className: 'cs-default', textContent: 'Karia' });
-    const tag = c.selected ? 'Kullanılıyor' : c.owned ? 'Sahipsin' : c.price ? `${fmt(c.price)} coin` : 'Ücretsiz';
-    const card = el('button', { type: 'button', className: `cs-item${c.selected ? ' on' : ''}${c.owned ? ' owned' : ''}` },
-      thumb, el('span', { className: 'cs-meta' }, el('strong', { textContent: c.name }), el('em', { textContent: tag })));
-    card.addEventListener('click', () => openCardDialog(c));
-    return card;
-  }));
-  if (!data.items.length) $('cs-grid').append(empty('Mağazada henüz kart yok. Yöneticiler yakında ekleyecek.'));
+// Mağazada üstteki büyük kart: tıklanan kart orada üyenin kendi bilgileriyle önizlenir
+let shopData = null;
+let shopPick = undefined; // undefined: taktığı kart, null: varsayılan, sayı: arka plan id
+
+function cardTile(c) {
+  const thumb = c.image ? el('img', { src: c.image, alt: '', loading: 'lazy' }) : el('div', { className: 'cs-default', textContent: 'Karia' });
+  const tag = c.selected ? 'Kullanılıyor' : c.owned ? 'Sahipsin' : c.price ? `${fmt(c.price)} coin` : 'Ücretsiz';
+  const picked = shopPick !== undefined && shopPick === c.id;
+  const tile = el('button', { type: 'button', className: `cs-item${c.selected ? ' on' : ''}${c.owned ? ' owned' : ''}${picked ? ' picked' : ''}` },
+    thumb, el('span', { className: 'cs-meta' }, el('strong', { textContent: c.name }), el('em', { textContent: tag })));
+  tile.addEventListener('click', () => pickCard(c));
+  return tile;
 }
 
-function openCardDialog(c) {
-  $('cs-title').textContent = c.name;
+function drawCardShop(data) {
+  shopData = data;
+  setBalance(data.balance);
+  const def = { id: null, name: 'Varsayılan', price: 0, owned: true, selected: !data.selected, image: null };
+  const mine = [def, ...data.items.filter((c) => c.owned)];
+  const store = data.items.filter((c) => !c.owned);
+  $('cs-mine').replaceChildren(...mine.map(cardTile));
+  $('cs-grid').replaceChildren(...(store.length ? store.map(cardTile) : [empty(data.items.length ? 'Mağazadaki bütün kartlara sahipsin.' : 'Mağazada henüz kart yok. Yöneticiler yakında ekleyecek.')]));
+  drawStageBar();
+}
+
+/** Üst alandaki başlık ve düğmeler, seçili karta göre */
+function drawStageBar() {
+  const c = shopPick === undefined ? null : shopPick === null ? { id: null, name: 'Varsayılan', owned: true, selected: !shopData.selected } : shopData.items.find((x) => x.id === shopPick);
   const actions = [];
   const act = (label, path, msg, primary = false) => {
     const b = el('button', { type: 'button', textContent: label, className: primary ? 'primary' : '' });
     b.addEventListener('click', () => guarded(async () => {
+      shopPick = undefined;
       drawCardShop(await api(path, { id: c.id }));
-      $('cs-dialog').close();
       say(msg, 'win');
-      refreshMyCard();
+      showCardImage($('cs-current'), $('cs-current-loading'), null);
     }));
     return b;
   };
-  if (c.adminView) actions.push(el('span', { className: 'hint', textContent: 'Üyeler bu kartı kendi bilgileriyle böyle görür.' }));
-  else if (c.selected) actions.push(el('span', { className: 'hint', textContent: 'Şu an bu kartı kullanıyorsun.' }));
-  else if (c.owned) actions.push(act('Kullan', '/cards/use', `${c.name} takıldı.`, true));
-  else actions.push(act(c.price ? `Satın Al · ${fmt(c.price)} coin` : 'Ücretsiz Al', '/cards/buy', `${c.name} satın alındı ve takıldı.`, true));
-  $('cs-actions').replaceChildren(...actions);
-  $('cs-dialog').showModal();
-  showCardImage($('cs-preview'), $('cs-loading'), c.id ?? 0);
+  if (!c) {
+    $('cs-stage-title').textContent = 'Şu anki kartın';
+    $('cs-stage-note').textContent = 'Aşağıdan bir karta bas, burada kendi kartınla önizle.';
+  } else {
+    $('cs-stage-title').textContent = c.name;
+    $('cs-stage-note').textContent = c.selected ? 'Şu an bu kartı kullanıyorsun.' : c.owned ? 'Bu karta sahipsin.' : 'Önizleme: satın alınca kartın böyle görünür.';
+    if (!c.selected && c.owned) actions.push(act('Kullan', '/cards/use', `${c.name} takıldı.`, true));
+    if (!c.owned) actions.push(act(c.price ? `Satın Al · ${fmt(c.price)} coin` : 'Ücretsiz Al', '/cards/buy', `${c.name} satın alındı ve takıldı.`, true));
+    const back = el('button', { type: 'button', textContent: 'Kartıma dön' });
+    back.addEventListener('click', () => pickCard(undefined));
+    if (!c.selected) actions.push(back);
+  }
+  $('cs-stage-actions').replaceChildren(...actions);
 }
 
-const refreshMyCard = () => showCardImage($('cs-current'), null, null);
+function pickCard(c) {
+  shopPick = c === undefined ? undefined : c.id;
+  drawCardShop(shopData);
+  showCardImage($('cs-current'), $('cs-current-loading'), shopPick === undefined ? null : shopPick ?? 0);
+  $('cs-current').closest('.cs-stage').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/** Yönetimde kart önizlemesi (pencere) */
+function openCardDialog(c) {
+  $('cs-title').textContent = c.name;
+  $('cs-actions').replaceChildren(el('span', { className: 'hint', textContent: 'Üyeler bu kartı kendi bilgileriyle böyle görür.' }));
+  $('cs-dialog').showModal();
+  showCardImage($('cs-preview'), $('cs-loading'), c.id);
+}
+
 const loadCardShop = () => guarded(async () => {
+  shopPick = undefined;
   drawCardShop(await api('/cards'));
-  refreshMyCard();
+  showCardImage($('cs-current'), $('cs-current-loading'), null);
 });
 
 // ── Yönetim: seviye kartı arka planları ──
@@ -1412,7 +1449,7 @@ function drawCardAdmin(data) {
       say('Kaydedildi.', 'win');
     }));
     const thumb = el('img', { src: c.image, alt: '' });
-    thumb.addEventListener('click', () => openCardDialog({ ...c, owned: true, selected: true, adminView: true }));
+    thumb.addEventListener('click', () => openCardDialog(c));
     return el('article', { className: 'cs-item admin' }, thumb,
       el('span', { className: 'cs-meta' }, el('em', { textContent: `${c.owners} kişi satın aldı` })),
       el('div', { className: 'cs-edit' }, name, price),
