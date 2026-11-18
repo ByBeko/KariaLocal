@@ -897,7 +897,7 @@
 /* ── Müzik sadeleştirme: arama + mod seçici tek satır, Aktar küçük açılır menü, sözler sağdaki çalar kartında ── */
 .music-top{display:flex;gap:8px;align-items:stretch}
 .music-top .music-form{flex:1;min-width:0}
-.pop-wrap{position:relative;flex:none}
+.pop-wrap{position:relative;flex:none;display:flex}
 .pop-toggle{display:flex;align-items:center;gap:7px;height:100%;min-height:40px;padding:0 12px;border:1px solid var(--pl-line2,var(--line));border-radius:12px;background:rgba(255,255,255,.03);color:var(--fg);font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
 .pop-toggle:hover{border-color:var(--pl-edge,var(--accent))}
 .pop-toggle img{width:16px;height:16px}
@@ -910,11 +910,8 @@
 .pop-menu.listen-modes button span{display:flex;flex-direction:column;min-width:0}
 .pop-menu.listen-modes button b{color:var(--fg);font-size:13px}
 .pop-menu.listen-modes button small{color:var(--muted);font-size:11.5px;font-weight:500}
-/* Sıradaki / Listelerim: küçük seçmeli düğme */
-.music-side .music-tabs.seg{display:inline-flex;align-self:flex-start;gap:2px;margin:12px 0 8px;padding:3px;border:1px solid var(--pl-line,var(--line));border-radius:999px;background:rgba(255,255,255,.03);overflow:visible}
-.music-tabs.seg button{padding:5px 12px;border-radius:999px;font-size:12px}
-/* Aktar: arama satırında yuvarlak düğme */
-.imp-toggle{display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--pl-line2,var(--line));border-radius:50%;background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer}
+/* Aktar ve Sıra: arama satırında, satırla aynı boyda yuvarlak düğmeler */
+.imp-toggle{flex:none;display:grid;place-items:center;align-self:stretch;width:auto;height:auto;min-height:40px;aspect-ratio:1;padding:0;border:1px solid var(--pl-line2,var(--line));border-radius:50%;background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer}
 .imp-toggle svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .imp-toggle:hover,.imp-toggle.active{color:var(--accent);border-color:var(--pl-edge,var(--accent))}
 .imp-menu{width:340px;max-width:calc(100vw - 40px);display:flex;flex-direction:column;gap:8px;padding:12px}
@@ -969,3 +966,18 @@
   .content.fit .runners li{padding:5px 10px}
   .content.fit .runner-avatar{width:30px;height:30px}
 }
+/* Sıradaki şarkılar paneli: listelerle çalar arasında, açılır kapanır */
+.queue-side{display:none;flex-direction:column;min-width:0;min-height:0;padding:12px;border:1px solid var(--pl-line,var(--line));border-radius:18px;background:rgba(255,255,255,.02)}
+.music-layout.q-open .queue-side{display:flex}
+.qs-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;padding:0 2px}
+.qs-head strong{font-size:14px}
+.qs-close{width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:20px;line-height:1;cursor:pointer}
+.qs-close:hover{background:rgba(255,255,255,.06);color:var(--fg)}
+.queue-side .queue{flex:1;min-height:0;max-height:none;overflow-y:auto}
+.music-side #playlist-box{margin-top:14px}
+@media (min-width:901px){
+  .music-layout.q-open{grid-template-columns:minmax(0,1fr) minmax(220px,270px) minmax(260px,340px)}
+  .music-layout.q-open .pop-toggle span{display:none} /* dar alanda mod seçici yalnızca ikon */
+  .music-layout>.queue-side{order:1}
+}
+@media (max-width:900px){.queue-side .queue{max-height:360px}}

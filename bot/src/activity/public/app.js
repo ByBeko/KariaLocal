@@ -1646,6 +1646,16 @@ tables = initTables({
 });
 // Ortak dinleme odası Discord etkinlik odasıdır; yerel testte ?room= ile verilir
 listen = initListen({ api, API, $, say, drawMusic, getInstance: () => sdk?.instanceId ?? (devId ? params.get('room') : null) });
+// Sıradaki şarkılar: müzikte sağda açılır kapanır panel (tercih hatırlanır)
+function setQueueOpen(open) {
+  document.querySelector('.music-layout').classList.toggle('q-open', open);
+  $('queue-toggle').classList.toggle('active', open);
+  $('queue-toggle').setAttribute('aria-expanded', String(open));
+  try { localStorage.setItem('karia-queue', open ? '1' : '0'); } catch {}
+}
+$('queue-toggle').addEventListener('click', () => setQueueOpen(!document.querySelector('.music-layout').classList.contains('q-open')));
+$('queue-close').addEventListener('click', () => setQueueOpen(false));
+try { setQueueOpen(localStorage.getItem('karia-queue') !== '0'); } catch { setQueueOpen(true); }
 const playlists = initPlaylists({ api, $, el, fmt, say, guarded, mmss, refreshMusic, listen });
 initMusicImport({ api, $, el, say, guarded, openLink, showList: playlists.showList });
 initLyrics({ api, $, el, nowPlaying: () => musicNow, position: musicPosition });

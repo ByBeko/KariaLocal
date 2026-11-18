@@ -4,7 +4,6 @@ export function initPlaylists(ctx) {
   const box = $('playlist-box');
   let lists = [];
   let open = null; // açık liste
-  let tab = 'queue';
   let confirmDelete = 0;
 
   const btn = (text, onClick, className = '', title = '') => {
@@ -14,14 +13,9 @@ export function initPlaylists(ctx) {
   };
   const long = (sec) => (sec >= 3600 ? `${Math.floor(sec / 3600)} sa ${Math.floor((sec % 3600) / 60)} dk` : `${Math.max(1, Math.round(sec / 60))} dk`);
 
-  function setTab(name) {
-    tab = name;
-    for (const b of document.querySelectorAll('[data-mtab]')) b.classList.toggle('active', b.dataset.mtab === name);
-    $('music-list').hidden = name !== 'queue';
-    box.hidden = name !== 'lists';
-    if (name === 'lists') (open ? openList(open.id) : loadLists());
-  }
-  for (const b of document.querySelectorAll('[data-mtab]')) b.addEventListener('click', () => setTab(b.dataset.mtab));
+  // Ana ekranda yalnızca çalma listeleri durur; Müzik'e her girişte yenilenir (sıra sağdaki açılır panelde)
+  const show = () => (open ? openList(open.id) : loadLists().catch((error) => say(error.message, 'lose')));
+  document.querySelector('.tab[data-tab="music"]')?.addEventListener('click', show);
 
   async function loadLists() {
     lists = (await api('/playlists')).lists;
@@ -178,12 +172,11 @@ export function initPlaylists(ctx) {
   document.addEventListener('click', closeMenu);
 
   return {
-    setTab,
-    refresh: () => { if (tab === 'lists') (open ? openList(open.id) : loadLists()); },
+    refresh: show,
     /** Aktarılan listeyi "Çalma Listelerim"de açar */
     showList: (list) => {
       open = list;
-      setTab('lists');
+      show();
     },
   };
 }

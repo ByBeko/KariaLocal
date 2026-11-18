@@ -6,7 +6,7 @@
 <title>Karia</title>
 <link rel="icon" href="logo.png">
 <link rel="stylesheet" href="style.css?v=9">
-<link rel="stylesheet" href="tables.css?v=33">
+<link rel="stylesheet" href="tables.css?v=34">
 <link rel="stylesheet" href="panel.css?v=1">
 </head>
 <body>
@@ -244,16 +244,16 @@
               <button type="button" id="import-toggle" class="imp-toggle" aria-haspopup="true" aria-expanded="false" title="Liste aktar" aria-label="Liste aktar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
               <div id="import-box" class="pop-menu imp-menu" hidden></div>
             </div>
+            <button type="button" id="queue-toggle" class="imp-toggle" aria-controls="queue-side" aria-expanded="false" title="Sıradaki şarkılar" aria-label="Sıradaki şarkılar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12M4 12h12M4 18h8M19 15v6M16 18h6"/></svg></button>
           </div>
-          <div class="music-tabs seg" role="tablist">
-            <button type="button" data-mtab="queue" class="active">Sıradaki Şarkılar <span id="music-count" class="queue-count"></span></button>
-            <button type="button" data-mtab="lists">Çalma Listelerim</button>
-          </div>
-          <ol id="music-list" class="queue"></ol>
-          <div id="playlist-box" class="queue plbox" hidden></div>
+          <div id="playlist-box" class="queue plbox"></div>
           <audio id="music-audio" preload="auto" hidden></audio>
           <p id="music-hint" class="hint">Ses, bulunduğun ses kanalında bot üzerinden çalar.</p>
         </div>
+        <aside id="queue-side" class="queue-side" aria-label="Sıradaki şarkılar">
+          <div class="qs-head"><strong>Sıradaki Şarkılar <span id="music-count" class="queue-count"></span></strong><button type="button" id="queue-close" class="qs-close" title="Paneli kapat" aria-label="Paneli kapat">×</button></div>
+          <ol id="music-list" class="queue"></ol>
+        </aside>
       </div>
     </section>
 
@@ -386,6 +386,6 @@
   </main>
   </div>
 </div>
-<script type="module" src="app.js?v=29"></script>
+<script type="module" src="app.js?v=30"></script>
 </body>
 </html>
