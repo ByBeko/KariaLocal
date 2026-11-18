@@ -81,7 +81,7 @@ export default {
         console.log(`✔ ${await setupLogs(guild).catch((e) => `Log kanalları tamamlanamadı: ${e.message}`)}`);
       }
       startServerCheck(guild);
-      // Üyelik kademe rolleri (VIP, VIP+, KVIP, Prime): yoksa oluşturulur, coin ödülleri bağlanır
+      // Üyelik kademe rolleri (VIP, VIP+, KVIP, Prime): yoksa oluşturulur
       await ensureTierRoles(guild).catch((err) => console.warn(`⚠ Üyelik rolleri hazırlanamadı: ${err.message}`));
       startActivityServer(client);
       startWebApi(client);

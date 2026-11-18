@@ -483,7 +483,7 @@ export function initBoards(ctx) {
 
     const deck = el('div', { className: `ok-deck${canDraw ? ' can' : ''}`, title: canDraw ? 'Desteden çek: tıkla ya da ıstakaya sürükle' : 'Deste' }, el('b', { textContent: String(room.deck) }), el('small', { textContent: 'deste' }));
     if (canDraw) deck.addEventListener('pointerdown', (e) => startDrag(e, drawFrom(room, 'deck'), deck));
-    const canAdd = room.opened === 'melds' && canDiscard;
+    const canAdd = Boolean(room.opened) && canDiscard; // çiftle açan da perlere işleyebilir
     const meldBox = (m, i) => {
       const box = el('div', { className: `ok-meld${canAdd ? ' can' : ''}`, title: 'Taşı bu pere sürükle ya da seçip tıkla' }, ...m.tiles.map((t) => tileEl(t, 'sm')));
       box.dataset.drop = `meld-${i}`;
@@ -509,7 +509,7 @@ export function initBoards(ctx) {
         el('div', { className: 'ok-pile' }, room.indicator ? tileEl(room.indicator) : el('span', { className: 'tile empty' }), el('small', { textContent: 'gösterge' })),
         el('div', { className: 'ok-info' },
           el('strong', { textContent: room.okey ? `Okey: ${COLOR_TR[room.okey.color]} ${room.okey.num}` : 'Okey 101' }),
-          el('small', { textContent: me?.penalty != null ? `Senin cezan: ${me.penalty}` : room.opened ? (room.opened === 'pairs' ? 'Çiftle açtın' : 'Açtın: perlere taş işleyebilirsin') : '101 sayı ya da 5 çiftle açılır' }))),
+          el('small', { textContent: me?.penalty != null ? `Senin cezan: ${me.penalty}` : room.opened ? (room.opened === 'pairs' ? 'Çiftle açtın: çift açabilir, perlere işleyebilirsin' : 'Açtın: perlere taş işleyebilirsin') : '101 sayı ya da 5 çiftle açılır' }))),
       zone(1), zone(0));
 
     // Istaka: bitişik grupların geçerliliği ve toplamı

@@ -1,4 +1,5 @@
 // Seviye atlama ve rol kazanma coin ödülleri. Her ödül üye başına bir kez verilir: rol alıp bırakarak kasılamaz.
+// Parayla alınan şeyler (takviye, üyelik kademeleri) coin vermez: gerçek para coine dönüşmesin.
 import { db } from '../core/database.js';
 import { getSetting } from '../core/settings.js';
 import { addMoney, getBalance, setMoney } from './economy.js';
@@ -9,7 +10,7 @@ import { e } from '../utils/emojis.js';
 export const levelUpCoins = (level) => level * 5;
 
 const BOOST_ROLE = '1568654095991185488';
-const BOOST_MIN_DAYS = 7; // Bu süre dolmadan çekilen takviyede ödülün 3/4'ü geri alınır
+const BOOST_MIN_DAYS = 7; // Eskiden takviye coin verirdi: bu süre dolmadan çekilen takviyede verilmiş ödülün 3/4'ü geri alınır
 const DAY = 86_400_000;
 
 // Emek isteyen seviye rolleri en yüksek ödülü verir; rozetler onun altında kalır
@@ -22,20 +23,8 @@ export const ROLE_COINS = [
   { id: '1569434235192868928', name: 'İmparator', coins: 15_000 },
   { id: '1568323512693821650', name: 'Hata Avcısı', coins: 1_000 },
   { id: '1568323512693821649', name: 'Erken Destekçi', coins: 1_500 },
-  { id: BOOST_ROLE, name: 'Takviye', coins: 2_500 },
-  // Üyelik kademeleri (VIP, VIP+, KVIP, Prime) rolleri çözülünce membership.js ekler
 ];
 export const roleCoinAmount = (roleId) => ROLE_COINS.find((r) => r.id === roleId)?.coins ?? 0;
-
-/** Rol ödülünü ekler ya da günceller (ID'si çalışırken belli olan roller için). */
-export function setRoleCoins(id, name, coins) {
-  const found = ROLE_COINS.find((r) => r.id === id);
-  if (found) Object.assign(found, { name, coins });
-  else ROLE_COINS.push({ id, name, coins });
-}
-
-const skipped = new Set(); // Yalnızca rol hediye edilen durumlarda bir sonraki rol coini atlanır
-export const skipRoleCoinOnce = (guildId, userId, roleId) => skipped.add(`${guildId}:${userId}:${roleId}`);
 
 const claim = db.prepare('INSERT OR IGNORE INTO coin_rewards (guild_id, user_id, reward, coins, at) VALUES (?, ?, ?, ?, ?)');
 const claimed = db.prepare('SELECT coins FROM coin_rewards WHERE guild_id=? AND user_id=? AND reward=?');
@@ -77,7 +66,6 @@ export async function grantRoleCoins(oldMember, newMember) {
   await clawbackBoost(oldMember, newMember);
   for (const reward of ROLE_COINS) {
     if (oldMember.roles.cache.has(reward.id) || !newMember.roles.cache.has(reward.id)) continue;
-    if (skipped.delete(`${guild.id}:${user.id}:${reward.id}`)) continue;
     const coins = grantOnce(guild.id, user.id, `role:${reward.id}`, reward.coins);
     if (!coins) continue;
     await sendLog(guild, 'log_level', { content: `${e('coin', '🪙')} <@${user.id}> **${reward.name}** rolüyle **${coins.toLocaleString('tr-TR')}** coin kazandı.` });

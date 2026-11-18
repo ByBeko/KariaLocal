@@ -3,9 +3,6 @@ import { randomInt } from 'node:crypto';
 import { db } from '../core/database.js';
 import { UserError } from '../utils/errors.js';
 import { addMoney, getBalance, takeMoney } from './economy.js';
-import { TIERS, SHOP_DAYS, tierRank, ensureTierRoles, memberTier, grantTier } from './membership.js';
-import { sendLog } from '../utils/logger.js';
-import { e } from '../utils/emojis.js';
 
 const CODE_TTL = 10 * 60_000;
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -26,7 +23,6 @@ const q = {
   dropCode: db.prepare('DELETE FROM mc_link_codes WHERE code=?'),
   getTx: db.prepare('SELECT * FROM mc_transactions WHERE guild_id=? AND tx_id=?'),
   addTx: db.prepare('INSERT INTO mc_transactions (guild_id, tx_id, uuid, amount, balance, reason, at) VALUES (?, ?, ?, ?, ?, ?, ?)'),
-  dropTx: db.prepare('DELETE FROM mc_transactions WHERE guild_id=? AND tx_id=?'),
 };
 
 const attempts = new Map(); // kullanıcı -> { count, at }
@@ -129,46 +125,7 @@ export function changeBalance(guildId, rawUuid, rawAmount, rawTxId, rawReason) {
   return { balance, duplicate: false };
 }
 
-const purchases = new Map(); // sunucu:işlem no -> sürmekte olan satın alma
-
-/**
- * Oyunda /uyelikal: coinle 30 günlük üyelik kademesi. txId tekildir; eklenti zaman aşımında aynı
- * işlem noyla tekrar sorarsa ikinci kez ücret alınmaz, ilk isteğin sonucu döner.
- * Daha yüksek kademesi olan düşüğünü alamaz; yükseltmede eski kademe alınır (üyede tek kademe olur).
- */
-export function buyTier(guild, rawUuid, rawTier, rawTxId) {
-  const txId = String(rawTxId ?? '');
-  if (!/^[\w-]{8,64}$/.test(txId)) throw new UserError('Geçersiz işlem numarası.');
-  const key = `${guild.id}:${txId}`;
-  if (!purchases.has(key)) purchases.set(key, purchase(guild, rawUuid, String(rawTier ?? ''), txId).finally(() => purchases.delete(key)));
-  return purchases.get(key);
-}
-
-async function purchase(guild, rawUuid, tierKey, txId) {
-  const done = q.getTx.get(guild.id, txId);
-  if (done) return { balance: Number(done.balance), duplicate: true };
-  const tier = TIERS.find((t) => t.key === tierKey);
-  if (!tier?.price) throw new UserError('Geçersiz kademe.');
-  const { user_id: userId, uuid } = linkedPlayer(guild.id, rawUuid);
-  const member = await guild.members.fetch(userId).catch(() => null);
-  if (!member) throw new UserError('Üyelik için Karia Discord sunucusunda olmalısın.');
-  await ensureTierRoles(guild);
-  const current = memberTier(guild, member);
-  if (current && tierRank(current.key) > tierRank(tier.key)) throw new UserError(`Daha yüksek bir üyeliğin var (${current.name}). Süresi bitince alabilirsin.`);
-  if (current?.key === tier.key && !current.until) throw new UserError(`Süresiz ${tier.name} üyeliğin zaten var.`);
-
-  // Ücret beklemeden alınır ve işlem kaydedilir; rol verilemezse geri ödenir ve kayıt silinir
-  const paid = takeMoney(guild.id, userId, tier.price);
-  q.addTx.run(guild.id, txId, uuid, -tier.price, paid, `Üyelik: ${tier.name}`, Date.now());
-  let until;
-  try {
-    until = await grantTier(guild, member, tier.key, SHOP_DAYS, guild.client.user.id);
-  } catch (error) {
-    q.dropTx.run(guild.id, txId);
-    addMoney(guild.id, userId, tier.price);
-    console.error('[Üyelik satın alma]', error.message);
-    throw new UserError('Üyelik verilemedi, coinin iade edildi. Yetkililere haber ver.');
-  }
-  await sendLog(guild, 'log_level', { content: `${e('tac', '👑')} <@${userId}> Minecraft'tan **${SHOP_DAYS} gün ${tier.name}** aldı (−${tier.price.toLocaleString('tr-TR')} coin). Bitiş: <t:${Math.floor(until / 1000)}:F>`, allowedMentions: { parse: [] } }).catch(() => {});
-  return { balance: getBalance(guild.id, userId), tier: tier.key, tierUntil: until };
+/** Oyunda /uyelikal: üyelikler yalnızca karia.live üzerinden parayla satılır, coinle alınamaz. */
+export function buyTier() {
+  throw new UserError('Üyelikler artık coinle alınamıyor; karia.live üzerinden satın alabilirsin.');
 }

@@ -89,7 +89,7 @@ Her sayfanın ikonu `bot/assets/onboarding/kaynak-ikonlar/` klasöründe (512x51
 **4. Takviyeler**
 
 ```
-<:Karia_elmas:1568986769808957460> Takviye yapanlar ve ayrıcalıkları. İlk takviyende 2.500 coin kazanırsın, her ay takviye yapanlar arasından 1 kişiye 30 gün Prime ve 1.000 coin çıkar.
+<:Karia_elmas:1568986769808957460> Takviye yapanlar ve ayrıcalıkları. Her ay takviye yapanlar arasından 1 kişiye 30 gün Prime çıkar. VIP'ten Prime'a üyelikler karia.live üzerinden satılır.
 ```
 
 **5. Bağlantılar**

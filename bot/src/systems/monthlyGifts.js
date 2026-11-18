@@ -1,7 +1,6 @@
 // Top.gg oy sayımı ve aylık hediyeler: ayın en çok oy verenleri ile takviye çekilişi.
 import { db } from '../core/database.js';
 import { getSetting, setSetting } from '../core/settings.js';
-import { grantOnce, skipRoleCoinOnce } from './coinRewards.js';
 import { findGuideChannel } from './guide.js';
 import { grantTier, PRIME_ROLE } from './membership.js';
 import { sendLog } from '../utils/logger.js';
@@ -10,7 +9,6 @@ import { logVote } from './voteBoard.js';
 
 const GIFT_DAYS = 30;
 const VOTE_GAP = 11 * 3_600_000; // Top.gg aynı oyu yeniden iletirse iki kez sayılmaz
-const BOOST_PRIZE = 1_000;
 
 const q = {
   get: db.prepare('SELECT last_at FROM votes WHERE guild_id=? AND user_id=? AND month=?'),
@@ -56,7 +54,6 @@ async function voteGifts(guild, month) {
     if (member && !member.user.bot) { winner = member; votes = Number(row.count); break; }
   }
   if (winner) {
-    skipRoleCoinOnce(guild.id, winner.id, PRIME_ROLE); // Oy ödülü yalnızca Prime'dır, rol coini verilmez
     await givePrime(guild, winner);
   }
   setSetting(guild.id, done, '1');
@@ -73,9 +70,8 @@ async function boostGift(guild, month) {
   if (!getSetting(guild.id, pickKey) && boosters.length) setSetting(guild.id, pickKey, boosters[Math.floor(Math.random() * boosters.length)].id);
   const winner = boosters.find((m) => m.id === getSetting(guild.id, pickKey));
   if (winner) {
-    grantOnce(guild.id, winner.id, `gift:boost:${month}`, BOOST_PRIZE);
     await givePrime(guild, winner);
-    await announce(guild, 'takviyeler', `${e('hediye', '🎁')} **${month} takviye çekilişi:** ${winner} ${GIFT_DAYS} gün Prime ve **${BOOST_PRIZE.toLocaleString('tr-TR')}** coin kazandı!`, [winner.id]);
+    await announce(guild, 'takviyeler', `${e('hediye', '🎁')} **${month} takviye çekilişi:** ${winner} ${GIFT_DAYS} gün Prime kazandı!`, [winner.id]);
   }
   setSetting(guild.id, done, '1');
 }

@@ -95,7 +95,8 @@ export function findMelds(hand, rules) {
     const one = [...byColor.values()];
     const combos = (arr, k) => (k === 0 ? [[]] : arr.flatMap((x, i) => combos(arr.slice(i + 1), k - 1).map((c) => [x, ...c])));
     for (const k of [4, 3]) for (const c of combos(one, k)) cands.push(c);
-    if (jokers.length) for (const c of combos(one, 2)) cands.push([...c, jokers[0]]);
+    // İki okey de denensin: biri bir perde kullanılınca diğeri başka perde kalır
+    for (const j of jokers) for (const k of [3, 2]) for (const c of combos(one, k)) cands.push([...c, j]);
   }
   // Seriler
   for (const color of COLORS.keys()) {
@@ -110,8 +111,10 @@ export function findMelds(hand, rules) {
           if (byNum.has(n)) run.push(byNum.get(n));
           else gaps++;
         }
-        if (gaps > Math.min(1, jokers.length) || new Set(run).size !== run.length) continue;
-        cands.push(gaps ? [...run, jokers[0]] : run);
+        if (gaps > jokers.length || !run.length || new Set(run).size !== run.length) continue;
+        if (!gaps) cands.push(run);
+        else if (gaps === 1) for (const j of jokers) cands.push([...run, j]);
+        else cands.push([...run, ...jokers.slice(0, gaps)]);
       }
     }
   }
@@ -246,6 +249,7 @@ export class OkeyTable extends TurnTable {
       this.note(`${p.name} ${pairs ? `${results.length} çiftle` : `${total} ile`} elini açtı.`);
     } else {
       if (pairs && was !== 'pairs') throw new UserError('Serilerle açtın, sonradan çift açamazsın.');
+      if (!pairs && was === 'pairs') throw new UserError('Çiftle açtın, seri açamazsın; masadaki perlere taş işleyebilirsin.');
       if (this.hand(p).length - used.length < 1) throw new UserError('Atacak bir taşın kalmalı.');
     }
     this.removeFromHand(p, used);
@@ -328,8 +332,11 @@ export class OkeyTable extends TurnTable {
       }
     } else if (opened === 'melds' && best.melds.length) {
       for (const g of best.melds) if (this.hand(p).length - g.length >= 1) tryOpen([g]);
+    } else if (opened === 'pairs') {
+      // Çiftle açan yeni çift açar ve perlere işler; yoksa eli hiç bitmez
+      for (const g of this.findPairs(this.hand(p))) if (this.hand(p).length - g.length >= 1) tryOpen([g]);
     }
-    if (this.opened.get(p) === 'melds') {
+    if (this.opened.get(p)) {
       for (const t of [...this.hand(p)]) {
         if (this.hand(p).length <= 1) break;
         for (let i = 0; i < this.melds.length; i++) {

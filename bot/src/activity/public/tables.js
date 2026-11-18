@@ -1189,7 +1189,7 @@ export function initTables(ctx) {
         'Sıran gelince ortadaki <b>desteden</b> ya da <b>solundakinin attığı</b> taştan bir taş çek: tıkla ya da ıstakana sürükle.',
         'Taşlarını sürükleyerek diz. Aralarında boşluk olmayan taşlar bir per sayılır: aynı renkte sıralı sayılar (4-5-6) ya da farklı renklerde aynı sayı (7-7-7).',
         'Perlerinin toplamı <b>101</b>’e ulaşınca ya da <b>5 çiftin</b> olunca <b>Elini Aç</b>. Açtıktan sonra masadaki perlere taş işleyebilirsin.',
-        'Her turu bir taş atarak bitir: taşı <b>At</b> kutusuna sürükle ya da seçip <b>Taş At</b>’a bas. Elini ilk bitiren potu alır.',
+        'Her turu bir taş atarak bitir: taşı <b>At</b> kutusuna sürükle ya da seçip <b>Taş At</b>’a bas. Elini ilk bitiren potu alır; deste biterse eldeki taş toplamı en az olan kazanır (elini açmayan 202 sayılır).',
         'Göstergenin bir üstü <b>okey</b>dir, her taşın yerine geçer. ★ sahte okeydir, okeyin kendisi yerine sayılır.'],
       pays: [['kupa', 'Elini bitiren', 'Potun hepsi (4×)'], ['kart', 'Açma', '101 ya da 5 çift'], ['arkadaslar', 'Masa', '4 oyuncu']],
     },

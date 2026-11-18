@@ -1295,11 +1295,9 @@ function drawMembership(data) {
     drawMembership(await api('/admin/membership', { userId: picker.value, tier: tier.value, days: Number(days.value) }));
     say(`${tierName(tier.value)} verildi.`, 'win');
   }));
-  const gifts = data.tiers.map((t) => `${t.name} ${fmt(t.coins)}`).join(', ');
-  const prices = data.tiers.map((t) => `${t.name} ${fmt(t.price)}`).join(', ');
   $('tier-form').replaceChildren(
     el('div', { className: 'tier-row' }, picker.root, tier, days, add),
-    el('p', { className: 'hint left', textContent: `Üyede tek kademe olur: yeni kademe verilince eskisi alınır. Rol seçilen süre kadar verilir, süre bitince kendiliğinden alınır. Kademe ilk kez alınınca bir kez coin hediye edilir (${gifts}); üyeye Discord'dan bilgi gider. Oyuncular Minecraft'ta /uyelikal ile ${data.shopDays} günlüğüne coinle de alabilir (${prices}).` }));
+    el('p', { className: 'hint left', textContent: 'Üyede tek kademe olur: yeni kademe verilince eskisi alınır. Rol seçilen süre kadar verilir, süre bitince kendiliğinden alınır; üyeye Discord\'dan bilgi gider. Üyelikler karia.live üzerinden parayla satılır: coin vermez, coinle alınmaz.' }));
   $('tier-list').replaceChildren(...(data.list.length ? data.list.map((p) => {
     const extend = el('button', { type: 'button', textContent: '+30 gün' });
     extend.addEventListener('click', () => guarded(async () => { drawMembership(await api('/admin/membership', { userId: p.id, tier: p.tier, days: 30 })); say('Süre uzatıldı.', 'win'); }));

@@ -1,28 +1,25 @@
 // Üyelik kademeleri (VIP < VIP+ < KVIP < Prime): süreli rol, üyede aynı anda tek kademe olur.
-// Süre dolunca timers.js rolü otomatik alır; ilk kez alınan kademenin coini rol verilince coinRewards'tan gelir.
+// Süre dolunca timers.js rolü otomatik alır. Üyelikler karia.live üzerinden parayla satılır; coin vermez, coinle alınmaz.
 // Prime rolü sabittir; diğerleri sunucuda adıyla bulunur, yoksa bot oluşturur ve ID'yi ayarlara kaydeder.
 import { db } from '../core/database.js';
 import { getSetting, setSetting } from '../core/settings.js';
 import { sendLog } from '../utils/logger.js';
 import { UserError } from '../utils/errors.js';
 import { e } from '../utils/emojis.js';
-import { setRoleCoins } from './coinRewards.js';
 
 export const PRIME_ROLE = '1569468546713526443';
 export const TIER_DAYS = [7, 30, 90];
-export const SHOP_DAYS = 30; // Minecraft'ta /uyelikal ile coinle alınan süre
 const DAY = 86_400_000;
 
-/** Düşükten yükseğe. key Minecraft eklentisindeki grup adıyla aynıdır; price oyunda coinle alma ücreti. id: Karia sunucusundaki sabit rol. */
+/** Düşükten yükseğe. key Minecraft eklentisindeki grup adıyla aynıdır. id: Karia sunucusundaki sabit rol. */
 export const TIERS = [
-  { key: 'vip', name: 'VIP', id: '1571854951267827764', color: 0x57f287, coins: 1_000, price: 5_000 },
-  { key: 'vipplus', name: 'VIP+', id: '1571854952303951994', color: 0x3498db, coins: 1_500, price: 10_000 },
-  { key: 'kvip', name: 'KVIP', id: '1571854953419378779', color: 0xf1c40f, coins: 2_000, price: 20_000 },
-  { key: 'prime', name: 'Prime', id: PRIME_ROLE, coins: 3_000, price: 40_000 },
+  { key: 'vip', name: 'VIP', id: '1571854952303951994', color: 0x57f287 },
+  { key: 'vipplus', name: 'VIP+', id: '1571854951267827764', color: 0x3498db },
+  { key: 'kvip', name: 'KVIP', id: '1571854953419378779', color: 0xf1c40f },
+  { key: 'prime', name: 'Prime', id: PRIME_ROLE },
 ];
 export const tierRank = (key) => TIERS.findIndex((t) => t.key === key);
 const tierOf = (key) => TIERS.find((t) => t.key === key);
-setRoleCoins(PRIME_ROLE, 'Prime', tierOf('prime').coins);
 
 const q = {
   get: db.prepare('SELECT until FROM temp_roles WHERE guild_id=? AND user_id=? AND role_id=?'),
@@ -51,7 +48,6 @@ async function resolveRoles(guild) {
     setSetting(guild.id, `tier_role_${tier.key}`, role.id);
     roles[tier.key] = role.id;
   }
-  for (const tier of TIERS) setRoleCoins(roles[tier.key], tier.name, tier.coins);
   return roles;
 }
 
@@ -101,8 +97,7 @@ export async function membershipView(guild) {
   const color = (t) => `#${(guild.roles.cache.get(roles[t.key])?.colors?.primaryColor || t.color || 0x9b59b6).toString(16).padStart(6, '0')}`;
   return {
     days: TIER_DAYS,
-    shopDays: SHOP_DAYS,
-    tiers: TIERS.map((t) => ({ key: t.key, name: t.name, coins: t.coins, price: t.price, color: color(t) })),
+    tiers: TIERS.map((t) => ({ key: t.key, name: t.name, color: color(t) })),
     members: humans.map((m) => ({ id: m.id, name: m.displayName })),
     list: humans.map((m) => ({ id: m.id, name: m.displayName, tier: memberTier(guild, m) }))
       .filter((m) => m.tier)
