@@ -121,6 +121,7 @@ $('side-toggle').addEventListener('click', () => setSide(!document.querySelector
 
 function openTab(name) {
   const isGame = GAMES.includes(name);
+  if (name !== 'cardshop' && shopPick !== undefined) { shopPick = undefined; refreshSideCard(); }
   autoSide(`tab-${name}`, false);
   const sideName = isGame ? 'blackjack' : name;
   for (const t of document.querySelectorAll('.tab')) t.classList.toggle('active', t.dataset.tab === sideName);
@@ -1311,11 +1312,11 @@ function drawMembership(data) {
 const loadMembership = () => guarded(async () => drawMembership(await api('/admin/membership')));
 
 // ── Kart Mağazası (seviye kartı arka planları) ──
-/** Sol alttaki kullanıcı kutusunun arka planı: taktığın kart */
-function setSideCard(id) {
-  const box = document.querySelector('.side-user');
-  box.classList.toggle('has-card', Boolean(id));
-  box.style.setProperty('--side-card', id ? `url("cardbg/${id}.jpg")` : 'none');
+/** Sol alttaki kullanıcı kutusunda seviye kartı; mağazada tıklanan kart da burada önizlenir */
+function refreshSideCard(id = null) {
+  return showCardImage($('side-card'), null, id).then(() => {
+    document.querySelector('.side-user').classList.toggle('card-on', !$('side-card').hidden);
+  });
 }
 
 /** id: null → üyenin taktığı kart, 0 → varsayılan, sayı → o arka plan */
@@ -1363,7 +1364,6 @@ function drawCardShop(data) {
   $('cs-mine').replaceChildren(...mine.map(cardTile));
   // Kartın yanındaki "Kartlarım" kutusu: sahip olunanların küçük resimleri üst üste
   $('cs-mine-count').textContent = String(mine.length);
-  setSideCard(data.selected);
   $('cs-grid').replaceChildren(...(store.length ? store.map(cardTile) : [empty(data.items.length ? 'Mağazadaki bütün kartlara sahipsin.' : 'Mağazada henüz kart yok. Yöneticiler yakında ekleyecek.')]));
   drawStageBar();
 }
@@ -1378,14 +1378,14 @@ function drawStageBar() {
       shopPick = undefined;
       drawCardShop(await api(path, { id: c.id }));
       say(msg, 'win');
-      showCardImage($('cs-current'), $('cs-current-loading'), null);
+      refreshSideCard();
     }));
     return b;
   };
   $('cs-stage-bar').hidden = !c; // satır yalnızca bir kart önizlenirken görünür
   if (c) {
     $('cs-stage-title').textContent = c.name;
-    $('cs-stage-note').textContent = c.selected ? 'Şu an bu kartı kullanıyorsun.' : c.owned ? 'Bu karta sahipsin.' : 'Önizleme: satın alınca kartın böyle görünür.';
+    $('cs-stage-note').textContent = c.selected ? 'Şu an bu kartı kullanıyorsun.' : c.owned ? 'Bu karta sahipsin. Önizleme sol altta.' : 'Önizleme sol altta: satın alınca kartın böyle görünür.';
     if (!c.selected && c.owned) actions.push(act('Kullan', '/cards/use', `${c.name} takıldı.`, true));
     if (!c.owned) actions.push(act(c.price ? `Satın Al · ${fmt(c.price)} coin` : 'Ücretsiz Al', '/cards/buy', `${c.name} satın alındı ve takıldı.`, true));
     const back = el('button', { type: 'button', textContent: 'Kartıma dön' });
@@ -1399,8 +1399,7 @@ function pickCard(c) {
   if ($('cs-mine-dialog').open) $('cs-mine-dialog').close();
   shopPick = c === undefined ? undefined : c.id;
   drawCardShop(shopData);
-  showCardImage($('cs-current'), $('cs-current-loading'), shopPick === undefined ? null : shopPick ?? 0);
-  $('cs-current').closest('.cs-stage').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  refreshSideCard(shopPick === undefined ? null : shopPick ?? 0);
 }
 
 /** Yönetimde kart önizlemesi (pencere) */
@@ -1417,7 +1416,6 @@ $('cs-mine-tile').addEventListener('click', () => $('cs-mine-dialog').showModal(
 const loadCardShop = () => guarded(async () => {
   shopPick = undefined;
   drawCardShop(await api('/cards'));
-  showCardImage($('cs-current'), $('cs-current-loading'), null);
 });
 
 // ── Yönetim: seviye kartı arka planları ──
@@ -1921,7 +1919,7 @@ async function start() {
     sideAvatar.alt = '';
     sideAvatar.onload = () => $('avatar-letter').replaceChildren(sideAvatar);
     sideAvatar.src = `avatar/${myId}.png`;
-    setSideCard(state.cardBg);
+    refreshSideCard();
     $('role-badge').textContent = state.isAdmin ? 'Yönetici' : staffUser ? 'Yetkili' : 'Üye';
     $('role-badge').classList.toggle('admin', staffUser);
     if (staffUser) { // menü kapalıyken de bekleyen işler görünsün

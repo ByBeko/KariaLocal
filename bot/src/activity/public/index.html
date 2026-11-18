@@ -44,7 +44,7 @@
       </div>
     </nav>
     <a id="site-back" class="site-back" href="https://karia.live" hidden>‹ karia.live</a>
-    <div class="side-user"><span class="avatar" id="avatar-letter"></span><div><strong id="username"></strong><em id="role-badge" class="role"></em></div></div>
+    <div class="side-user"><img id="side-card" class="side-card" alt="Seviye kartın" hidden><span class="avatar" id="avatar-letter"></span><div><strong id="username"></strong><em id="role-badge" class="role"></em></div></div>
   </aside>
 
   <div class="content">
@@ -291,15 +291,12 @@
     </section>
 
     <section class="panel" data-panel="cardshop" hidden>
-      <div class="cs-stage">
-        <div class="cs-stage-frame"><img id="cs-current" class="cs-card" alt="Seviye kartın" hidden><span id="cs-current-loading" class="hint">Kartın hazırlanıyor...</span></div>
-        <div id="cs-stage-bar" class="cs-stage-bar" hidden>
-          <div class="cs-stage-info">
-            <strong id="cs-stage-title"></strong>
-            <small id="cs-stage-note"></small>
-          </div>
-          <div id="cs-stage-actions" class="item-actions"></div>
+      <div id="cs-stage-bar" class="cs-stage-bar" hidden>
+        <div class="cs-stage-info">
+          <strong id="cs-stage-title"></strong>
+          <small id="cs-stage-note"></small>
         </div>
+        <div id="cs-stage-actions" class="item-actions"></div>
       </div>
       <div class="cs-head-row">
         <h4 class="cs-head">Mağaza</h4>
