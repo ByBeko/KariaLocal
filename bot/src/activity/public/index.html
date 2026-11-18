@@ -292,16 +292,25 @@
 
     <section class="panel" data-panel="cardshop" hidden>
       <div class="cs-stage">
-        <div class="cs-stage-frame"><img id="cs-current" class="cs-card" alt="Seviye kartın" hidden><span id="cs-current-loading" class="hint">Kartın hazırlanıyor...</span></div>
+        <div class="cs-stage-row">
+          <div class="cs-stage-frame"><img id="cs-current" class="cs-card" alt="Seviye kartın" hidden><span id="cs-current-loading" class="hint">Kartın hazırlanıyor...</span></div>
+          <button type="button" id="cs-mine-tile" class="cs-mine-tile" title="Sahip olduğun kartlar">
+            <span id="cs-mine-stack" class="cs-mine-stack"></span>
+            <strong>Kartlarım</strong>
+            <small id="cs-mine-count">0 kart</small>
+          </button>
+        </div>
         <div class="cs-stage-bar">
           <div><strong id="cs-stage-title">Şu anki kartın</strong><small id="cs-stage-note">Aşağıdan bir karta bas, burada kendi kartınla önizle.</small></div>
           <div id="cs-stage-actions" class="item-actions"></div>
         </div>
       </div>
-      <h4 class="cs-head">Kartlarım</h4>
-      <div id="cs-mine" class="cs-grid"></div>
-      <h4 class="cs-head">Mağaza</h4>
-      <div id="cs-grid" class="cs-grid"></div>
+      <div class="period cs-switch" id="cs-switch" role="tablist">
+        <button type="button" data-cs-view="store" class="active"><img src="emojis/coin.png" alt="">Mağaza</button>
+        <button type="button" data-cs-view="mine"><img src="emojis/foto.png" alt="">Kartlarım</button>
+      </div>
+      <div id="cs-grid" class="cs-grid" data-cs-pane="store"></div>
+      <div id="cs-mine" class="cs-grid" data-cs-pane="mine" hidden></div>
     </section>
 
     <section class="panel" data-panel="cardadmin" hidden>
