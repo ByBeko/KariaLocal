@@ -644,10 +644,10 @@ export function initTables(ctx) {
     const spanM = Math.max(2, m * 1.25);
     const X = (t) => pad + (t / spanT) * (w - pad * 2);
     const Y = (mult) => h - pad - ((mult - 1) / (spanM - 1)) * (h - pad * 2);
-    g.strokeStyle = 'rgba(255,255,255,.07)';
+    g.strokeStyle = 'rgba(191,247,236,.12)';
     g.lineWidth = 1;
-    g.font = '500 11px "JetBrains Mono", ui-monospace, monospace';
-    g.fillStyle = 'rgba(148,148,157,.8)';
+    g.font = '11px system-ui';
+    g.fillStyle = 'rgba(191,247,236,.45)';
     for (let i = 1; i <= 4; i++) {
       const mult = 1 + ((spanM - 1) * i) / 4;
       g.beginPath();
@@ -658,8 +658,8 @@ export function initTables(ctx) {
     }
     if (room.phase === 'flying' || room.phase === 'crashed') {
       const grad = g.createLinearGradient(0, h, w, 0);
-      grad.addColorStop(0, '#14b8a6');
-      grad.addColorStop(1, room.phase === 'crashed' ? '#f87171' : '#99f6e4');
+      grad.addColorStop(0, '#2f9e87');
+      grad.addColorStop(1, room.phase === 'crashed' ? '#ef7a7f' : '#bff7ec');
       g.beginPath();
       g.moveTo(X(0), Y(1));
       const steps = 60;
@@ -673,8 +673,8 @@ export function initTables(ctx) {
       g.lineTo(X(0), h - pad);
       g.closePath();
       const fill = g.createLinearGradient(0, 0, 0, h);
-      fill.addColorStop(0, room.phase === 'crashed' ? 'rgba(248,113,113,.22)' : 'rgba(45,212,191,.22)');
-      fill.addColorStop(1, 'rgba(45,212,191,0)');
+      fill.addColorStop(0, room.phase === 'crashed' ? 'rgba(239,122,127,.28)' : 'rgba(79,207,180,.32)');
+      fill.addColorStop(1, 'rgba(79,207,180,0)');
       g.fillStyle = fill;
       g.fill();
       g.beginPath();
@@ -702,9 +702,9 @@ export function initTables(ctx) {
     g.save();
     g.translate(x, y);
     g.rotate(angle);
-    g.shadowColor = broken ? 'rgba(248,113,113,.7)' : 'rgba(45,212,191,.7)';
+    g.shadowColor = broken ? 'rgba(239,122,127,.8)' : 'rgba(127,240,218,.8)';
     g.shadowBlur = 16;
-    g.fillStyle = broken ? '#f87171' : '#2dd4bf';
+    g.fillStyle = broken ? '#ef7a7f' : '#4fcfb4';
     // gövde
     g.beginPath();
     g.moveTo(22, 0);
@@ -717,7 +717,7 @@ export function initTables(ctx) {
     g.quadraticCurveTo(14, 6, 22, 0);
     g.fill();
     // kanat
-    g.fillStyle = broken ? '#b91c1c' : '#ccfbf1';
+    g.fillStyle = broken ? '#c8323f' : '#bff7ec';
     g.beginPath();
     g.moveTo(6, 1);
     g.lineTo(-6, 16);
@@ -733,7 +733,7 @@ export function initTables(ctx) {
     g.closePath();
     g.fill();
     // pervane
-    g.fillStyle = '#fbbf24';
+    g.fillStyle = '#ffd479';
     g.fillRect(21, -6, 2.5, 12);
     g.restore();
   }
@@ -771,7 +771,7 @@ export function initTables(ctx) {
 
   function buildWheel() {
     const slice = 360 / WHEEL.length;
-    const colors = { green: '#15803d', red: '#b91c1c', black: '#141418' };
+    const colors = { green: '#1f9a6a', red: '#b3262f', black: '#121619' };
     const wheel = $('wheel');
     wheel.style.background = `conic-gradient(${WHEEL.map((n, i) => `${colors[numColor(n)]} ${(i * slice).toFixed(3)}deg ${((i + 1) * slice).toFixed(3)}deg`).join(',')})`;
     wheel.replaceChildren(...WHEEL.map((n, i) => {

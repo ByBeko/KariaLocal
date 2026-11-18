@@ -5,19 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Karia</title>
 <link rel="icon" href="logo.png">
-<meta name="theme-color" content="#08080a">
-<link rel="preload" href="fonts/Inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="fonts/fonts.css?v=1">
-<link rel="stylesheet" href="style.css?v=8">
-<link rel="stylesheet" href="tables.css?v=32">
-<link rel="stylesheet" href="kx.css?v=1">
+<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="tables.css?v=31">
 </head>
 <body>
 <div id="boot" class="boot"><img src="boot-logo.png" alt="Karia" width="160" height="160"><p id="boot-text">Karia açılıyor...</p></div>
 
 <div id="app" class="app" hidden>
   <aside class="side">
-    <div class="side-brand"><svg class="logo-mark" viewBox="22 140 468 232" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"><path d="M48 160v192M60 262l118-45M60 265l230 77-54-146M238 178l224 78-112 42"/><path d="M193 195l21-5M196 212l21-5" stroke-width="9"/></g><circle cx="316" cy="325" r="17" fill="var(--accent)"/></svg><strong>Karia</strong><button type="button" id="sfx-toggle" class="sfx-toggle"></button></div>
+    <div class="side-brand"><span class="logo"><img src="logo.png" alt=""></span><strong>Karia</strong><button type="button" id="sfx-toggle" class="sfx-toggle"></button></div>
     <div class="balance" title="Botla aynı bakiye">
       <img src="emojis/coin.png" alt="">
       <div><small>Bakiye</small><strong id="balance">0</strong></div>
@@ -382,6 +378,6 @@
   </main>
   </div>
 </div>
-<script type="module" src="app.js?v=28"></script>
+<script type="module" src="app.js?v=27"></script>
 </body>
 </html>
