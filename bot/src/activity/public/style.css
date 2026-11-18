@@ -742,5 +742,5 @@ textarea::-webkit-scrollbar{display:none}
 .cs-mine-stack>*:nth-child(2){top:12px;left:6px;z-index:2;opacity:.8}
 .cs-mine-stack>*:nth-child(3){top:0;left:0;z-index:1;opacity:.6}
 .cs-mine-stack i.cs-default{font-size:0}
-.cs-switch{margin:4px 0 14px}
+#cs-mine-dialog .cs-grid{margin-top:12px;max-height:60vh;overflow-y:auto}
 @media (max-width:640px){.cs-stage-row{flex-direction:column}.cs-mine-tile{flex-basis:auto;width:100%;flex-direction:row;justify-content:center}}

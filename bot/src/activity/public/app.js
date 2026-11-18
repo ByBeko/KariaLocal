@@ -1391,6 +1391,7 @@ function drawStageBar() {
 }
 
 function pickCard(c) {
+  if ($('cs-mine-dialog').open) $('cs-mine-dialog').close();
   shopPick = c === undefined ? undefined : c.id;
   drawCardShop(shopData);
   showCardImage($('cs-current'), $('cs-current-loading'), shopPick === undefined ? null : shopPick ?? 0);
@@ -1405,21 +1406,11 @@ function openCardDialog(c) {
   showCardImage($('cs-preview'), $('cs-loading'), c.id);
 }
 
-/** Mağaza / Kartlarım sekmesi */
-function setShopView(view) {
-  for (const b of document.querySelectorAll('[data-cs-view]')) b.classList.toggle('active', b.dataset.csView === view);
-  for (const p of document.querySelectorAll('[data-cs-pane]')) p.hidden = p.dataset.csPane !== view;
-  $('cs-mine-tile').classList.toggle('active', view === 'mine');
-}
-for (const b of document.querySelectorAll('[data-cs-view]')) b.addEventListener('click', () => setShopView(b.dataset.csView));
-$('cs-mine-tile').addEventListener('click', () => {
-  setShopView('mine');
-  $('cs-switch').scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
+// Kartın yanındaki "Kartlarım" düğmesi sahip olunan kartları pencerede açar
+$('cs-mine-tile').addEventListener('click', () => $('cs-mine-dialog').showModal());
 
 const loadCardShop = () => guarded(async () => {
   shopPick = undefined;
-  setShopView('store');
   drawCardShop(await api('/cards'));
   showCardImage($('cs-current'), $('cs-current-loading'), null);
 });
