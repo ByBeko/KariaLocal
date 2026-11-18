@@ -1211,9 +1211,11 @@ async function loadHome() {
     });
     $('home').replaceChildren(
       el('div', { className: 'hero' },
-        el('img', { className: 'hero-cover', src: 'cover.png', alt: 'Karia' }),
         el('div', { className: 'hero-top' },
-          el('div', {}, el('h2', {}, ...(myId ? [avatarImg(myId, 'hero-avatar')] : []), `Hoş geldin, ${name}`), el('p', { textContent: `${h.server.members} üye • ${h.server.inVoice} kişi seste` })),
+          el('div', {},
+            el('span', { className: 'tag' }, el('i'), 'Karia Local'),
+            el('h2', {}, ...(myId ? [avatarImg(myId, 'hero-avatar')] : []), 'Hoş geldin, ', el('span', { className: 'serif', textContent: name })),
+            el('p', { textContent: `${fmt(h.server.members)} üye · ${h.server.inVoice} kişi seste` })),
           el('div', { className: 'hero-actions' }, dailyButton(h.dailyAt))),
         el('div', { className: 'level-head' }, el('strong', { textContent: `Seviye ${h.level.level}` }), el('span', { textContent: `${fmt(h.level.current)} / ${fmt(h.level.needed)} XP` })),
         el('div', { className: 'progress' }, fill)),
@@ -1252,7 +1254,7 @@ function boardView(rows) {
     const bit = el('i');
     bit.style.left = `${(i * 37) % 100}%`;
     bit.style.animationDelay = `${(i * 0.37) % 4}s`;
-    bit.style.background = ['#4fcfb4', '#ffd479', '#ef7a7f', '#7aa8ff', '#c79bff'][i % 5];
+    bit.style.background = ['#2dd4bf', '#fbbf24', '#f87171', '#60a5fa', '#a78bfa'][i % 5];
     return bit;
   });
   const runners = rows.slice(3).map((r, i) => el('li', { className: r.me ? 'me' : '' },

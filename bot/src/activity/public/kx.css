@@ -1,0 +1,528 @@
+/* ==========================================================================
+   Karia kx teması: karia.live ile aynı tasarım dili.
+   Koyu nokta ızgarası, ince çizgili kutular, köşeli düğmeler, teal vurgu, mono etiketler.
+   style.css ve tables.css'ten sonra yüklenir; yalnızca görünümü değiştirir.
+   ========================================================================== */
+:root{
+  --felt:radial-gradient(rgba(45,212,191,.09) 1px,transparent 1px) 0 0/16px 16px,radial-gradient(90% 70% at 50% 30%,rgba(45,212,191,.09),transparent 72%),#0a0e0e;
+  --felt-in:radial-gradient(rgba(45,212,191,.15) 1px,transparent 1px) 0 0/14px 14px,radial-gradient(ellipse at 50% 40%,rgba(45,212,191,.16),transparent 72%),#0b1615;
+  --felt-edge:rgba(45,212,191,.34);
+  --ring:0 30px 60px -24px #000;
+  --act-bar:var(--bg2);
+}
+::selection{background:rgba(45,212,191,.3)}
+*{scrollbar-color:var(--line3) transparent}
+.serif{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.01em;color:var(--accent)}
+.tag{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid var(--line2);border-radius:4px;background:var(--panel);color:var(--muted);font:500 11.5px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.tag i{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.boot p{font:500 12.5px var(--mono);letter-spacing:.06em}
+
+/* ── Köşeli düğme (kb): nötr, teal (ana eylem), amber (para), kırmızı (vazgeç) ── */
+.actions button,.item-actions button,.inline button,.hero-actions button,.suggest button,.report button,.music-form button,.pl-new button,.pl-actions button,
+.social-form>button,.social-result button,.brole-row button,.ann-pin,.pl-back,
+.pk,.room-root button.big,.room-root button.primary,.room-root button.ghost,.room-root .raise-box .mini,.pill-gold,
+.roulette-tools .spin-btn,#slot-spin,.tay-btn,.roulette-tools button:not(.spin-btn),.side-actions button,.casino .table .actions button{
+  position:relative;border:1px solid var(--line3);border-radius:4px;background:var(--panel2);color:var(--fg);font-family:var(--sans);font-weight:600;letter-spacing:0;
+  text-shadow:none;box-shadow:none;transition:background-color .15s,border-color .15s,color .15s}
+:is(.actions button,.item-actions button,.inline button,.hero-actions button,.suggest button,.report button,.music-form button,.pl-new button,.pl-actions button,
+.social-form>button,.social-result button,.brole-row button,.ann-pin,.pl-back,
+.pk,.room-root button.big,.room-root button.primary,.room-root button.ghost,.room-root .raise-box .mini,.pill-gold,
+.roulette-tools .spin-btn,#slot-spin,.tay-btn,.roulette-tools button:not(.spin-btn),.side-actions button,.casino .table .actions button):hover:not(:disabled){background:#1a1a1f;border-color:#4a4a53;filter:none}
+:is(.pk,.room-root button.big,.roulette-tools .spin-btn,#slot-spin,.tay-btn,.casino .table .actions button):active:not(:disabled){transform:translateY(1px);box-shadow:none}
+
+/* Ana eylem: teal */
+.primary,.actions .primary,.music-form .primary,.item-actions .primary,.inline .primary,.suggest button,.hero-actions .primary,.pl-actions .primary,
+.pk.check,.pk.call,.room-root button.big,.room-root button.primary,.pill-gold,.roulette-tools .spin-btn,#slot-spin,.tay-btn,
+.casino .table .actions .deal,.lobby-go,.stake-btns button.active{
+  --kb-dot:var(--accent);background:#0d2723;border:1px solid rgba(45,212,191,.55);border-radius:4px;color:#e7fffb;box-shadow:none}
+:is(.primary,.actions .primary,.music-form .primary,.item-actions .primary,.inline .primary,.suggest button,.hero-actions .primary,.pl-actions .primary,
+.pk.check,.pk.call,.room-root button.big,.room-root button.primary,.pill-gold,.roulette-tools .spin-btn,#slot-spin,.tay-btn,.casino .table .actions .deal):hover:not(:disabled){background:#10332e;border-color:var(--accent)}
+/* Para ile ilgili güçlü eylem: amber */
+.pk.raise,.pk.allin,.tay-btn.cash,#bj-double,#bj-insure{--kb-dot:var(--amber);background:#2a2008;border:1px solid rgba(251,191,36,.55);border-radius:4px;color:#fde68a;box-shadow:none}
+:is(.pk.raise,.pk.allin,.tay-btn.cash,#bj-double,#bj-insure):hover:not(:disabled){background:#33270a;border-color:var(--amber)}
+/* Vazgeçme: kırmızı */
+.pk.fold,.tay-btn.cancel,#bj-surrender,.room-root button.danger,.item-actions .danger,.pl-actions .pl-danger,.brole-row button{background:#1f0f10;border:1px solid rgba(248,113,113,.45);border-radius:4px;color:#fca5a5;box-shadow:none}
+:is(.pk.fold,.tay-btn.cancel,#bj-surrender,.room-root button.danger,.item-actions .danger,.pl-actions .pl-danger):hover:not(:disabled){background:#2a1214;border-color:var(--lose)}
+#bj-split,#bj-noinsure{background:var(--panel2);border:1px solid var(--line3);color:var(--fg);box-shadow:none}
+/* Köşe noktaları (karia.live düğmeleri gibi) */
+:is(.primary,.suggest button,.pk.check,.pk.call,.pk.raise,.pk.allin,.room-root button.big,.pill-gold,.roulette-tools .spin-btn,#slot-spin,.tay-btn,.casino .table .actions .deal,#bj-double,#bj-insure){position:relative}
+:is(.primary,.suggest button,.pk.check,.pk.call,.pk.raise,.pk.allin,.room-root button.big,.pill-gold,.roulette-tools .spin-btn,#slot-spin,.tay-btn,.casino .table .actions .deal,#bj-double,#bj-insure)::after{
+  content:'';position:absolute;inset:-5px;pointer-events:none;border:1px solid transparent;transition:border-color .2s;
+  background:radial-gradient(circle,var(--kb-dot,var(--line3)) 2px,transparent 2.5px) 0 0/10px 10px no-repeat,
+    radial-gradient(circle,var(--kb-dot,var(--line3)) 2px,transparent 2.5px) 100% 0/10px 10px no-repeat,
+    radial-gradient(circle,var(--kb-dot,var(--line3)) 2px,transparent 2.5px) 0 100%/10px 10px no-repeat,
+    radial-gradient(circle,var(--kb-dot,var(--line3)) 2px,transparent 2.5px) 100% 100%/10px 10px no-repeat}
+:is(.primary,.suggest button,.pk.check,.pk.call,.pk.raise,.pk.allin,.room-root button.big,.pill-gold,.roulette-tools .spin-btn,#slot-spin,.tay-btn,.casino .table .actions .deal,#bj-double,#bj-insure):hover:not(:disabled)::after{border-color:var(--line2)}
+:is(.primary,.pk,.room-root button.big,.tay-btn,#slot-spin,.roulette-tools .spin-btn,.casino .table .actions button):disabled::after{display:none}
+button:disabled{opacity:.45}
+
+/* ── Alanlar ── */
+.field,.music-form input,.pl-new input,.picker-search,.stake-select,.buyin input{background:var(--bg2);border:1px solid var(--line3);border-radius:6px;color:var(--fg)}
+.field:focus,.music-form input:focus,.pl-new input:focus,.picker-search:focus,.stake-select:focus,.buyin input:focus,.bet-input input:focus,.tay-auto input:focus{outline:none;border-color:var(--accent)}
+select.field option,select.field optgroup,.stake-select option{background:var(--panel2);color:var(--fg)}
+.picker-toggle{background:var(--bg2);border:1px solid var(--line3);border-radius:6px}
+.picker-toggle:hover,.picker-toggle[aria-expanded="true"]{border-color:var(--accent)}
+.picker-pop,.suggest-pop{background:var(--panel2);border:1px solid var(--line2);border-radius:10px;box-shadow:0 30px 60px -20px #000}
+.picker-row.active,.suggest-item:hover,.suggest-item.active{background:rgba(45,212,191,.1);color:var(--accent)}
+.picker-avatar{box-shadow:0 0 0 1px var(--line3)}
+/* Anahtar (karia.live'daki gibi) */
+.switch{appearance:none;-webkit-appearance:none;position:relative;width:34px;height:20px;margin:0;border-radius:999px;background:var(--line3);cursor:pointer;flex:none;transition:background-color .15s}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s,background-color .15s}
+.switch:checked{background:var(--accent)}
+.switch:checked::after{left:17px;background:var(--teal-ink)}
+.switch:disabled{opacity:.5}
+
+/* ── Sol menü ── */
+.app{gap:20px}
+.side{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:14px 10px 12px;gap:12px}
+.side-brand{gap:10px;margin:0 -10px;padding:4px 16px 14px;border-bottom:1px solid var(--line)}
+.side-brand .logo-mark{width:44px;height:auto;flex:none;color:var(--fg)}
+.side-brand strong{font:700 14px var(--sans);letter-spacing:.16em;text-transform:uppercase}
+.sfx-toggle{width:30px;height:30px;border:1px solid var(--line2);border-radius:6px;background:var(--panel2);font-size:14px}
+.sfx-toggle:hover{background:#1a1a1f;border-color:var(--line3)}
+.balance{gap:10px;margin:2px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.balance img{width:26px;height:26px}
+.balance small{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.balance strong{font:600 18px var(--sans);letter-spacing:-.02em}
+.tabs{gap:2px}
+.tab{gap:11px;padding:9px 12px;border-radius:6px;font:500 14.5px var(--sans);color:var(--soft)}
+.tab img{width:19px;height:19px;opacity:.65;filter:saturate(.5)}
+.tab:hover{color:var(--fg);background:var(--panel2)}
+.tab.active{color:var(--fg);background:var(--panel2);box-shadow:inset 2px 0 0 var(--accent)}
+.tab.active img{opacity:1;filter:none}
+.admin-toggle{margin-top:12px;padding:8px 12px;font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.admin-toggle:hover{color:var(--soft)}
+.badge{border-radius:4px;padding:0 6px;background:rgba(248,113,113,.12);color:#fca5a5;font:600 11px/18px var(--mono);box-shadow:inset 0 0 0 1px rgba(248,113,113,.45)}
+.site-back{border-radius:6px;font:500 12.5px var(--mono);color:var(--muted)}
+.site-back:hover{color:var(--fg);background:var(--panel2)}
+.side-user{margin:0 -10px;padding:12px 14px 0;border-top:1px solid var(--line)}
+.avatar{background:var(--panel2);color:var(--accent);box-shadow:inset 0 0 0 1px var(--line3);font-weight:700}
+.side-user strong{font-weight:600}
+.role{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.role.admin{color:var(--accent)}
+
+/* ── Sayfa başlığı, kutular ── */
+.page-title{display:flex;align-items:center;gap:12px;font:600 26px/1.15 var(--sans);letter-spacing:-.03em}
+.page-title::before{content:'';flex:none;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(45,212,191,.14)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.panel.plain{background:transparent;border:0;border-radius:0}
+.stat,.box,.runners-box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.box h4,.runners-box h4,#home .box h4{font:500 11.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.panel h4{font:500 11.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.hint{color:var(--muted)}
+/* İstatistik şeridi: karia.live'daki gibi tek kutu, aralarda çizgi */
+.stats,#home .stats{gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.stats .stat{border:0;border-radius:0;background:var(--panel)}
+.stat small{margin-bottom:6px;font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.stat strong,#home .stat strong{font:600 24px var(--sans);letter-spacing:-.03em}
+#home .stat strong{font-size:22px}
+.stat em{font:500 11.5px var(--mono);color:var(--muted)}
+/* Modül kartları */
+.mod{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);transition:background-color .15s,border-color .15s}
+.mod:hover{background:var(--panel2);border-color:var(--line2)}
+.mod{--c:var(--accent)}.mod.red{--c:var(--lose)}.mod.blue{--c:var(--blue)}.mod.purple{--c:var(--violet)}
+.mod .mod-icon,.mod.red .mod-icon,.mod.blue .mod-icon,.mod.green .mod-icon,.mod.purple .mod-icon{border-radius:10px;background:color-mix(in srgb,var(--c) 12%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 35%,transparent)}
+.mod-text strong{font-weight:600}
+.chart i{border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--accent),rgba(45,212,191,.2))}
+.rank li{border-bottom:1px dashed var(--line2)}
+.rank li:last-child{border-bottom:0}
+.rank li b{font:600 13px var(--mono)}
+/* Seçim şeritleri */
+.period{gap:2px;padding:3px;background:var(--bg2);border:1px solid var(--line);border-radius:8px}
+.period button{border-radius:5px;padding:6px 12px;color:var(--muted);font:500 13.5px var(--sans)}
+.period button:hover{color:var(--fg)}
+.period button.active,.board-types button.active{background:rgba(45,212,191,.08);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(45,212,191,.45)}
+.message{padding:11px 16px;background:var(--panel2);border:1px solid var(--line3);border-radius:8px;box-shadow:0 20px 40px -10px #000;font:500 14.5px var(--sans);color:var(--fg)}
+.message.win{background:var(--panel2);border-color:rgba(74,222,128,.6);color:#86efac;box-shadow:0 20px 40px -10px #000}
+.message.lose{background:var(--panel2);border-color:rgba(248,113,113,.6);color:#fca5a5}
+.message.info{color:var(--soft)}
+
+/* ── Ana sayfa ── */
+.hero,#home .hero{position:relative;display:block;overflow:hidden;margin-bottom:14px;padding:24px 26px;border:1px solid var(--line2);border-radius:var(--radius);
+  background:radial-gradient(70% 140% at 100% 0%,rgba(45,212,191,.12),transparent 70%),var(--panel)}
+.hero::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(rgba(45,212,191,.18) 1px,transparent 1px) 0 0/18px 18px;
+  -webkit-mask-image:linear-gradient(270deg,#000 5%,transparent 60%);mask-image:linear-gradient(270deg,#000 5%,transparent 60%)}
+.hero>*{position:relative;z-index:1}
+.hero-top,#home .hero-top{align-items:flex-end;margin-bottom:20px}
+.hero .tag{margin-bottom:14px}
+.hero h2{font:600 30px/1.1 var(--sans);letter-spacing:-.035em}
+.hero h2 .serif{font-size:1.14em}
+.hero p{margin-top:10px;font:500 12.5px var(--mono);letter-spacing:.02em;color:var(--muted)}
+.hero-avatar{width:34px;height:34px;margin-right:10px;box-shadow:0 0 0 1px var(--line3);vertical-align:-6px}
+.hero-actions button{padding:10px 18px}
+.level-head strong{font:600 14px var(--sans)}
+.level-head span{font:500 12px var(--mono);color:var(--muted)}
+.progress{height:8px;border-radius:99px;background:var(--line2)}
+.progress i{border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--blue))}
+.ann-badge{border-radius:4px;background:transparent;color:var(--accent);font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;box-shadow:inset 0 0 0 1px rgba(45,212,191,.5)}
+.ann small{font-family:var(--mono)}
+.ann-count{font:500 11.5px var(--mono)}
+.ann-arrow{border:1px solid var(--line3);border-radius:4px;background:var(--panel2)}
+.ann-pin{padding:4px 10px;font-size:12px}
+.md-q{border-left-color:rgba(45,212,191,.6)}
+
+/* ── Sıralama ── */
+.podium{border:1px solid var(--line);border-radius:var(--radius);background:radial-gradient(rgba(45,212,191,.11) 1px,transparent 1px) 0 0/18px 18px,radial-gradient(70% 60% at 50% 0%,rgba(45,212,191,.14),transparent 70%),var(--panel)}
+.podium-col{--c:var(--accent)}.p1{--c:var(--amber)}.p2{--c:#d4d4d8}.p3{--c:#fb923c}
+.podium-block{border:1px solid var(--line2);border-bottom:0;border-radius:8px 8px 0 0;background:linear-gradient(180deg,var(--panel2),var(--bg2));box-shadow:inset 0 2px 0 var(--c)}
+.podium-col .podium-avatar{border:3px solid var(--c)}
+.podium-block b{font:600 44px var(--sans);letter-spacing:-.04em;color:var(--c)}
+.podium-block em{font:500 12.5px var(--mono);color:var(--soft)}
+.podium-name{font-weight:600}
+.podium-col.me .podium-block{outline:1px solid var(--accent);outline-offset:3px}
+.board-types{margin:-14px -14px 14px;padding:6px;border-radius:var(--radius) var(--radius) 0 0;background:var(--bg2);box-shadow:none;border:0;border-bottom:1px solid var(--line)}
+.board-types button{border-radius:5px;font:500 13px var(--sans)}
+.runners li{border-radius:6px}
+.runners li:nth-child(odd){background:transparent}
+.runners li+li{border-top:1px solid var(--line);border-radius:0}
+.runners li b{font:600 12.5px var(--mono);color:var(--dim)}
+.runners li em{font:500 12.5px var(--mono)}
+.runners li.me{outline:0;background:rgba(45,212,191,.07);box-shadow:inset 2px 0 0 var(--accent)}
+.runner-avatar{box-shadow:0 0 0 1px var(--line3)}
+
+/* ── Müzik ── */
+.now-card.player{background:var(--bg2);border:1px solid var(--line2);border-radius:var(--radius)}
+.now-backdrop{opacity:.35}
+.now-backdrop::after{background:linear-gradient(180deg,rgba(8,8,10,.35),rgba(8,8,10,.92))}
+.now-cover{border:1px solid var(--line2);border-radius:8px;background:var(--panel2);box-shadow:0 30px 60px -24px #000}
+.now-label{font-family:var(--mono)!important;font-weight:500!important;letter-spacing:.16em!important}
+.now-text strong{font-weight:600;letter-spacing:-.02em}
+.now-text small,.now-card .player-time{color:var(--muted)}
+.player-time{font:500 12px var(--mono)}
+.now-card .player-bar,.player-bar{background:var(--line2)}
+.player-bar i{background:linear-gradient(90deg,var(--accent),var(--blue))}
+.player button{border-radius:6px}
+.player button.on{background:rgba(45,212,191,.12);box-shadow:inset 0 0 0 1px rgba(45,212,191,.45)}
+.now-card.player button.play{border:1px solid rgba(45,212,191,.55);border-radius:50%;background:#0d2723;box-shadow:0 0 0 6px rgba(45,212,191,.08)}
+.now-card.player button.play:hover:not(:disabled){background:#10332e;border-color:var(--accent)}
+.player button b{border-radius:3px;color:var(--teal-ink);font-family:var(--mono)}
+.queue{background:var(--bg2);border:1px solid var(--line);border-radius:10px}
+.queue li{border-radius:6px}
+.queue li b{font:500 12px var(--mono);color:var(--dim)}
+.queue li em{font:500 12px var(--mono)}
+.queue-count{font-family:var(--mono)}
+.music-tabs button{border-radius:5px;font:500 13px var(--sans)}
+.music-tabs button.active{background:rgba(45,212,191,.08);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(45,212,191,.45)}
+.pl-icon{border:1px solid var(--line3);border-radius:6px;background:var(--panel2)}
+.pl-icon:hover{background:#0d2723;border-color:rgba(45,212,191,.55);color:var(--accent)}
+.pl-menu{background:var(--panel2);border:1px solid var(--line2);border-radius:10px;box-shadow:0 30px 60px -20px #000}
+.pl-menu h5{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.pl-title:hover,.pl-title:focus{border-color:var(--line3);background:var(--bg2)}
+.listen-modes{padding:3px;background:var(--bg2);border:1px solid var(--line);border-radius:8px}
+.listen-modes button img{filter:saturate(.5)}
+.listen-modes button.active img{filter:none}
+/* Sözler */
+.ly-head strong{font-weight:600;letter-spacing:-.02em}
+.ly-head small,.ly-source{font-family:var(--mono)}
+.ly-line{border-radius:6px}
+.ly-lines.synced .ly-line{font-weight:500}
+.ly-lines.synced .ly-line.on{color:var(--fg);background:rgba(45,212,191,.07);box-shadow:inset 2px 0 0 var(--accent)}
+.player-right select.field{border-radius:4px;font-family:var(--mono)!important}
+.imp-logo{border-radius:8px}
+.pl-row img,#import-box .pl-row img{border-radius:4px}
+.listen-modes button{border-radius:5px;font:500 12.5px var(--sans)}
+.listen-modes button.active{background:rgba(45,212,191,.08);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(45,212,191,.45)}
+.imp-card{background:var(--bg2);border:1px solid var(--line);border-radius:8px}
+.imp-card h5{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.imp-actions button,.imp-take{border:1px solid var(--line3);border-radius:4px;font-weight:600}
+.imp-actions button:not(.primary){background:var(--panel2)}
+.imp-actions .primary{background:#0d2723;border-color:rgba(45,212,191,.55);color:#e7fffb}
+.imp-take:hover{background:#0d2723;border-color:rgba(45,212,191,.55);color:#e7fffb}
+
+/* ── Yönetim ── */
+.item,.module,.ticket-row,.say-card,.cmd-card{background:var(--bg2);border:1px solid var(--line);border-radius:8px}
+.item small,.ticket-top small,.ticket-who,.tier-item small{font-family:var(--mono)}
+.ticket-row{border-color:var(--line)}
+.ticket-row:hover{border-color:var(--line3)}
+.ticket-row.active{border-color:rgba(45,212,191,.55);background:rgba(45,212,191,.06)}
+.ticket-src{border-radius:4px;font:600 10px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.ticket-src.discord{background:transparent;color:#a5b4fc;box-shadow:inset 0 0 0 1px rgba(129,140,248,.5)}
+.ticket-src.mail{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1px rgba(45,212,191,.5)}
+.desk-empty{background:var(--bg2);border:1px dashed var(--line2);border-radius:var(--radius)}
+.log,.desk .log{background:var(--bg2);border:1px solid var(--line);border-radius:10px}
+.desk .msg{background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+.desk .msg.bot{background:rgba(45,212,191,.07);border-color:rgba(45,212,191,.3)}
+.msg small{font:500 11.5px var(--mono)}
+.output{background:var(--bg2);border:1px solid var(--line);border-radius:8px;font:13px/1.55 var(--mono)}
+.setting{border-top-color:var(--line)}
+.cmd-group h5{font:500 11px var(--mono);letter-spacing:.14em;color:var(--muted)}
+.cmd-group h5 em{font-family:var(--mono)}
+.cmd-item{border-radius:6px}
+.cmd-item:hover{background:var(--panel2)}
+.cmd-item.active{background:rgba(45,212,191,.08);border-color:rgba(45,212,191,.45)}
+.cmd-item strong{font-weight:600}
+.say-preview{background:var(--bg);border:1px solid var(--line);border-radius:6px}
+.say-preview.embed{border-left:3px solid var(--accent)}
+.mention{background:rgba(45,212,191,.14);color:var(--accent)}
+.social-file{border:1px dashed var(--line3);border-radius:8px;background:var(--bg2)}
+.social-tiktok{border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brole-row{border-bottom-color:var(--line)}
+
+/* ── Oyun çerçevesi: oyun seçici, bahis paneli, köşe düğmeleri ── */
+#game-switch{gap:1px;padding:0;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+#game-switch button{border-radius:0;background:var(--panel);color:var(--muted);font-weight:500}
+#game-switch button:hover{background:var(--panel2);color:var(--fg)}
+#game-switch button.active{background:var(--panel2);color:var(--fg);box-shadow:inset 0 -2px 0 var(--accent)}
+.betbar{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.bet-input label,.stake-pick label{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.bet-input input,.content.game .bet-input input{background:var(--bg2);border:1px solid var(--line3);border-radius:6px;font-family:var(--mono);font-weight:600}
+.chips .chip-wrap .chip{border:1px solid var(--line3)!important;border-radius:6px;background:var(--panel2);color:var(--fg);font:600 14px var(--mono);text-shadow:none;box-shadow:inset 0 -2px 0 var(--c,var(--accent))}
+.chips .chip-wrap .chip[data-add]{background:var(--panel2);color:var(--fg)}
+.chips .chip-wrap .chip[data-add="10"]{--c:var(--accent)}
+.chips .chip-wrap .chip[data-add="100"]{--c:var(--amber)}
+.chips .chip-wrap .chip[data-add="1000"]{--c:var(--lose)}
+.chips .chip-wrap .chip[data-add="5000"]{--c:var(--violet)}
+.chips .chip-wrap .chip[data-add]::before{content:'';position:static;display:inline-block;width:6px;height:6px;margin:0 7px 2px 0;vertical-align:middle;border:0;border-radius:50%;background:var(--c)}
+.chips .chip-wrap .chip:hover{background:#1a1a1f;border-color:#4a4a53!important;filter:none;transform:none}
+.chips .chip-wrap .chip:active{transform:translateY(1px);box-shadow:inset 0 -2px 0 var(--c,var(--accent))}
+.chip-minus{width:20px;height:20px;border:1px solid rgba(248,113,113,.6);border-radius:4px;background:var(--bg2);color:#fca5a5;font:700 14px/17px var(--mono);box-shadow:none}
+.chip-minus:hover{background:#2a1214;transform:none}
+.bet-tools button,.content.game .bet-tools button{border:1px solid var(--line3);border-radius:4px;background:var(--panel2);color:var(--soft);font:600 13px var(--mono)}
+.bet-tools button:hover,.content.game .bet-tools button:hover{background:#1a1a1f;color:var(--fg)}
+.game-info h4{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.game-row{padding:6px 0;border-bottom:1px dashed var(--line2)}
+.game-row:last-child{border-bottom:0}
+.game-row b{font:600 12.5px var(--mono)}
+.stake-btns button{border:1px solid var(--line3);border-radius:4px;background:var(--panel2);font:600 14px var(--mono);box-shadow:none}
+.stake-btns button:hover{border-color:#4a4a53;box-shadow:none}
+.stake-note{font-family:var(--mono)}
+.side-actions button{font-size:14px}
+.side-actions button:hover:not(:disabled){background:#0d2723;border-color:rgba(45,212,191,.55);color:#e7fffb}
+.mode-switch{padding:3px;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;box-shadow:none}
+.mode-switch button{border-radius:5px;color:var(--muted);font:500 13px var(--sans)}
+.mode-switch button.active{background:rgba(45,212,191,.1);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(45,212,191,.5)}
+.corner-btn{border-radius:6px;background:var(--panel2);color:var(--soft);box-shadow:inset 0 0 0 1px var(--line3);font:600 15px var(--mono)}
+.corner-btn:hover{background:#1a1a1f;color:var(--fg);box-shadow:inset 0 0 0 1px #4a4a53}
+.corner-btn.danger{color:#fca5a5;box-shadow:inset 0 0 0 1px rgba(248,113,113,.5)}
+.corner-btn.danger:hover{background:#2a1214;color:#fca5a5}
+.content.side-closed #side-toggle{background:rgba(45,212,191,.1);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(45,212,191,.5)}
+.rules{background:var(--panel);border:1px solid var(--line2);border-radius:var(--radius);box-shadow:0 40px 80px -30px #000}
+.rules-x{border:1px solid var(--line3);border-radius:6px;background:var(--panel2)}
+.rules h3{font-weight:600;letter-spacing:-.02em}
+.rules h4{font:500 11px var(--mono);letter-spacing:.14em}
+.rules ol{color:var(--soft)}
+.rules .pay div:nth-child(odd){background:var(--bg2)}
+.rules .pay b{font-family:var(--mono);color:var(--amber)}
+
+/* ── Masalar: keçe yerine teal nokta ızgaralı koyu yüzey, ince kenar çizgileri ── */
+.table{background:var(--felt)}
+.pfelt,.zcenter,.bjtable,.cabinet,.chess,.lab{outline:1px solid var(--line2);outline-offset:6px}
+.karia-room{background:var(--panel)}
+.room-root,.roulette-room,.slot-room{background:var(--felt)}
+.pfelt,.zcenter{background:var(--felt-in);border:1px solid var(--felt-edge);box-shadow:var(--ring)}
+.bjtable{background:var(--felt-in);border:1px solid var(--felt-edge);border-top:0;box-shadow:var(--ring)}
+.okf{background:var(--felt-in);border:1px solid var(--felt-edge);border-radius:12px;box-shadow:none}
+.lobby-felt{border:1px solid var(--felt-edge);box-shadow:none;background:radial-gradient(rgba(45,212,191,.22) 1px,transparent 1px) 0 0/6px 6px,#0b1615}
+.felt-mark span{font:italic 400 32px var(--serif);letter-spacing:1px}
+.felt-mark small{font:500 11px var(--mono);letter-spacing:.2em}
+.felt-mark img{border-radius:0;filter:none}
+.felt-title{font:italic 400 54px var(--serif);fill:#fff;letter-spacing:0}
+.felt-sub{font:500 14px var(--mono);fill:var(--accent);letter-spacing:5px}
+.felt-band{stroke:rgba(45,212,191,.35);stroke-width:1.5}
+.felt-band-text{font:500 12px var(--mono);fill:var(--soft);letter-spacing:4px}
+.hand h3,.casino .hand h3,.bj-dealer h3{font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--soft);text-shadow:none}
+.total{border-radius:4px;background:var(--bg2);color:var(--amber);font:600 12.5px var(--mono);box-shadow:inset 0 0 0 1px var(--line3)}
+/* Kartlar */
+.card{border-radius:6px;background:var(--card);box-shadow:0 1px 0 rgba(0,0,0,.25),0 8px 16px -6px rgba(0,0,0,.7)}
+.card.back{background:url(logo.png) center/60% no-repeat,radial-gradient(rgba(45,212,191,.28) 1px,transparent 1px) 0 0/7px 7px,#0d1514;border:1px solid rgba(45,212,191,.5);box-shadow:inset 0 0 0 3px #0d1514,inset 0 0 0 4px rgba(45,212,191,.3),0 8px 16px -6px rgba(0,0,0,.7)}
+.card.slot{border:1px dashed rgba(153,246,228,.25)}
+/* Aksiyon çubuğu */
+.casino .table .actions{gap:8px;padding:10px;background:var(--bg2);border:1px solid var(--line2);border-radius:10px}
+.casino .table .actions button{height:44px;min-width:96px;padding:0 18px;font-size:14.5px}
+.casino .table .actions .deal{height:48px;padding:0 34px;font-size:16px}
+/* Oda başlığı, lobi */
+.room-head strong{font:600 17px var(--sans);letter-spacing:-.02em}
+.room-stake{border-radius:4px;background:var(--bg2);color:var(--amber);font:600 12.5px var(--mono);box-shadow:inset 0 0 0 1px var(--line2)}
+.room-root .hint{color:var(--soft)}
+.room-log{font:500 11.5px var(--mono);color:var(--dim)}
+.room-log span:last-child{color:var(--soft)}
+.room-empty{color:var(--muted)}
+.lobby-head h3{font:600 24px var(--sans);letter-spacing:-.03em}
+.lobby-head p{color:var(--muted)}
+.lobby-card{border:1px solid var(--line2);border-radius:10px;background:var(--panel)}
+.lobby-card:hover{border-color:rgba(45,212,191,.55);background:var(--panel2)}
+.lobby-info strong{font-weight:600}
+.lobby-info small{font:500 11.5px var(--mono);color:var(--muted)}
+.lobby-seats i{border-radius:2px;background:var(--line3)}
+.lobby-seats i.on{background:var(--accent);box-shadow:none}
+.lobby-go{border-radius:4px;font:600 12.5px var(--sans)}
+.solo-intro{background:var(--panel);border:1px solid var(--line2);border-radius:var(--radius)}
+.solo-intro h3{font-weight:600;letter-spacing:-.03em}
+.solo-intro p{color:var(--muted)}
+.past h5{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.past-item{border:1px solid var(--line2);border-radius:6px;background:var(--bg2)}
+.past-item:first-child{border-color:rgba(251,191,36,.55)}
+.past-item span{font-family:var(--mono)}
+/* Koltuklar */
+.seat-avatar{background:var(--line2)}
+.seat-avatar.ready{background:var(--accent);box-shadow:0 0 0 4px rgba(45,212,191,.15)}
+.seat-avatar.timer{background:conic-gradient(var(--amber) calc(var(--p,1) * 360deg),var(--line2) 0)}
+.seat-plate{border:1px solid var(--line2);border-radius:6px;background:rgba(12,12,15,.92)}
+.seat-plate strong{font-weight:600}
+.seat-plate span{font:600 11.5px var(--mono);color:var(--amber)}
+.seat-tag{border-radius:4px;background:var(--bg2);color:var(--soft);font:500 10.5px var(--mono);box-shadow:inset 0 0 0 1px var(--line2)}
+.seat-tag.win{background:#2a2008;color:#fde68a;box-shadow:inset 0 0 0 1px rgba(251,191,36,.55)}
+.seat-bet{border-radius:4px;background:var(--bg2);color:var(--amber);font:600 11.5px var(--mono);box-shadow:inset 0 0 0 1px var(--line2)}
+.dealer-btn{color:#111;font:700 11px var(--mono)}
+.pseat.me .seat-avatar,.bseat.me .seat-avatar{box-shadow:0 0 0 2px var(--accent)}
+.pseat.turn .seat-plate,.bseat.turn .seat-plate{border-color:var(--amber);box-shadow:0 0 0 3px rgba(251,191,36,.15)}
+.pseat .sit,.bseat .sit,.tt-seat .sit{border:1px dashed rgba(45,212,191,.5);background:rgba(45,212,191,.06);color:var(--accent);font:600 13px var(--sans)}
+.pseat .sit:hover,.bseat .sit:hover,.tt-seat .sit:hover{border-style:solid;background:#0d2723;color:#e7fffb}
+.pseat.empty{border:1px dashed var(--line3)}
+.tt-seat .sit{border-radius:4px}
+.ppot{border-radius:4px;background:var(--bg2);color:var(--amber);font:600 13px var(--mono);box-shadow:inset 0 0 0 1px var(--line2)}
+.pstatus{font:500 12.5px var(--mono);color:var(--soft);text-shadow:none}
+.pcontrols{background:var(--bg2);border:1px solid var(--line2);border-radius:10px}
+.turn-bar{border-radius:10px 10px 0 0;background:linear-gradient(90deg,var(--amber) calc(var(--p,1) * 100%),transparent 0)}
+.pcontrols.my-turn{box-shadow:0 0 0 1px var(--amber),0 0 24px -6px rgba(251,191,36,.45)}
+.pk{height:44px;min-width:92px;font-size:14.5px}
+.raise-presets b{font-family:var(--mono)}
+.raise-box input[type=range]{accent-color:var(--amber)}
+.room-root .raise-box .mini{padding:3px 8px;font:600 11px var(--mono)}
+.buyin{border:1px solid rgba(45,212,191,.45);border-radius:8px;background:var(--bg2)}
+.buyin input{font-family:var(--mono)}
+/* Zar */
+.die{border-radius:6px;background:var(--card);box-shadow:0 1px 0 rgba(0,0,0,.25),0 6px 12px -4px rgba(0,0,0,.6),inset 0 -2px 0 #d4d4da}
+.die i.on{background:#17171c}
+/* Rulet */
+.wheel{border:4px solid #141418;box-shadow:0 0 0 1px var(--felt-edge),0 0 0 7px rgba(45,212,191,.05),0 0 0 8px var(--line2),0 20px 40px -12px #000}
+.wheel::after{background:radial-gradient(rgba(45,212,191,.22) 1px,transparent 1px) 0 0/6px 6px,#0b1615;border:1px solid var(--felt-edge)}
+.wheel-pin{border-top-color:var(--amber)}
+.wn{font-family:var(--mono)}
+.roulette-result{font:600 36px var(--sans);letter-spacing:-.03em}
+.roulette-result.red{color:#fca5a5}.roulette-result.green{color:#86efac}
+.rc{border:1px solid rgba(255,255,255,.14);border-radius:4px;font:600 12.5px var(--mono)}
+.rc.red{background:#991b1b}.rc.black{background:#141418}.rc.green{background:#15803d}.rc.out{background:rgba(255,255,255,.03)}
+.rc:hover{filter:brightness(1.25)}
+.rc[data-bet]::after{border-radius:4px;background:var(--amber);color:#1c1300;font:700 10px/17px var(--mono)}
+.rh{border-radius:4px;font:600 11.5px var(--mono);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.rh.red{background:#991b1b}.rh.black{background:#141418}.rh.green{background:#15803d}
+.rh:first-child{box-shadow:0 0 0 1px var(--amber)}
+.roulette-status,.roulette-total{font:500 12.5px var(--mono);color:var(--soft);text-shadow:none}
+.roulette-kind button{border:1px solid var(--line3);border-radius:4px;background:var(--panel2);color:var(--soft);font:500 12.5px var(--sans)}
+.roulette-kind button.active{background:rgba(45,212,191,.1);border-color:rgba(45,212,191,.55);color:var(--accent)}
+.roulette-tools{background:var(--bg2);border:1px solid var(--line2);border-radius:10px}
+.roulette-tools button:not(.spin-btn){height:38px;padding:0 14px;font-weight:500}
+.rg{border-radius:4px;background:var(--bg2);font:500 12px var(--mono);box-shadow:inset 0 0 0 1px var(--line2)}
+.rg em{border-radius:3px;background:var(--amber);color:#1c1300}
+.rg button{border-radius:3px}
+.rp{border-radius:4px;background:var(--bg2);box-shadow:inset 0 0 0 1px var(--line2)}
+.rp em{font-family:var(--mono)}
+.rp.me{box-shadow:inset 0 0 0 1px var(--accent)}
+/* Slot */
+.cabinet{padding:14px 18px 18px;border:1px solid var(--line2);border-radius:14px;background:var(--panel);box-shadow:var(--ring)}
+.marquee{padding:10px;border:1px solid var(--line2);border-radius:8px;background:var(--bg2)}
+.marquee strong{font:500 12px var(--mono);letter-spacing:.32em;color:var(--soft);text-shadow:none}
+.marquee em{font:italic 400 42px var(--serif);color:var(--accent);text-shadow:0 0 24px rgba(45,212,191,.45)}
+.bulbs{height:6px;background:radial-gradient(circle,rgba(45,212,191,.75) 0 2px,transparent 2.5px) 0 0/14px 6px repeat-x}
+.machine{border:1px solid var(--line2);border-radius:10px;background:var(--bg2);box-shadow:inset 0 0 30px rgba(0,0,0,.6)}
+.reel{border:1px solid var(--line3);border-radius:8px;background:linear-gradient(180deg,#0f0f13,#1c1c22 30%,#1c1c22 70%,#0f0f13)}
+.reel.hit{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 24px rgba(45,212,191,.45)}
+.lever{display:none}
+.slot-feed h5{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.sf{border-radius:4px;background:var(--bg2);box-shadow:inset 0 0 0 1px var(--line2)}
+.sf em{font-family:var(--mono)}
+.sf.big{box-shadow:inset 0 0 0 1px var(--amber)}
+.sf.me{box-shadow:inset 0 0 0 1px var(--accent)}
+/* Süper Tayyare */
+.tay-room{background:var(--panel)}
+.tay-sky{background:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px) 0 0/22px 22px,radial-gradient(60% 80% at 15% 100%,rgba(45,212,191,.16),transparent 70%),#08090b}
+.tay-history span{border-radius:4px;background:rgba(12,12,15,.85);color:var(--soft);font:600 11.5px var(--mono);box-shadow:inset 0 0 0 1px var(--line2)}
+.tay-history span.good{color:var(--accent)}.tay-history span.hot{color:var(--amber)}
+.tay-brand{font:italic 400 22px var(--serif);letter-spacing:1px;color:rgba(255,255,255,.12)}
+.tay-mult{font:600 clamp(48px,8vw,84px)/1 var(--sans);letter-spacing:-.04em;color:#fff;text-shadow:0 0 40px rgba(45,212,191,.55)}
+.tay-mult.crashed{color:#fca5a5;text-shadow:0 0 40px rgba(248,113,113,.55)}
+.tay-status strong{font:500 12px var(--mono);letter-spacing:.16em;text-transform:uppercase}
+.tay-status span{font:600 30px var(--mono)}
+.tay-status i{height:4px;border-radius:99px;background:linear-gradient(90deg,var(--accent) calc(var(--p,0) * 100%),var(--line2) 0)}
+.tay-bottom{border-top:1px solid var(--line);border-radius:0;background:var(--bg2)}
+.tay-auto{border:1px solid var(--line3);border-radius:6px;background:var(--panel);color:var(--muted);font:500 12.5px var(--mono)}
+.tay-auto input{font:600 15px var(--mono)}
+.tay-auto b{color:var(--accent)}
+.tay-btn{height:52px;font-size:17px}
+.tay-btn:disabled{opacity:.5;background:var(--panel2);border-color:var(--line3);color:var(--muted)}
+.tay-bets h4{font:500 10.5px var(--mono)!important;letter-spacing:.14em;color:var(--dim)}
+.tay-bet{border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.tay-bet b,.tay-bet em{font-family:var(--mono)}
+.tay-bet.won{background:rgba(74,222,128,.06);border-color:rgba(74,222,128,.3)}
+.tay-bet.me{box-shadow:inset 2px 0 0 var(--accent)}
+/* Sıra masaları */
+.tt-seat{border:1px solid var(--line2);border-radius:8px;background:var(--bg2)}
+.tt-seat.turn{border-color:var(--amber)}
+.tt-seat.me{box-shadow:inset 2px 0 0 var(--accent)}
+.tt-seat.winner{background:rgba(251,191,36,.08);border-color:var(--amber)}
+.tt-seat.empty{border-style:dashed;border-color:var(--line3)}
+.chess-moves span{border-radius:4px;background:var(--bg2);color:var(--soft);font:500 11.5px var(--mono);box-shadow:inset 0 0 0 1px var(--line2)}
+.chess-moves span.new{background:#2a2008;color:#fde68a;box-shadow:inset 0 0 0 1px rgba(251,191,36,.55)}
+.room-root .hint.turn-strip{border:1px solid rgba(251,191,36,.55);border-radius:6px;background:#2a2008;color:#fde68a!important;font:600 13px var(--sans)}
+.big-result{color:var(--amber)!important}
+/* Satranç */
+.chess{border:1px solid var(--felt-edge);border-radius:6px;box-shadow:var(--ring)}
+.sq.l{background:#d3dad9}
+.sq.d{background:#4d7470}
+.sq.last.l{background:#a5e9dd}
+.sq.last.d{background:#27917f}
+.sq.pick{box-shadow:inset 0 0 0 4px var(--amber)}
+.sq.l .rank,.sq.l .file{color:#4d7470}
+.sq.d .rank,.sq.d .file{color:#d3dad9}
+.sq .rank,.sq .file{font-family:var(--mono)}
+.promo-pick{border-radius:10px;background:var(--panel);box-shadow:0 0 0 1px var(--line2),0 30px 60px -20px #000}
+.promo-pick button{border-radius:6px;background:var(--card)}
+.promo-pick button:hover{background:#fde68a}
+/* Labirent */
+.lab{border:1px solid var(--felt-edge);border-radius:10px;background:#0b1312;box-shadow:var(--ring)}
+.lab .cell{border-radius:4px;background:#15211f}
+.lab .cell.goal0{background:#0f2e29;box-shadow:inset 0 0 0 1px rgba(45,212,191,.55)}
+.lab .cell.goal1{background:#2a2410;box-shadow:inset 0 0 0 1px rgba(251,191,36,.55)}
+.lab .cell.can{box-shadow:inset 0 0 0 2px var(--accent)}
+.lab .cell.can::after{background:var(--accent)}
+.lab .cell.can:hover{background:#17403a}
+.groove.wall{background:var(--amber);box-shadow:0 0 8px rgba(251,191,36,.4)}
+.groove.wall.new{background:#fde68a;box-shadow:0 0 12px var(--amber)}
+.groove.pv{background:rgba(45,212,191,.85)}
+.pawn.p0{background:radial-gradient(circle at 35% 30%,#ccfbf1,#14b8a6)}
+.pawn.p1{background:radial-gradient(circle at 35% 30%,#fef3c7,#d97706)}
+.lab-pl{border:1px solid var(--line2);border-radius:8px;background:var(--bg2)}
+.lab-pl.turn{border-color:var(--amber)}
+.lab-help,.lab-walls small{color:var(--muted)}
+.lab-file,.lab-rank{font-family:var(--mono)}
+/* Okey 101 */
+.okp{border:1px solid var(--line2);border-radius:8px;background:var(--bg2)}
+.okp.turn{border-color:var(--amber);box-shadow:0 0 0 3px rgba(251,191,36,.12)}
+.okp.winner{background:rgba(251,191,36,.08);border-color:var(--amber)}
+.okp small,.ok-pile small,.ok-info small{color:var(--muted);font-family:var(--mono)}
+.okp.wait-empty{border:1px dashed var(--line3);background:transparent}
+.okz{border-radius:8px;background:rgba(0,0,0,.25)}
+.okf-101 .okf-mid{border-radius:10px;background:rgba(0,0,0,.2)}
+.ok-meld{border:1px solid var(--line2);border-radius:6px;background:rgba(12,12,15,.6)}
+.ok-meld.can{border-color:var(--accent);box-shadow:0 0 12px rgba(45,212,191,.3)}
+.ok-deck{border-radius:6px;background:radial-gradient(rgba(45,212,191,.25) 1px,transparent 1px) 0 0/6px 6px,#0d1514;box-shadow:0 0 0 1px rgba(45,212,191,.45),0 6px 12px -4px rgba(0,0,0,.6);font-family:var(--mono)}
+.ok-deck.can{box-shadow:0 0 0 2px var(--accent),0 6px 12px -4px rgba(0,0,0,.6)}
+.ok-info strong{font-family:var(--mono)}
+.ok-score{border-radius:6px;background:var(--bg2);box-shadow:inset 0 0 0 1px rgba(96,165,250,.55);font-family:var(--mono)}
+.ok-score.ready{background:var(--bg2);box-shadow:inset 0 0 0 1px rgba(74,222,128,.6)}
+.ok-group{border:1px dashed var(--amber);border-radius:6px;background:rgba(251,191,36,.06)}
+.ok-rack{border:1px solid var(--line3);border-radius:10px;background:linear-gradient(180deg,#1a1a20,#131317);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 20px 40px -20px #000}
+.ok-slot{border-radius:5px;background:rgba(255,255,255,.025);box-shadow:inset 0 0 0 1px var(--line)}
+.ok-slot.drop-hot{background:rgba(45,212,191,.15);box-shadow:inset 0 0 0 1px var(--accent)}
+.tile{border-radius:5px}
+.tile.sel{box-shadow:0 0 0 2px var(--accent),0 3px 0 #b9ab8c,0 10px 14px rgba(0,0,0,.4)}
+.tile.takeable{box-shadow:0 0 0 2px var(--accent),0 3px 0 #b9ab8c}
+.tile.empty{border:1px dashed rgba(153,246,228,.25)}
+
+/* ── Dar ekran ── */
+@media (max-width:900px){
+  #game-switch{gap:4px;padding:0;background:transparent;border:0;overflow:visible}
+  #game-switch button{border:1px solid var(--line2);border-radius:6px}
+  #game-switch button.active{box-shadow:inset 0 0 0 1px rgba(45,212,191,.5);color:var(--accent)}
+}
+@media (max-width:720px){
+  .side-brand{margin:0;padding:0;border-bottom:0}
+  .side-brand .logo-mark{width:38px}
+  .side-user{margin:0;padding:0;border-top:0}
+  .balance{margin:0;padding:6px 10px}
+  .tab.active{box-shadow:inset 0 -2px 0 var(--accent)}
+  .hero,#home .hero{padding:18px}
+  .hero h2{font-size:24px}
+  .page-title{font-size:21px}
+}
