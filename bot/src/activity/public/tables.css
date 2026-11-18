@@ -334,6 +334,16 @@
 #import-box .pl-row{cursor:default}
 #import-box .pl-row img{border-radius:6px;object-fit:cover}
 @media (max-width:720px){.listen-modes button{font-size:11.5px}}
+/* Müzik > Sözler: o anki satır vurgulanır */
+.lyrics{position:relative;scroll-behavior:smooth}
+.ly-head{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 0 2px}
+.ly-head strong{font-size:15px}
+.ly-head small{color:var(--muted);font-size:12px}
+.ly-lines{display:flex;flex-direction:column;gap:2px;padding:4px 6px}
+.ly-line{margin:0;padding:5px 8px;border-radius:8px;font-size:15px;line-height:1.45;color:var(--fg);text-align:center;white-space:pre-wrap;opacity:.85}
+.ly-lines.synced .ly-line{color:var(--muted);font-weight:600;opacity:.6;transition:color .25s,opacity .25s,transform .25s}
+.ly-lines.synced .ly-line.on{color:var(--fg);opacity:1;transform:scale(1.05)}
+.ly-source{color:var(--muted);opacity:.6;font-size:11px;text-align:center;padding:6px 0 2px}
 /* Bot oyuncular */
 .seat-avatar.bot img{object-fit:contain;padding:6px;background:#0b2f2b}
 .room-root button.bot-add{color:#bff7ec;border-color:#4fcfb4}

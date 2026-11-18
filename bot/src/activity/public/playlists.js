@@ -20,6 +20,7 @@ export function initPlaylists(ctx) {
     $('music-list').hidden = name !== 'queue';
     box.hidden = name !== 'lists';
     $('import-box').hidden = name !== 'import';
+    $('lyrics-box').hidden = name !== 'lyrics';
     if (name === 'lists') (open ? openList(open.id) : loadLists());
   }
   for (const b of document.querySelectorAll('[data-mtab]')) b.addEventListener('click', () => setTab(b.dataset.mtab));

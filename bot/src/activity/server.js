@@ -10,6 +10,7 @@ import { startTables, tablesRoute } from './tables/index.js';
 import { playlistRoute } from './playlists.js';
 import { listenRoute, partyRoute, serveAudio, isKnownThumb } from './listen.js';
 import { accountsRoute, musicCallback } from './musicAccounts.js';
+import { lyricsRoute } from './lyrics.js';
 import { getQueue, playQuery, requireVoice, voteSkip, stopMusic, goBack } from '../systems/music.js';
 import { coverSource } from '../systems/playlistImport.js';
 import { adminRoute, isPanelAdmin, isPanelStaff } from './admin.js';
@@ -203,6 +204,7 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
     if (pathname.startsWith('/listen/')) return listenRoute(req.method, pathname, body, member);
     if (pathname.startsWith('/party/')) return partyRoute(req.method, pathname, body, member, guildId);
     if (pathname === '/music-accounts' || pathname.startsWith('/music-accounts/')) return accountsRoute(req.method, pathname, body, member, guildId);
+    if (req.method === 'GET' && pathname === '/lyrics') return lyricsRoute(query);
     if (req.method === 'GET' && pathname === '/slot/feed') return { wins: slotWins() };
     if (req.method === 'GET' && pathname === '/music') return { ...musicView(guild()), inVoice: Boolean(member.voice.channelId) };
     if (req.method !== 'POST') return { __status: 405, error: 'Geçersiz istek.' };

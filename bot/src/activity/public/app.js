@@ -4,6 +4,7 @@ import { initTables } from './tables.js';
 import { initPlaylists } from './playlists.js';
 import { initListen } from './listen.js';
 import { initMusicImport } from './musicImport.js';
+import { initLyrics } from './lyrics.js';
 
 const ON_SITE = location.hostname === 'activity.karia.live'; // Tarayıcıda açıldı: oturum karia.live Discord girişinden gelir
 const API = location.hostname.endsWith('discordsays.com') ? '/.proxy/api' : '/api';
@@ -297,7 +298,16 @@ const mmss = (total) => {
   return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
 };
 let musicClock = null;
+let musicNow = null; // çalan şarkı (sözler için)
 let volumeBusy = false;
+
+/** Çalan şarkının konumu: bu cihazda çalıyorsa sesin kendisinden, bot çalıyorsa sunucunun verdiği saatten */
+function musicPosition() {
+  const audio = $('music-audio');
+  if (listen && listen.mode() !== 'bot' && audio.getAttribute('src') && audio.readyState > 0) return audio.currentTime;
+  const c = musicClock;
+  return c ? c.position + (c.paused ? 0 : (Date.now() - c.at) / 1000) : 0;
+}
 
 function drawProgress() {
   const c = musicClock;
@@ -334,6 +344,7 @@ function drawMusic(m) {
   $('music-loop-one').hidden = loop !== 'track';
   if (m.playing && !volumeBusy) $('music-volume').value = m.volume;
   musicClock = m.playing ? { position: m.position, duration: m.current.duration, paused: m.paused, at: Date.now() } : null;
+  musicNow = m.playing ? { title: m.current.title, artist: m.current.artist, duration: m.current.duration } : null;
   drawProgress();
 
   $('music-count').textContent = m.remaining ? `(${m.remaining})` : '';
@@ -1637,6 +1648,7 @@ tables = initTables({
 listen = initListen({ api, API, $, say, drawMusic, getInstance: () => sdk?.instanceId ?? (devId ? params.get('room') : null) });
 const playlists = initPlaylists({ api, $, el, fmt, say, guarded, mmss, refreshMusic, listen });
 initMusicImport({ api, $, el, say, guarded, openLink, showList: playlists.showList });
+initLyrics({ api, $, el, nowPlaying: () => musicNow, position: musicPosition });
 $('set-search').addEventListener('input', drawSettings);
 $('cmd-search').addEventListener('input', drawCommandList);
 $('cmd-select').addEventListener('change', drawCommandForm);
