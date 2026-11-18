@@ -1,5 +1,5 @@
 import { MessageFlags } from 'discord.js';
-import { getQueue, requireVoice, voteSkip, stopMusic, LOOP_NAMES } from '../systems/music.js';
+import { getQueue, requireVoice, voteSkip, stopMusic, LOOP_NAMES, FILTERS } from '../systems/music.js';
 import { UserError } from '../utils/errors.js';
 import { e } from '../utils/emojis.js';
 
@@ -37,6 +37,21 @@ export default {
         queue.shuffle();
         await interaction.update({ embeds: [queue.nowPlayingEmbed()], components: queue.controls() });
         return interaction.followUp({ content: `${e('karistir', '🔀')} ${interaction.user} sırayı karıştırdı.`, allowedMentions: { parse: [] } }).catch(() => {});
+      }
+      if (action === 'filtre' && interaction.isStringSelectMenu()) {
+        const name = interaction.values[0];
+        if (name === queue.filter) return interaction.update({ embeds: [queue.nowPlayingEmbed()], components: queue.controls() });
+        await interaction.deferUpdate(); // Lavalink'in yanıtı 3 saniyeyi geçebilir
+        try {
+          await queue.setFilter(name);
+        } catch (error) {
+          if (!(error instanceof UserError)) throw error;
+          await interaction.editReply({ components: queue.controls() }).catch(() => {}); // menü açık filtreye döner
+          return interaction.followUp({ content: error.message, flags: MessageFlags.Ephemeral }).catch(() => {});
+        }
+        await interaction.editReply({ embeds: [queue.nowPlayingEmbed()], components: queue.controls() }).catch(() => {});
+        const f = FILTERS[name];
+        return interaction.followUp({ content: `${f.emoji} ${interaction.user} filtreyi **${f.label}** yaptı.`, allowedMentions: { parse: [] } }).catch(() => {});
       }
     } catch (error) {
       if (error instanceof UserError) return ephemeral(interaction, error.message);

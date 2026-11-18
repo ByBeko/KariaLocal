@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, Partials } from 'discord.js';
 import { readFileSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { loadCommands, loadComponents, loadEvents } from './core/loader.js';
+import { initLavalink } from './systems/lavalink.js';
 
 if (!process.env.DISCORD_TOKEN) {
   console.error('.env dosyasında DISCORD_TOKEN yok. .env.example dosyasını .env olarak kopyalayıp doldur.');
@@ -58,6 +59,7 @@ client.presenceEnabled = presenceEnabled;
 client.commands = await loadCommands();
 client.components = await loadComponents();
 await loadEvents(client);
+initLavalink(client); // giriş yapılmadan önce: Discord ses olaylarını dinlemeli
 
 process.on('unhandledRejection', (error) => console.error('[Yakalanmamış hata]', error));
 

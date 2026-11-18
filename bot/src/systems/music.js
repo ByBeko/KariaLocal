@@ -1,4 +1,6 @@
-// Müzik: YouTube (ve SoundCloud) sesi yt-dlp ile indirilir, ffmpeg ile çözülüp Discord ses kanalına aktarılır.
+// Müzik: ses kanalında Lavalink çalar (filtreler dahil, bkz. lavalink.js). Lavalink yoksa ya da ulaşılamazsa
+// YouTube (ve SoundCloud) sesi yt-dlp ile indirilir, ffmpeg ile çözülüp doğrudan Discord'a aktarılır.
+// Etkinlikte tarayıcıda çalınan şarkılar (downloadAudio) her zaman yt-dlp ile indirilir.
 // Her sunucunun tek bir sırası (queue) vardır.
 import { spawn, execFile } from 'node:child_process';
 import { e } from '../utils/emojis.js';
@@ -15,12 +17,14 @@ import {
   NoSubscriberBehavior,
   StreamType,
 } from '@discordjs/voice';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, StringSelectMenuBuilder } from 'discord.js';
 import ffmpegPath from 'ffmpeg-static';
 import { kariaEmbed } from '../utils/embeds.js';
 import { UserError } from '../utils/errors.js';
 import { isStaff } from '../utils/permissions.js';
 import { isExternalLink, readMusicLink } from './playlistImport.js';
+import { lavalinkUp, lavalinkEvents, loadTracks, joinVoice, leaveVoice, forgetPlayer, voiceChannelOf } from './lavalink.js';
+import { createRelay } from './audioRelay.js';
 
 const require = createRequire(import.meta.url);
 // Sunucuda paketin Python sürümü çalışmayabilir: YOUTUBE_DL_PATH ile tek dosyalık yt-dlp gösterilir
@@ -33,6 +37,7 @@ const IDLE_LEAVE = 3 * 60_000; // sıra bitince bu kadar bekleyip çık
 const ALONE_LEAVE = 60_000; // kanalda kimse kalmayınca
 const PREFETCH_DELAY = 4; // çalan şarkı başladıktan bu kadar saniye sonra sıradaki hazırlanır: geçince beklemeden başlar
 const YT_BLOCK_MS = 20 * 60_000; // YouTube "bot musun" derse bu süre doğrudan SoundCloud denenir
+const LAVALINK_GRACE = 20_000; // Lavalink koparsa bu kadar beklenir (pm2 yeniden başlatır); dönmezse yt-dlp ile sürer
 let ytBlockedUntil = 0;
 export const DEFAULT_VOLUME = 70;
 
@@ -94,7 +99,8 @@ async function runYtdlp(args, timeout = 30_000) {
 export async function resolveQuery(query, requesterId) {
   const text = query.trim();
   let target;
-  let args = ['--flat-playlist', '--print', '%(id)s\t%(title)s\t%(duration)s\t%(uploader,channel)s\t%(webpage_url,url)s\t%(live_status)s\t%(playlist_title)s'];
+  let lavalinkTarget;
+  let args =['--flat-playlist', '--print', '%(id)s\t%(title)s\t%(duration)s\t%(uploader,channel)s\t%(webpage_url,url)s\t%(live_status)s\t%(playlist_title)s'];
 
   if (/^https?:\/\//i.test(text)) {
     let url;
@@ -109,12 +115,18 @@ export async function resolveQuery(query, requesterId) {
     }
     if (!ALLOWED_HOSTS.test(url.hostname)) throw new UserError('YouTube, YouTube Music, SoundCloud, Spotify, Deezer ve Apple Music linkleri çalınabilir. Ya da şarkının adını yaz.');
     const isPlaylist = url.searchParams.has('list') && (!url.searchParams.has('v') || url.pathname === '/playlist');
-    if (!isPlaylist) args.push('--no-playlist');
-    else args.push('--playlist-end', String(MAX_PLAYLIST));
+    if (!isPlaylist) {
+      args.push('--no-playlist');
+      for (const key of ['list', 'index', 'start_radio', 'pp']) url.searchParams.delete(key); // Lavalink de tek şarkı alsın
+    } else args.push('--playlist-end', String(MAX_PLAYLIST));
     target = text;
+    lavalinkTarget = url.toString();
   } else {
     target = `ytsearch1:${text}`;
   }
+
+  const viaLavalink = await resolveOnLavalink(lavalinkTarget ?? target, requesterId);
+  if (viaLavalink) return { ...viaLavalink, playlist: viaLavalink.tracks.length > 1 || /[?&]list=/.test(text) };
 
   const out = await runYtdlp([...args, target]);
   const lines = out.split('\n').filter(Boolean);
@@ -140,6 +152,40 @@ export async function resolveQuery(query, requesterId) {
   return { tracks, playlist: tracks.length > 1 || /[?&]list=/.test(text), name };
 }
 
+/** Lavalink'in şarkı kaydı → sıradaki şarkı biçimi (yt-dlp ile aynı alanlar; encoded tekrar aramadan çalmak için) */
+function fromLavalink(t, requesterId) {
+  const i = t.info;
+  const isYoutube = i.sourceName === 'youtube' && /^[\w-]{11}$/.test(i.identifier);
+  return {
+    id: i.identifier,
+    title: i.title || 'Bilinmeyen şarkı',
+    duration: i.isStream ? 0 : Math.round(i.length / 1000),
+    uploader: i.author || '',
+    url: isYoutube ? `https://www.youtube.com/watch?v=${i.identifier}` : i.uri,
+    thumbnail: isYoutube ? `https://i.ytimg.com/vi/${i.identifier}/hqdefault.jpg` : (i.artworkUrl ?? null),
+    live: Boolean(i.isStream),
+    requesterId,
+    encoded: t.encoded,
+  };
+}
+
+/** Lavalink açıksa sorgu orada çözülür (yt-dlp'den hızlı). Olmazsa null döner, yt-dlp dener. */
+async function resolveOnLavalink(identifier, requesterId) {
+  if (!lavalinkUp() || SOUNDCLOUD.test(identifier)) return null; // SoundCloud linkleri yt-dlp ile çözülür
+  const search = identifier.match(/^ytsearch1:(.+)$/s)?.[1];
+  const res = await loadTracks(search ? `ytsearch:${search}` : identifier).catch(() => null);
+  let found = [];
+  let name = '';
+  if (res?.loadType === 'track') found = [res.data];
+  else if (res?.loadType === 'search') found = res.data.slice(0, 1);
+  else if (res?.loadType === 'playlist') {
+    found = res.data.tracks.slice(0, MAX_PLAYLIST);
+    name = res.data.info?.name ?? '';
+  } else if (res?.loadType === 'empty' && search) throw new UserError('Hiçbir şey bulunamadı. Başka bir şekilde ara.');
+  const tracks = found.map((t) => fromLavalink(t, requesterId)).filter((t) => t.url && !['[Private video]', '[Deleted video]'].includes(t.title));
+  return tracks.length ? { tracks, name: name.slice(0, 40) } : null;
+}
+
 const MAX_ATTEMPTS = 3;
 
 /** YouTube şarkıyı sunucuya vermezse aynı şarkıyı SoundCloud'da arar: önizlemeleri eler, süresi en yakın olanı seçer */
@@ -159,11 +205,67 @@ async function soundcloudAlternatives(track) {
   return options.slice(0, 3).map((o) => o.url);
 }
 
+// Lavalink 4.2'nin SoundCloud kaynağı SoundCloud'un yeni (HLS) biçimlerini okuyamıyor: SoundCloud şarkıları
+// yt-dlp ile çözülür ve yerel köprüden çalınır (openRelay).
+const SOUNDCLOUD = /soundcloud\.com/i;
+
+/** Şarkının Lavalink kaydı. Aktarılan şarkılar (ytsearch1:) önce YouTube Music'te, bulunmazsa YouTube'da aranır. */
+async function encodeTrack(track) {
+  if (track.encoded) return track.encoded;
+  const search = track.url?.match(/^ytsearch\d*:(.+)$/s)?.[1];
+  const ids = search ? [`ytmsearch:${search.replace(/ audio$/, '')}`, `ytsearch:${search}`] : [track.url];
+  let lastError = '';
+  for (const id of ids) {
+    const res = await loadTracks(id);
+    if (res.loadType === 'error') lastError = res.data?.message ?? '';
+    const found =
+      res.loadType === 'track' ? res.data
+      : res.loadType === 'search' ? res.data[0]
+      : res.loadType === 'playlist' ? (res.data.tracks[res.data.info?.selectedTrack] ?? res.data.tracks[0])
+      : null;
+    if (!found) continue;
+    const info = fromLavalink(found, track.requesterId);
+    track.encoded = found.encoded;
+    if (!track.duration) track.duration = info.duration;
+    track.thumbnail ??= info.thumbnail;
+    return found.encoded;
+  }
+  throw new Error(lastError || 'Şarkı bulunamadı.');
+}
+
+// YouTube Lavalink'i "bot musun" diye engellerse bu süre YouTube şarkıları doğrudan köprüyle (yt-dlp) çalınır
+let lavalinkYtBlockedUntil = 0;
+const youtubeBlockedOnLavalink = () => Date.now() < lavalinkYtBlockedUntil;
+
+/** Lavalink'in kendisi çalmayacağı şarkı: SoundCloud ya da YouTube engelliyken YouTube */
+const needsRelay = (track) => SOUNDCLOUD.test(track.url ?? '') || (youtubeBlockedOnLavalink() && YOUTUBE_SOURCE.test(track.url ?? ''));
+
 /**
- * yt-dlp → ffmpeg → ham PCM (48 kHz stereo) akışı.
+ * Şarkıyı bugünkü yolla (yt-dlp + ffmpeg; YouTube engelinde SoundCloud) alır, yerel köprüden Lavalink'e verir.
+ * relay.encoded yoksa çalınamadı (relay.error() nedenini söyler). İşi bitince relay.release() çağrılmalı.
+ */
+async function openRelay(track) {
+  const relay = await createRelay(() => openStream(track, 'ogg'));
+  await relay.firstAudio();
+  const res = relay.hasAudio ? await loadTracks(relay.url).catch(() => null) : null;
+  if (res?.loadType === 'track') relay.encoded = res.data.encoded;
+  return relay;
+}
+
+/** Kullanıcıya gösterilecek kısa hata: YouTube'un uzun istemci dökümü yerine */
+const friendlyError = (message) =>
+  /All clients failed|Sign in to confirm|requires login/i.test(message ?? '') ? "YouTube bu şarkıyı vermedi" : String(message ?? '').replace(/^ERROR:\s*(\[[^\]]+\]\s*)?/, '').slice(0, 150);
+
+const FFMPEG_OUTPUT = {
+  pcm: ['-f', 's16le', '-ar', '48000', '-ac', '2'], // ham PCM: @discordjs/voice (Lavalink yokken)
+  ogg: ['-vn', '-c:a', 'libopus', '-b:a', '160k', '-ar', '48000', '-ac', '2', '-f', 'ogg'], // Lavalink köprüsü
+};
+
+/**
+ * yt-dlp → ffmpeg → ham PCM (48 kHz stereo) ya da Ogg/Opus akışı.
  * YouTube bağlantısı ara sıra SSL hatasıyla düşüyor; hiç ses gelmeden biterse kendiliğinden yeniden dener.
  */
-export function openStream(track) {
+export function openStream(track, format = 'pcm') {
   const out = new PassThrough({ highWaterMark: 1 << 16 });
   let procs = null;
   let killed = false;
@@ -180,7 +282,7 @@ export function openStream(track) {
       [...BASE_ARGS, ...(track.live ? [] : ['--extractor-args', 'youtube:skip=hls']), '-f', 'bestaudio[acodec=opus]/bestaudio/best', '-o', '-', '--quiet', url],
       { windowsHide: true, env: ENV },
     );
-    const ffmpeg = spawn(ffmpegPath, ['-hide_banner', '-loglevel', 'error', '-i', 'pipe:0', '-f', 's16le', '-ar', '48000', '-ac', '2', 'pipe:1'], {
+    const ffmpeg = spawn(ffmpegPath, ['-hide_banner', '-loglevel', 'error', '-i', 'pipe:0', ...FFMPEG_OUTPUT[format], 'pipe:1'], {
       windowsHide: true,
     });
     procs = { ytdlp, ffmpeg };
@@ -289,31 +391,50 @@ export async function downloadAudio(track, file) {
   throw new UserError(`Çalınamadı: ${lastError.replace(/^ERROR:\s*(\[[^\]]+\]\s*)?/, '').slice(0, 150) || 'şarkı bulunamadı.'}`);
 }
 
-// ───────────────────────── Sunucu sırası ─────────────────────────
+// ───────────────────────── Filtreler (sadece Lavalink) ─────────────────────────
 
-const queues = new Map(); // guildId -> GuildQueue
-export const getQueue = (guildId) => queues.get(guildId) ?? null;
+export const FILTERS = {
+  off: { label: 'Kapalı', description: 'Filtre yok', emoji: '🎵', filters: {} },
+  '8d': { label: '8D', description: 'Ses başının etrafında döner (kulaklıkla)', emoji: '🎧', filters: { rotation: { rotationHz: 0.2 } } },
+  bass: {
+    label: 'Bass boost',
+    description: 'Baslar güçlenir',
+    emoji: '🔊',
+    filters: { equalizer: [0.3, 0.25, 0.2, 0.1, 0.05].map((gain, band) => ({ band, gain })) },
+  },
+  nightcore: { label: 'Nightcore', description: 'Hızlı ve ince', emoji: '⏩', filters: { timescale: { speed: 1.2, pitch: 1.25, rate: 1 } } },
+  slowed: {
+    label: 'Slowed',
+    description: 'Yavaş ve kalın (vaporwave)',
+    emoji: '🌙',
+    filters: { timescale: { speed: 0.8, pitch: 0.85, rate: 1 }, equalizer: [0.12, 0.1, 0.05].map((gain, band) => ({ band, gain })) },
+  },
+};
+const NO_FILTERS = 'Filtreler şu an kullanılamıyor: müzik sunucusu (Lavalink) kapalı, müzik yedek yolla çalıyor.';
+/** Filtrenin şarkıyı ne kadar hızlandırdığı (konumu tahmin etmek için) */
+const filterSpeed = (name) => {
+  const t = FILTERS[name]?.filters.timescale;
+  return (t?.speed ?? 1) * (t?.rate ?? 1);
+};
 
-class GuildQueue {
-  constructor(guild, voiceChannel, textChannel) {
-    this.guild = guild;
-    this.textChannel = textChannel;
-    this.tracks = [];
-    this.current = null;
-    this.loop = 'off'; // off | track | queue
-    this.volume = DEFAULT_VOLUME;
-    this.skipVotes = new Set();
-    this.panel = null; // "şimdi çalıyor" mesajı
+// ───────────────────────── Çalma motorları ─────────────────────────
+// İkisi de sıraya aynı şekilde haber verir: queue.onTrackStart() ses başlayınca, queue.onTrackEnd(hata) şarkı bitince.
+
+const cleanError = (text) => String(text ?? '').replace(/^ERROR:\s*(\[[^\]]+\]\s*)?/, '').slice(0, 150);
+const YOUTUBE_SOURCE = /youtu\.?be|^ytsearch/i;
+
+/** Lavalink yokken: yt-dlp + ffmpeg akışı @discordjs/voice ile bu süreçte çalınır */
+class VoiceEngine {
+  filters = false;
+
+  constructor(queue, voiceChannel) {
+    this.queue = queue;
     this.prepared = null; // önceden hazırlanan sıradaki şarkı
     this.active = null; // çalan şarkının süreçleri
-    this.forceNext = false;
-    this.history = []; // biten şarkılar (önceki şarkıya dönmek için)
-    this.goingBack = false;
-
     this.connection = joinVoiceChannel({
       channelId: voiceChannel.id,
-      guildId: guild.id,
-      adapterCreator: guild.voiceAdapterCreator,
+      guildId: voiceChannel.guild.id,
+      adapterCreator: voiceChannel.guild.voiceAdapterCreator,
       selfDeaf: true,
     });
     this.player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Pause } });
@@ -327,21 +448,18 @@ class GuildQueue {
           entersState(this.connection, VoiceConnectionStatus.Connecting, 5_000),
         ]);
       } catch {
-        this.destroy();
+        queue.destroy();
       }
     });
-    this.connection.on(VoiceConnectionStatus.Destroyed, () => this.destroy());
+    this.connection.on(VoiceConnectionStatus.Destroyed, () => queue.destroy());
 
     this.player.on(AudioPlayerStatus.Idle, (old) => {
-      if (old.status !== AudioPlayerStatus.Idle) this.onTrackEnd();
+      if (old.status !== AudioPlayerStatus.Idle) this.finish();
     });
     this.player.on(AudioPlayerStatus.Playing, (old) => {
-      if (old.status === AudioPlayerStatus.Buffering) this.sendPanel();
+      if (old.status === AudioPlayerStatus.Buffering) queue.onTrackStart();
     });
-    this.player.on('error', (e) => console.error('[Müzik oynatıcı]', e.message));
-
-    this.prefetchTimer = setInterval(() => this.maybePrefetch(), 2_000);
-    queues.set(guild.id, this);
+    this.player.on('error', (error) => console.error('[Müzik oynatıcı]', error.message));
   }
 
   get channelId() {
@@ -356,10 +474,355 @@ class GuildQueue {
     return this.player.state.status === AudioPlayerStatus.Paused;
   }
 
+  connect() {
+    return entersState(this.connection, VoiceConnectionStatus.Ready, 20_000);
+  }
+
+  play(track) {
+    let source;
+    if (this.prepared?.track === track) source = this.prepared.source;
+    else {
+      this.prepared?.source.kill();
+      source = openStream(track);
+    }
+    this.prepared = null;
+    this.active = { track, source, startedAt: Date.now() };
+    const resource = createAudioResource(source.stream, { inputType: StreamType.Raw, inlineVolume: true, metadata: track });
+    resource.volume.setVolume(this.queue.volume / 100);
+    this.player.play(resource);
+  }
+
+  finish() {
+    const ended = this.active;
+    this.active = null;
+    ended?.source.kill();
+    // Kısa sürede hata ile bittiyse (gizli/yaş sınırlı video vb.) sıra haber verir, döngüye almaz
+    const error = ended?.source.error();
+    this.queue.onTrackEnd(error && Date.now() - ended.startedAt < 15_000 ? cleanError(error) : null);
+  }
+
+  stop() {
+    this.player.stop(true);
+  }
+
+  setPaused(paused) {
+    if (paused) this.player.pause();
+    else this.player.unpause();
+  }
+
+  setVolume(volume) {
+    this.player.state.resource?.volume?.setVolume(volume / 100);
+  }
+
+  setFilter() {
+    throw new UserError(NO_FILTERS);
+  }
+
+  prefetch(next) {
+    if (!this.prepared) this.prepared = { track: next, source: openStream(next) };
+  }
+
+  /** Sıra değişince (karıştır, sil) önceden hazırlanan şarkı geçersiz olabilir */
+  invalidatePrefetch(next) {
+    if (this.prepared && this.prepared.track !== next) {
+      this.prepared.source.kill();
+      this.prepared = null;
+    }
+  }
+
+  destroy() {
+    this.active?.source.kill();
+    this.prepared?.source.kill();
+    this.player.stop(true);
+    if (this.connection.state.status !== VoiceConnectionStatus.Destroyed) this.connection.destroy();
+  }
+}
+
+/** Lavalink ile: ses Lavalink sunucusunda çözülür ve Discord'a oradan gider; filtreler de orada uygulanır */
+class LavalinkEngine {
+  filters = true;
+
+  constructor(queue, voiceChannel) {
+    this.queue = queue;
+    this.guildId = voiceChannel.guild.id;
+    this.joinedChannelId = voiceChannel.id;
+    this.player = null;
+    this.token = 0; // her şarkıda artar: iptal edilen işlerin sonuçları yok sayılır
+    this.loaded = false; // Lavalink'te çalan ya da yüklenen bir şarkı var
+    this.done = true; // bu şarkının bittiği sıraya bildirildi
+    this.stopping = false; // şarkıyı biz durdurduk (geç, önceki)
+    this.fresh = false; // yeni şarkı başlıyor (Lavalink yeniden bağlanınca aynı şarkı kaldığı yerden başlar)
+    this.isPaused = false;
+    this.speed = 1;
+    this.base = 0; // Lavalink konumu 5 sn'de bir bildirir; arası bu son değerden tahmin edilir
+    this.at = Date.now();
+  }
+
+  get channelId() {
+    return voiceChannelOf(this.guildId) ?? this.joinedChannelId;
+  }
+
+  get paused() {
+    return this.isPaused;
+  }
+
+  get ms() {
+    return this.base + (this.isPaused ? 0 : (Date.now() - this.at) * this.speed);
+  }
+
+  get position() {
+    return this.loaded ? Math.floor(this.ms / 1000) : 0;
+  }
+
+  mark(ms) {
+    this.base = ms;
+    this.at = Date.now();
+  }
+
+  async connect() {
+    this.player = await joinVoice(this.queue.guild, this.joinedChannelId);
+    this.player.on('start', () => {
+      this.mark(this.fresh ? 0 : this.player.position);
+      this.fresh = false;
+      this.queue.onTrackStart();
+    });
+    this.player.on('update', (json) => {
+      if (this.loaded) this.mark(json.state?.position ?? this.ms);
+    });
+    this.player.on('end', (json) => this.onEnd(json));
+    this.player.on('exception', (json) => {
+      const message = json.exception?.message || 'Bilinmeyen hata';
+      if (/Sign in to confirm|not a bot/i.test(message)) lavalinkYtBlockedUntil = Date.now() + YT_BLOCK_MS;
+      this.error = friendlyError(message);
+      console.warn(`[Lavalink] ${this.queue.current?.title ?? 'Şarkı'}: ${message.split('\n')[0].slice(0, 200)}`);
+    });
+    this.player.on('stuck', () => {
+      console.warn(`[Lavalink] Ses gelmiyor, geçiliyor: ${this.queue.current?.title ?? 'şarkı'}`);
+      this.player.stopTrack().catch(() => {});
+    });
+    this.player.on('closed', (json) => console.warn(`[Lavalink] Discord ses bağlantısı kapandı (${json.code}${json.reason ? ` ${json.reason}` : ''})`));
+    await this.player.setGlobalVolume(this.queue.volume);
+  }
+
+  play(track) {
+    const token = ++this.token;
+    this.done = false;
+    this.loaded = false;
+    this.stopping = false;
+    this.error = null;
+    this.triedRelay = false;
+    this.startedAt = Date.now();
+    this.mark(0);
+    this.load(track, token);
+  }
+
+  async load(track, token) {
+    let encoded = null;
+    // SoundCloud ve (YouTube Lavalink'i engellediyse) YouTube şarkıları doğrudan köprüyle çalınır
+    if (!needsRelay(track)) {
+      try {
+        encoded = await encodeTrack(track);
+      } catch (error) {
+        if (token !== this.token) return;
+        if (!lavalinkUp()) return this.queue.fallback();
+        this.error = friendlyError(error?.message);
+      }
+      if (token !== this.token) return;
+    }
+    if (encoded) this.start(encoded, token);
+    else this.useRelay(track, token);
+  }
+
+  async start(encoded, token) {
+    this.loaded = true;
+    this.fresh = true;
+    this.isPaused = false;
+    try {
+      await this.player.playTrack({ track: { encoded }, position: 0, paused: false });
+    } catch (error) {
+      if (token !== this.token) return;
+      this.loaded = false;
+      if (!lavalinkUp()) return this.queue.fallback();
+      this.error = friendlyError(error?.message);
+      this.retry(token);
+    }
+  }
+
+  /** Lavalink şarkıyı çalamadı: bir kez köprü denenir, o da olmadıysa sıraya hata bildirilir */
+  retry(token) {
+    if (!this.triedRelay && this.queue.current) return this.useRelay(this.queue.current, token);
+    this.finish(this.error || 'şarkı bulunamadı.');
+  }
+
+  /** Ses bugünkü yolla (yt-dlp + ffmpeg, YouTube engelinde SoundCloud) alınır ve yerel köprüden Lavalink'e verilir */
+  async useRelay(track, token) {
+    this.triedRelay = true;
+    let relay = null;
+    if (this.prepared?.track === track) relay = this.prepared.relay;
+    else this.prepared?.relay.release();
+    this.prepared = null;
+    relay ??= await openRelay(track).catch((error) => console.warn('[Müzik] Köprü açılamadı:', error?.message ?? error));
+    if (token !== this.token) return relay?.release();
+    if (!relay?.encoded) {
+      const reason = relay?.error();
+      relay?.release();
+      if (!lavalinkUp()) return this.queue.fallback();
+      return this.finish(reason ? friendlyError(reason) : this.error || 'şarkı bulunamadı.');
+    }
+    if (this.error) console.log(`[Müzik] Lavalink çalamadı, yt-dlp ile çalınıyor: ${track.title}`);
+    this.relay = relay;
+    this.start(relay.encoded, token);
+  }
+
+  onEnd(json) {
+    if (this.done || json.reason === 'replaced' || json.reason === 'cleanup') return;
+    this.loaded = false;
+    if (json.reason === 'loadFailed' && !this.stopping) return this.retry(this.token);
+    // Kısa sürede hata ile bittiyse sıra haber verir, döngüye almaz
+    this.finish(!this.stopping && this.error && Date.now() - this.startedAt < 15_000 ? this.error : null);
+  }
+
+  finish(error) {
+    if (this.done) return;
+    this.done = true;
+    this.loaded = false;
+    this.relay?.release();
+    this.relay = null;
+    this.queue.onTrackEnd(error);
+  }
+
+  stop() {
+    this.stopping = true;
+    if (this.loaded) return void this.player.stopTrack().catch(() => this.finish(null));
+    this.token++; // şarkı daha aranıyorsa bırakılır
+    this.finish(null);
+  }
+
+  setPaused(paused) {
+    this.mark(this.ms);
+    this.isPaused = paused;
+    this.player.setPaused(paused).catch((error) => console.warn('[Lavalink] Duraklatılamadı:', error.message));
+  }
+
+  setVolume(volume) {
+    this.player
+      .setGlobalVolume(volume)
+      .then(() => (this.player.paused = this.isPaused)) // kütüphane her istekte "devam ediyor" sayıyor
+      .catch((error) => console.warn('[Lavalink] Ses düzeyi ayarlanamadı:', error.message));
+  }
+
+  async setFilter(name) {
+    const { filters } = FILTERS[name];
+    await this.player.setFilters(filters); // Lavalink v4'te verilen filtreler öncekilerin yerine geçer ({} hepsini kapatır)
+    this.player.filters = { ...filters }; // yeniden bağlanınca sadece bunlar gönderilsin
+    this.player.paused = this.isPaused;
+    this.mark(this.ms);
+    this.speed = filterSpeed(name);
+  }
+
+  /** Sıradaki şarkı önceden hazırlanır (Lavalink'te aranır ya da köprüsü açılır): geçince beklemeden başlar */
+  prefetch(next) {
+    if (this.prefetching === next) return;
+    this.prefetching = next;
+    if (!needsRelay(next)) return void encodeTrack(next).catch(() => {});
+    openRelay(next)
+      .then((relay) => {
+        if (this.prefetching !== next || this.gone) return relay.release();
+        this.prepared?.relay.release();
+        this.prepared = { track: next, relay };
+      })
+      .catch(() => {});
+  }
+
+  /** Sıra değişince (karıştır, sil) önceden açılan köprü geçersiz olabilir */
+  invalidatePrefetch(next) {
+    if (this.prefetching !== next) this.prefetching = null;
+    if (this.prepared && this.prepared.track !== next) {
+      this.prepared.relay.release();
+      this.prepared = null;
+    }
+  }
+
+  cleanup() {
+    this.gone = true;
+    this.token++;
+    this.relay?.release();
+    this.prepared?.relay.release();
+    this.relay = this.prepared = null;
+  }
+
+  destroy() {
+    this.cleanup();
+    leaveVoice(this.guildId);
+  }
+
+  /** Yedek yola geçerken: Lavalink oyuncusu bırakılır ama bot kanalda kalır */
+  abandon() {
+    this.cleanup();
+    this.done = true;
+    forgetPlayer(this.guildId);
+  }
+}
+// ───────────────────────── Sunucu sırası ─────────────────────────
+
+const queues = new Map(); // guildId -> GuildQueue
+export const getQueue = (guildId) => queues.get(guildId) ?? null;
+
+class GuildQueue {
+  constructor(guild, voiceChannel, textChannel) {
+    this.guild = guild;
+    this.textChannel = textChannel;
+    this.tracks = [];
+    this.current = null;
+    this.loop = 'off'; // off | track | queue
+    this.volume = DEFAULT_VOLUME;
+    this.filter = 'off'; // FILTERS anahtarı
+    this.skipVotes = new Set();
+    this.panel = null; // "şimdi çalıyor" mesajı
+    this.plays = 0; // her çalınan şarkıda artar
+    this.panelFor = 0; // panelin gönderildiği çalma
+    this.forceNext = false;
+    this.history = []; // biten şarkılar (önceki şarkıya dönmek için)
+    this.goingBack = false;
+    this.engine = lavalinkUp() ? new LavalinkEngine(this, voiceChannel) : new VoiceEngine(this, voiceChannel);
+    this.prefetchTimer = setInterval(() => this.maybePrefetch(), 2_000);
+    queues.set(guild.id, this);
+  }
+
+  get channelId() {
+    return this.engine.channelId;
+  }
+
+  get position() {
+    return this.engine.position;
+  }
+
+  get paused() {
+    return this.engine.paused;
+  }
+
+  /** Filtreler sadece Lavalink ile çalarken kullanılabilir */
+  get filtersAvailable() {
+    return this.engine.filters;
+  }
+
   async waitReady() {
     try {
-      await entersState(this.connection, VoiceConnectionStatus.Ready, 20_000);
-    } catch {
+      await this.engine.connect();
+      return;
+    } catch (error) {
+      if (this.engine instanceof LavalinkEngine && !this.destroyed) {
+        console.warn('[Lavalink] Kanala bağlanamadı, yt-dlp ile deneniyor:', error?.message ?? error);
+        this.engine.abandon();
+        const channel = this.guild.channels.cache.get(this.engine.joinedChannelId);
+        if (channel) {
+          this.engine = new VoiceEngine(this, channel);
+          try {
+            await this.engine.connect();
+            return;
+          } catch {}
+        }
+      }
       this.destroy();
       throw new UserError('Ses kanalına bağlanamadım. Kanal izinlerimi kontrol et.');
     }
@@ -392,24 +855,19 @@ class GuildQueue {
   play(track) {
     this.current = track;
     this.skipVotes.clear();
-    let source;
-    if (this.prepared?.track === track) source = this.prepared.source;
-    else {
-      this.prepared?.source.kill();
-      source = openStream(track);
-    }
-    this.prepared = null;
-    this.active = { track, source, startedAt: Date.now() };
-    const resource = createAudioResource(source.stream, { inputType: StreamType.Raw, inlineVolume: true, metadata: track });
-    resource.volume.setVolume(this.volume / 100);
-    this.player.play(resource);
+    this.plays++;
+    this.engine.play(track);
   }
 
-  onTrackEnd() {
+  onTrackStart() {
     if (this.destroyed) return;
-    const ended = this.active;
-    this.active = null;
-    ended?.source.kill();
+    if (this.panelFor === this.plays && this.panel) return this.refreshPanel(); // Lavalink yeniden bağlanınca aynı şarkı sürer
+    this.panelFor = this.plays;
+    this.sendPanel();
+  }
+
+  onTrackEnd(error = null) {
+    if (this.destroyed) return;
     const finished = this.current;
     if (this.goingBack) { // sıra previous() içinde kuruldu
       this.goingBack = false;
@@ -418,10 +876,9 @@ class GuildQueue {
       return;
     }
 
-    // Kısa sürede hata ile bittiyse (gizli/yaş sınırlı video vb.) haber ver, döngüye alma
-    const err = ended?.source.error();
-    if (err && Date.now() - ended.startedAt < 15_000) {
-      this.say(`${e('unlem', '⚠️')} **${finished?.title ?? 'Şarkı'}** çalınamadı: ${err.replace(/^ERROR:\s*(\[[^\]]+\]\s*)?/, '').slice(0, 150)}`);
+    // Hata ile bittiyse (gizli/yaş sınırlı video vb.) haber ver, döngüye alma
+    if (error) {
+      this.say(`${e('unlem', '⚠️')} **${finished?.title ?? 'Şarkı'}** çalınamadı: ${error}`);
     } else if (finished) {
       if (this.loop === 'track' && !this.forceNext) this.tracks.unshift(finished);
       else {
@@ -434,24 +891,48 @@ class GuildQueue {
     this.playNext();
   }
 
+  /** Lavalink'e ulaşılamıyor: aynı kanalda yt-dlp ile sürer (çalan şarkı baştan başlar, filtre kapanır) */
+  async fallback() {
+    if (this.destroyed || this.switching || !(this.engine instanceof LavalinkEngine)) return;
+    this.switching = true;
+    clearTimeout(this.lostTimer);
+    const channel = this.guild.channels.cache.get(this.channelId);
+    this.engine.abandon();
+    const hadFilter = this.filter !== 'off';
+    this.filter = 'off';
+    try {
+      if (!channel) throw new Error('kanal yok');
+      this.engine = new VoiceEngine(this, channel);
+      await this.engine.connect();
+    } catch {
+      this.switching = false;
+      this.say(`${e('unlem', '⚠️')} Müzik sunucusuna ulaşılamıyor ve ses kanalına yeniden bağlanamadım.`);
+      return this.destroy();
+    }
+    this.switching = false;
+    if (this.destroyed) return;
+    console.warn(`[Lavalink] Ulaşılamıyor: ${this.guild.name} müziği yt-dlp ile sürüyor.`);
+    this.say(`${e('unlem', '⚠️')} Müzik sunucusuna ulaşılamadı, yedek yolla devam ediyorum${hadFilter ? ' (filtre kapandı)' : ''}.`);
+    if (this.current) {
+      this.tracks.unshift(this.current);
+      this.playNext();
+    }
+  }
+
   maybePrefetch() {
-    if (this.prepared || !this.current || this.current.live || !this.current.duration) return;
+    if (!this.current || this.current.live || !this.current.duration) return;
     const next = this.loop === 'track' ? null : this.tracks[0];
-    if (!next || next.live) return;
-    if (this.position >= PREFETCH_DELAY) this.prepared = { track: next, source: openStream(next) };
+    if (next && !next.live && this.position >= PREFETCH_DELAY) this.engine.prefetch(next);
   }
 
   /** Sıra değişince (karıştır, sil) önceden hazırlanan şarkı geçersiz olabilir */
   invalidatePrefetch() {
-    if (this.prepared && this.prepared.track !== this.tracks[0]) {
-      this.prepared.source.kill();
-      this.prepared = null;
-    }
+    this.engine.invalidatePrefetch(this.tracks[0]);
   }
 
   skip() {
     this.forceNext = true;
-    this.player.stop(true);
+    this.engine.stop();
   }
 
   previous() {
@@ -462,18 +943,29 @@ class GuildQueue {
     this.tracks.unshift(track, this.current);
     this.invalidatePrefetch();
     this.goingBack = true;
-    this.player.stop(true);
+    this.engine.stop();
   }
 
   togglePause() {
-    if (this.paused) this.player.unpause();
-    else this.player.pause();
+    this.engine.setPaused(!this.paused);
     return this.paused;
   }
 
   setVolume(volume) {
     this.volume = volume;
-    this.player.state.resource?.volume?.setVolume(volume / 100);
+    this.engine.setVolume(volume);
+  }
+
+  async setFilter(name) {
+    if (!Object.hasOwn(FILTERS, name)) throw new UserError('Böyle bir filtre yok.');
+    if (!this.filtersAvailable) throw new UserError(NO_FILTERS);
+    try {
+      await this.engine.setFilter(name);
+    } catch (error) {
+      console.warn('[Lavalink] Filtre uygulanamadı:', error?.message ?? error);
+      throw new UserError('Filtre uygulanamadı, müzik sunucusu yanıt vermedi. Biraz sonra tekrar dene.');
+    }
+    this.filter = name;
   }
 
   shuffle() {
@@ -510,13 +1002,14 @@ class GuildQueue {
         { name: `${e('kulaklik', '🔊')} Ses`, value: `**%${this.volume}**`, inline: true },
         { name: `${e('yenile', '🔁')} Döngü`, value: `**${LOOP_NAMES[this.loop]}**`, inline: true },
       );
+    if (this.filter !== 'off') embed.addFields({ name: `${FILTERS[this.filter].emoji} Filtre`, value: `**${FILTERS[this.filter].label}**`, inline: true });
     if (t.thumbnail) embed.setThumbnail(t.thumbnail);
     return embed;
   }
 
   controls(disabled = false) {
     const b = (id, emoji, style = ButtonStyle.Secondary) => new ButtonBuilder().setCustomId(`muzik:${id}`).setEmoji(emoji).setStyle(style).setDisabled(disabled);
-    return [
+    const rows = [
       new ActionRowBuilder().addComponents(
         b('duraklat', this.paused ? e('oynat', '▶️') : e('duraklat', '⏸️'), ButtonStyle.Primary),
         b('gec', e('atla', '⏭️')),
@@ -525,6 +1018,18 @@ class GuildQueue {
         b('karistir', e('karistir', '🔀')),
       ),
     ];
+    if (this.filtersAvailable) {
+      rows.push(
+        new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId('muzik:filtre')
+            .setPlaceholder('Ses filtresi')
+            .setDisabled(disabled)
+            .addOptions(Object.entries(FILTERS).map(([value, f]) => ({ label: f.label, value, description: f.description, emoji: f.emoji, default: value === this.filter }))),
+        ),
+      );
+    }
+    return rows;
   }
 
   async sendPanel() {
@@ -550,16 +1055,31 @@ class GuildQueue {
     clearInterval(this.prefetchTimer);
     clearTimeout(this.idleTimer);
     clearTimeout(this.aloneTimer);
+    clearTimeout(this.lostTimer);
     this.tracks = [];
     this.current = null;
-    this.active?.source.kill();
-    this.prepared?.source.kill();
-    this.player.stop(true);
+    this.engine.destroy();
     this.disablePanel();
-    if (this.connection.state.status !== VoiceConnectionStatus.Destroyed) this.connection.destroy();
     queues.delete(this.guild.id);
   }
 }
+
+// Lavalink koparsa kısa bir süre beklenir (yeniden başlarsa şarkı kaldığı yerden sürer); dönmezse yt-dlp'ye geçilir
+lavalinkEvents.on('down', () => {
+  for (const queue of queues.values()) {
+    if (!(queue.engine instanceof LavalinkEngine) || queue.lostTimer) continue;
+    queue.lostTimer = setTimeout(() => {
+      queue.lostTimer = null;
+      queue.fallback();
+    }, LAVALINK_GRACE);
+  }
+});
+lavalinkEvents.on('up', () => {
+  for (const queue of queues.values()) {
+    clearTimeout(queue.lostTimer);
+    queue.lostTimer = null;
+  }
+});
 
 export const LOOP_NAMES = { off: 'kapalı', track: 'şarkı', queue: 'sıra' };
 
@@ -604,8 +1124,9 @@ export async function playTracks(member, textChannel, tracks, playlist = true) {
   let queue = existing;
   if (!queue) {
     queue = new GuildQueue(member.guild, channel, textChannel);
-    await queue.waitReady();
+    queue.ready = queue.waitReady();
   }
+  await queue.ready; // aynı anda başka biri de eklerse bağlantı bitene kadar bekler
   if (queue.tracks.length >= MAX_QUEUE) throw new UserError(`Sıra dolu (en fazla ${MAX_QUEUE} şarkı).`);
   const wasPlaying = Boolean(queue.current);
   const added = queue.add(tracks);

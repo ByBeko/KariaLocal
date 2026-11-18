@@ -23,14 +23,14 @@ export const CATEGORIES = {
 const COMMAND_ORDER = {
   genel: ['bilgi', 'yardim', 'bot-bilgi', 'ping'],
   topluluk: ['afk', 'oneri', 'rapor'],
-  muzik: ['cal', 'duraklat', 'gec', 'dur', 'sira', 'simdi', 'karistir', 'dongu', 'ses'],
+  muzik: ['cal', 'duraklat', 'gec', 'dur', 'sira', 'simdi', 'karistir', 'dongu', 'ses', 'filtre'],
   ekonomi: ['bakiye', 'gunluk', 'gonder'],
   oyunlar: ['coinflip', 'slot', 'blackjack'],
 };
 /** /bilgi butonlarından açılan komutlar: çalışmaya devam eder ama yardım listesinde ayrıca gösterilmez */
 const HIDDEN_IN_HELP = new Set(['avatar', 'roller', 'emoji', 'seviye', 'siralama', 'istatistik']);
 /** Ana sayfada yazılmayan komutlar: sadece komut seçme menüsünde çıkar */
-const DETAIL_ONLY = new Set(['duraklat', 'gec', 'dur', 'sira', 'simdi', 'karistir', 'dongu', 'ses']);
+const DETAIL_ONLY = new Set(['duraklat', 'gec', 'dur', 'sira', 'simdi', 'karistir', 'dongu', 'ses', 'filtre']);
 /** Ana sayfada kategorinin altına düşülen kısa not */
 const MAIN_NOTES = { muzik: '*Diğer kontroller oynatıcının butonlarında.*' };
 /** Kategorinin sonuna her zaman eklenen satırlar (komut olmayan bağlantılar) */
@@ -56,6 +56,7 @@ const SHORT_DESCRIPTIONS = {
   karistir: 'Sırayı karıştır',
   dongu: 'Tekrar modu',
   ses: 'Ses düzeyi',
+  filtre: 'Ses filtresi (8D, bass boost, nightcore, slowed)',
   bakiye: 'Coin bakiyen',
   gunluk: 'Günlük coin ödülü',
   gonder: 'Üyeye coin gönder',
@@ -116,6 +117,7 @@ const EXAMPLES = {
   sira: `${P} sıra`,
   simdi: `${P} np`,
   ses: `${P} ses 50`,
+  filtre: `${P} filtre nightcore`,
   dongu: `${P} döngü`,
   karistir: `${P} karıştır`,
   bakiye: `${P} para`,

@@ -1,8 +1,45 @@
 // Müziğin nerede çalacağı: botla ses kanalında, burada (sadece bu cihazda) ya da etkinlikteki herkesle ortak.
 // Botsuz modlarda ses sunucudan m4a olarak gelir ve <audio> ile çalar; çalar aynı görünümü (drawMusic) kullanır.
 export function initListen(ctx) {
-  const { api, API, $, say, drawMusic, getInstance } = ctx;
+  const { api, API, $, say, drawMusic: drawView, getInstance } = ctx;
   const audio = $('music-audio');
+
+  // Ses filtresi: sadece bot ses kanalında Lavalink ile çalarken (sunucu "filters: true" der)
+  const FILTERS = [['off', 'Filtre yok'], ['8d', '8D'], ['bass', 'Bass boost'], ['nightcore', 'Nightcore'], ['slowed', 'Slowed']];
+  const filterBox = document.createElement('select');
+  filterBox.className = 'field';
+  filterBox.title = 'Ses filtresi (ses kanalındaki herkes için)';
+  filterBox.setAttribute('aria-label', 'Ses filtresi');
+  filterBox.style.cssText = 'width:auto;flex:none;padding:4px 6px;font-size:13px';
+  filterBox.hidden = true;
+  for (const [value, label] of FILTERS) filterBox.append(new Option(label, value));
+  const playerRight = $('music-volume').closest('.player-right');
+  playerRight.insertBefore(filterBox, playerRight.querySelector('.vol-icon'));
+  let filtersOn = false; // son bot görünümünde filtre seçilebiliyor muydu
+  let filterBusy = false;
+
+  /** Çalar görünümü + filtre kutusu (görünümü çizen her yer bunu çağırır) */
+  function drawMusic(view) {
+    drawView(view);
+    filtersOn = mode === 'bot' && Boolean(view?.playing && view.filters);
+    filterBox.hidden = !filtersOn;
+    if (filtersOn && !filterBusy) filterBox.value = view.filter ?? 'off';
+  }
+  filterBox.addEventListener('change', async () => {
+    if (mode !== 'bot') return;
+    filterBusy = true;
+    filterBox.disabled = true;
+    try {
+      drawView(await api('/music/filter', { filter: filterBox.value }));
+      say(`Filtre: ${filterBox.selectedOptions[0]?.textContent ?? ''}`, 'win');
+    } catch (error) {
+      say(error.message, 'lose');
+    } finally {
+      filterBusy = false;
+      filterBox.disabled = false;
+      refresh().catch(() => {});
+    }
+  });
   const HINTS = {
     bot: 'Ses, bulunduğun ses kanalında bot üzerinden çalar.',
     local: 'Ses sadece bu cihazda çalar; ses kanalına girmen gerekmez.',
@@ -197,6 +234,7 @@ export function initListen(ctx) {
   function paint() {
     for (const b of document.querySelectorAll('[data-lmode]')) b.classList.toggle('active', b.dataset.lmode === mode);
     $('music-hint').textContent = HINTS[mode];
+    filterBox.hidden = mode !== 'bot' || !filtersOn;
     $('music-query').placeholder = mode === 'bot' ? 'Şarkı adı ya da link' : 'Şarkı adı ya da link (burada çalar)';
   }
 

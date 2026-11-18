@@ -58,6 +58,8 @@ function musicView(guild) {
     position: queue.position,
     loop: queue.loop,
     volume: queue.volume,
+    filter: queue.filter,
+    filters: queue.filtersAvailable, // Lavalink kapalıyken filtre seçilemez
     canBack: queue.history.length > 0,
     upcoming: queue.tracks.slice(0, 50).map(brief),
     remaining: queue.tracks.length,
@@ -248,6 +250,12 @@ export function startActivityServer(client, { port = Number(process.env.ACTIVITY
         if (!Number.isInteger(level) || level < 0 || level > 150) throw new UserError('Ses düzeyi 0 ile 150 arasında olmalı.');
         const { queue } = requireVoice(member);
         queue.setVolume(level);
+        await queue.refreshPanel();
+        return musicView(guild());
+      }
+      case '/music/filter': {
+        const { queue } = requireVoice(member);
+        await queue.setFilter(String(body.filter ?? ''));
         await queue.refreshPanel();
         return musicView(guild());
       }

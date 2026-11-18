@@ -1,0 +1,82 @@
+# Karia için Lavalink v4 yapılandırması. Bu dosyayı aynı klasöre "application.yml" adıyla kopyala (README.md).
+# Şifre burada yazılmaz: LAVALINK_PASSWORD ortam değişkeninden okunur. pm2 ile başlatınca ecosystem.config.cjs
+# onu bot/.env dosyasından verir, böylece bot ve Lavalink aynı şifreyi kullanır.
+server:
+  port: ${LAVALINK_PORT:2333}
+  address: 127.0.0.1 # sadece aynı makinedeki bot bağlanır; portu dışarı açma
+  http2:
+    enabled: false
+
+plugins:
+  youtube:
+    enabled: true
+    allowSearch: true # ytsearch: ve ytmsearch: aramaları
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    # Sırayla denenir. MUSIC sadece YouTube Music araması (ytmsearch:) içindir, çalmaz.
+    clients:
+      - MUSIC
+      - ANDROID_VR
+      - WEB
+      - WEBEMBEDDED
+      - TVHTML5_SIMPLY
+    # Sunucu IP'si YouTube tarafından "bot musun" diye engellenirse (Azure gibi veri merkezlerinde olur) README'deki
+    # OAuth adımına bak. Yenileme anahtarını buraya değil LAVALINK_YT_REFRESH_TOKEN olarak bot/.env'ye yaz.
+    # oauth:
+    #   enabled: true
+    #   refreshToken: "${LAVALINK_YT_REFRESH_TOKEN:}"
+
+lavalink:
+  plugins:
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.2"
+      snapshot: false
+  server:
+    password: "${LAVALINK_PASSWORD}"
+    sources:
+      youtube: false # yerleşik YouTube kaynağı eski; yukarıdaki eklenti kullanılır
+      soundcloud: false # 4.2.2 SoundCloud'un yeni (HLS) biçimlerini okuyamıyor; bot SoundCloud'u yt-dlp ile bulup http ile çaldırır
+      bandcamp: false
+      twitch: false
+      vimeo: false
+      nico: false
+      # YouTube Lavalink'e ses vermezse (ve SoundCloud şarkılarında) bot ses adresini yt-dlp ile bulup buradan çaldırır.
+      # Kullanıcıların yazdığı linkler botta YouTube/SoundCloud ile sınırlı; Lavalink sadece 127.0.0.1'den ve şifreyle açılır.
+      http: true
+      local: false
+    filters: # botun kullandığı filtreler açık, gerisi kapalı
+      volume: true
+      equalizer: true # Bass boost
+      timescale: true # Nightcore, Slowed
+      rotation: true # 8D
+      karaoke: false
+      tremolo: false
+      vibrato: false
+      distortion: false
+      channelMix: false
+      lowPass: false
+    bufferDurationMs: 400
+    frameBufferDurationMs: 5000
+    opusEncodingQuality: 10
+    resamplingQuality: MEDIUM
+    trackStuckThresholdMs: 10000
+    useSeekGhosting: true
+    youtubePlaylistLoadLimit: 1 # sayfa başına 100 şarkı; bot zaten en fazla 100 şarkı alıyor
+    playerUpdateInterval: 5
+    youtubeSearchEnabled: true
+    soundcloudSearchEnabled: false
+    gc-warnings: true
+
+metrics:
+  prometheus:
+    enabled: false
+
+logging:
+  file:
+    path: ./logs/
+  level:
+    root: INFO
+    lavalink: INFO
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
