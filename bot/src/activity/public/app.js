@@ -1356,7 +1356,9 @@ function drawCardShop(data) {
   $('cs-mine').replaceChildren(...mine.map(cardTile));
   // Kartın yanındaki "Kartlarım" kutusu: sahip olunanların küçük resimleri üst üste
   $('cs-mine-count').textContent = String(mine.length);
-  $('cs-mine-stack').replaceChildren(...mine.slice(-3).reverse().map((c) => (c.image ? el('img', { src: c.image, alt: '' }) : el('i', { className: 'cs-default' }))));
+  // Düğmenin solunda taktığın kart
+  const worn = mine.find((c) => c.selected) ?? def;
+  $('cs-mine-stack').replaceChildren(worn.image ? el('img', { src: worn.image, alt: '' }) : el('i', { className: 'cs-default' }));
   $('cs-grid').replaceChildren(...(store.length ? store.map(cardTile) : [empty(data.items.length ? 'Mağazadaki bütün kartlara sahipsin.' : 'Mağazada henüz kart yok. Yöneticiler yakında ekleyecek.')]));
   drawStageBar();
 }
@@ -1375,10 +1377,8 @@ function drawStageBar() {
     }));
     return b;
   };
-  if (!c) {
-    $('cs-stage-title').textContent = 'Şu anki kartın';
-    $('cs-stage-note').textContent = 'Aşağıdan bir karta bas, burada kendi kartınla önizle.';
-  } else {
+  $('cs-stage-bar').hidden = !c; // satır yalnızca bir kart önizlenirken görünür
+  if (c) {
     $('cs-stage-title').textContent = c.name;
     $('cs-stage-note').textContent = c.selected ? 'Şu an bu kartı kullanıyorsun.' : c.owned ? 'Bu karta sahipsin.' : 'Önizleme: satın alınca kartın böyle görünür.';
     if (!c.selected && c.owned) actions.push(act('Kullan', '/cards/use', `${c.name} takıldı.`, true));

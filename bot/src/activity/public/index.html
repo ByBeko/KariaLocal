@@ -293,20 +293,20 @@
     <section class="panel" data-panel="cardshop" hidden>
       <div class="cs-stage">
         <div class="cs-stage-frame"><img id="cs-current" class="cs-card" alt="Seviye kartın" hidden><span id="cs-current-loading" class="hint">Kartın hazırlanıyor...</span></div>
-        <div class="cs-stage-bar">
+        <div id="cs-stage-bar" class="cs-stage-bar" hidden>
           <div class="cs-stage-info">
-            <strong id="cs-stage-title">Şu anki kartın</strong>
-            <small id="cs-stage-note">Aşağıdan bir karta bas, burada kendi kartınla önizle.</small>
+            <strong id="cs-stage-title"></strong>
+            <small id="cs-stage-note"></small>
           </div>
-          <div class="cs-stage-right">
-            <div id="cs-stage-actions" class="item-actions"></div>
-            <button type="button" id="cs-mine-tile" class="cs-mine-tile" title="Sahip olduğun kartlar">
-              <span id="cs-mine-stack" class="cs-mine-stack"></span>Kartlarım<small id="cs-mine-count">0</small>
-            </button>
-          </div>
+          <div id="cs-stage-actions" class="item-actions"></div>
         </div>
       </div>
-      <h4 class="cs-head">Mağaza</h4>
+      <div class="cs-head-row">
+        <h4 class="cs-head">Mağaza</h4>
+        <button type="button" id="cs-mine-tile" class="cs-mine-tile" title="Sahip olduğun kartlar">
+          <span id="cs-mine-stack" class="cs-mine-stack"></span>Kartlarım<small id="cs-mine-count">0</small>
+        </button>
+      </div>
       <div id="cs-grid" class="cs-grid"></div>
       <dialog id="cs-mine-dialog" class="rules cs-dialog">
         <form method="dialog"><button class="rules-x" aria-label="Kapat">×</button></form>
