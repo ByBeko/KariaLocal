@@ -1954,19 +1954,39 @@ async function start() {
 
 start();
 
-// ── Mobil menü çekmecesi (Discord gibi): sağa kaydır = aç, sola kaydır = kapat ──
+// ── Mobil çekmeceler (Discord gibi): soldan menü, sağdan oyun paneli. Sağa kaydır = menü aç / sağ paneli kapat, sola kaydır = tersi ──
 {
   const app = $('app');
   const mobile = () => matchMedia('(max-width:720px)').matches;
-  const setNav = (on) => { app.classList.toggle('nav-on', on); $('nav-scrim').hidden = !on; };
+  const drawer = document.createElement('div');
+  drawer.id = 'r-drawer';
+  document.body.append(drawer);
+  const main = document.querySelector('main');
+  const place = () => {
+    if (mobile()) drawer.append($('game-switch'), $('betbar'));
+    else if (drawer.contains($('betbar'))) main.insertBefore($('betbar'), main.querySelector('.panel')), main.insertBefore($('game-switch'), $('betbar'));
+  };
+  place();
+  matchMedia('(max-width:720px)').addEventListener('change', () => { setNav(false); setRight(false); place(); });
+  const isGameScreen = () => document.querySelector('.content').classList.contains('game');
+  function setNav(on) { app.classList.toggle('nav-on', on); sync(); }
+  function setRight(on) { app.classList.toggle('r-on', on); sync(); }
+  function sync() { $('nav-scrim').hidden = !(app.classList.contains('nav-on') || app.classList.contains('r-on')); }
   $('nav-open').addEventListener('click', () => setNav(true));
-  $('nav-scrim').addEventListener('click', () => setNav(false));
+  $('nav-scrim').addEventListener('click', () => { setNav(false); setRight(false); });
   for (const t of document.querySelectorAll('.tab')) t.addEventListener('click', () => setNav(false));
+  for (const b of document.querySelectorAll('[data-game]')) b.addEventListener('click', () => setRight(false));
+  // Köşedeki panel düğmesi mobilde sağ çekmeceyi açar/kapatır
+  $('side-toggle').addEventListener('click', (e) => {
+    if (!mobile()) return;
+    e.stopImmediatePropagation();
+    setRight(!app.classList.contains('r-on'));
+  }, true);
   let sx = 0, sy = 0, ok = false;
   document.addEventListener('touchstart', (e) => {
     const t = e.touches[0];
     sx = t.clientX; sy = t.clientY;
-    // Sürükleme/kaydırma alanlarında başlayan hareket menüyü açmaz
+    // Sürükleme/kaydırma alanlarında başlayan hareket çekmece açmaz
     ok = mobile() && e.touches.length === 1 && !e.target.closest('.tile,.ok-rack,canvas,.chess,.lab,input,textarea,select,[data-drop]');
   }, { passive: true });
   document.addEventListener('touchend', (e) => {
@@ -1974,7 +1994,9 @@ start();
     const t = e.changedTouches[0];
     const dx = t.clientX - sx, dy = t.clientY - sy;
     if (Math.abs(dy) > 60 || Math.abs(dx) < 70) return;
-    if (dx > 0 && !app.classList.contains('nav-on')) setNav(true);
-    else if (dx < 0 && app.classList.contains('nav-on')) setNav(false);
+    const nav = app.classList.contains('nav-on'), right = app.classList.contains('r-on');
+    if (dx > 0) { if (right) setRight(false); else if (!nav) setNav(true); }
+    else if (nav) setNav(false);
+    else if (!right && isGameScreen()) setRight(true);
   }, { passive: true });
 }

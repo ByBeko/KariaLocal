@@ -1282,7 +1282,8 @@ export function initTables(ctx) {
     sw.hidden = false;
     // Solo/Online ve köşe düğmeleri sağ panelde oyun seçicinin üstünde tek satır (panel kapalıyken masanın sağ üstünde)
     const corner = $('game-corner');
-    if (corner.nextElementSibling !== $('game-switch')) $('game-switch').before(corner);
+    if (matchMedia('(max-width:720px)').matches) { if (corner.parentElement !== document.querySelector('main')) document.querySelector('main').prepend(corner); }
+    else if (corner.nextElementSibling !== $('game-switch')) $('game-switch').before(corner);
     if (corner.firstElementChild !== sw) corner.prepend(sw);
     corner.hidden = false;
     for (const b of sw.querySelectorAll('[data-mode]')) b.classList.toggle('active', b.dataset.mode === modeOf(name));
