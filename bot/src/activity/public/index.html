@@ -5,14 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Karia</title>
 <link rel="icon" href="logo.png">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 <link rel="stylesheet" href="tables.css?v=35">
 <link rel="stylesheet" href="panel.css?v=1">
 </head>
 <body>
-<div id="boot" class="boot"><img src="boot-logo.png" alt="Karia" width="160" height="160"><p id="boot-text">Karia açılıyor...</p></div>
+<div id="boot" class="boot"><img src="boot-logo.gif" alt="Karia" width="160" height="160"><p id="boot-text">Karia açılıyor...</p></div>
 
 <div id="app" class="app" hidden>
+  <button type="button" id="nav-open" class="nav-open" aria-label="Menüyü aç">☰</button>
+  <div id="nav-scrim" class="nav-scrim" hidden></div>
   <aside class="side">
     <div class="side-brand"><span class="logo"><img src="logo.png" alt=""></span><strong>Karia</strong><button type="button" id="sfx-toggle" class="sfx-toggle"></button></div>
     <div class="balance" title="Botla aynı bakiye">

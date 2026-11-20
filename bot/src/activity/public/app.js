@@ -143,8 +143,17 @@ function openTab(name) {
   if (name === 'music') refreshMusic();
   DASH[name]?.();
 }
-for (const b of document.querySelectorAll('[data-game]')) b.addEventListener('click', () => openTab(b.dataset.game));
-for (const t of document.querySelectorAll('.tab')) t.addEventListener('click', () => openTab(t.dataset.tab));
+// Oyunlardan çıkıp dönünce son açık oyun (ve modu) aynen açılır; oyun seçicide bir oyuna basınca önce Solo açılır
+let lastGame = 'blackjack';
+try { const g = localStorage.getItem('karia-last-game'); if (GAMES.includes(g)) lastGame = g; } catch {}
+const openGame = (name) => { lastGame = name; try { localStorage.setItem('karia-last-game', name); } catch {} openTab(name); };
+for (const b of document.querySelectorAll('[data-game]')) {
+  b.addEventListener('click', () => {
+    try { localStorage.setItem(`karia-mode-${b.dataset.game}`, 'solo'); } catch {}
+    openGame(b.dataset.game);
+  });
+}
+for (const t of document.querySelectorAll('.tab')) t.addEventListener('click', () => (t.dataset.tab === 'blackjack' ? openGame(lastGame) : openTab(t.dataset.tab)));
 
 // ── Ses açma/kapama ──
 function drawSfxToggle() {
@@ -1944,3 +1953,28 @@ async function start() {
 }
 
 start();
+
+// ── Mobil menü çekmecesi (Discord gibi): sağa kaydır = aç, sola kaydır = kapat ──
+{
+  const app = $('app');
+  const mobile = () => matchMedia('(max-width:720px)').matches;
+  const setNav = (on) => { app.classList.toggle('nav-on', on); $('nav-scrim').hidden = !on; };
+  $('nav-open').addEventListener('click', () => setNav(true));
+  $('nav-scrim').addEventListener('click', () => setNav(false));
+  for (const t of document.querySelectorAll('.tab')) t.addEventListener('click', () => setNav(false));
+  let sx = 0, sy = 0, ok = false;
+  document.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    sx = t.clientX; sy = t.clientY;
+    // Sürükleme/kaydırma alanlarında başlayan hareket menüyü açmaz
+    ok = mobile() && e.touches.length === 1 && !e.target.closest('.tile,.ok-rack,canvas,.chess,.lab,input,textarea,select,[data-drop]');
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!ok) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dy) > 60 || Math.abs(dx) < 70) return;
+    if (dx > 0 && !app.classList.contains('nav-on')) setNav(true);
+    else if (dx < 0 && app.classList.contains('nav-on')) setNav(false);
+  }, { passive: true });
+}

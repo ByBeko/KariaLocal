@@ -7,8 +7,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 input:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 button:disabled{opacity:.45;cursor:default}
 .boot{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);padding:16px;text-align:center}
-.boot img{width:160px;height:160px;animation:boot-glow 2.4s ease-in-out infinite}
-@keyframes boot-glow{0%,100%{transform:scale(1);filter:drop-shadow(0 0 6px rgba(79,207,180,.25))}50%{transform:scale(1.04);filter:drop-shadow(0 0 18px rgba(79,207,180,.6)) drop-shadow(0 0 4px rgba(255,255,255,.35))}}
+.boot img{width:160px;height:160px}
 
 /* İskelet */
 .app{display:grid;grid-template-columns:216px minmax(0,1fr);gap:24px;padding:16px;min-height:100%;align-items:start}
@@ -736,3 +735,19 @@ textarea::-webkit-scrollbar{display:none}
 #cs-mine-dialog .cs-grid{margin-top:12px;max-height:60vh;overflow-y:auto}
 .side-user.has-card{background:linear-gradient(90deg,rgba(8,9,11,.8),rgba(8,9,11,.3)),var(--card-bg) center/cover no-repeat}
 #home .hero.has-card{background:linear-gradient(90deg,rgba(15,17,20,.88) 30%,rgba(15,17,20,.45)),var(--card-bg) right center/cover no-repeat}
+
+/* Mobil: menü Discord gibi soldan kayan çekmece; sağa kaydırınca açılır, sola kaydırınca kapanır */
+.nav-open,.nav-scrim{display:none}
+@media (max-width:720px){
+  .app{padding-top:46px}
+  .nav-open{display:block;position:fixed;top:8px;left:8px;z-index:60;width:34px;height:34px;border:0;border-radius:10px;background:rgba(20,30,45,.85);color:#fff;font-size:18px;line-height:1}
+  .nav-scrim{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55)}
+  .nav-scrim[hidden]{display:none}
+  .side{position:fixed;top:0;left:0;bottom:0;z-index:80;width:min(82vw,300px);height:100%;border-radius:0 18px 18px 0;overflow-y:auto;display:flex;flex-direction:column;align-items:stretch;transform:translateX(-105%);transition:transform .22s ease;box-shadow:none}
+  .app.nav-on .side{transform:none;box-shadow:6px 0 30px rgba(0,0,0,.5)}
+  .side .side-brand{justify-self:auto}.side .side-brand strong{display:inline}
+  .side .side-user{display:flex}
+  .side .tabs{flex-direction:column;overflow:visible}
+  .side .tab{flex:none;flex-direction:row;gap:10px;font-size:14px;padding:10px 12px;text-align:left}
+  .side .tab .badge{position:static}
+}

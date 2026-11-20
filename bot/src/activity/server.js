@@ -25,7 +25,7 @@ const API = 'https://discord.com/api/v10';
 const TOKEN_TTL = 10 * 60_000;
 const MIN_INTERVAL = 120;
 const MAX_BODY = 16 * 1024;
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
 
 // Sadece public klasöründeki bilinen dosyalar verilir; adres ile dosya yoluna çıkılamaz
 function loadStatic(dir = PUBLIC_DIR, base = '') {

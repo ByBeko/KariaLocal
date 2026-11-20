@@ -284,7 +284,8 @@ export function initTables(ctx) {
         ring,
         el('div', { className: 'seat-plate' }, el('strong', { textContent: s.name }), el('span', { textContent: fmt(s.stack) })),
         ...(tag ? [el('em', { className: `seat-tag${won ? ' win' : ''}`, textContent: tag })] : []),
-        el('div', { className: 'seat-cards' }, ...s.cards.map((c, k) => card(c, `${room.id}-s${i}-${k}`))),
+        el('div', { className: 'seat-cards' }, ...s.cards.map((c, k) => card(c, `${room.id}-s${i}-${k}`)),
+          ...(s.other?.length ? [el('span', { className: 'split-gap', textContent: '|' }), ...s.other.map((c, k) => card(c, `${room.id}-s${i}-o${k}`))] : [])),
         ...(s.bet ? [el('div', { className: 'seat-bet' }, el('img', { src: 'emojis/coin.png', alt: '' }), el('span', { textContent: short(s.bet) }))] : []),
         ...(room.button === i && room.phase !== 'waiting' ? [el('b', { className: 'dealer-btn', textContent: 'D' })] : []));
       table.append(node);
@@ -445,6 +446,7 @@ export function initTables(ctx) {
       controls.append(timer,
         btn('Kart Çek', () => act(room.id, 'hit'), 'pk call'),
         btn('Dur', () => act(room.id, 'stand'), 'pk check'),
+        ...(room.controls.canSplit ? [btn('İkiye Ayır', () => act(room.id, 'split'), 'pk raise')] : []),
         ...(room.controls.canDouble ? [btn('İkiye Katla', () => act(room.id, 'double'), 'pk raise')] : []),
         ...(room.controls.canSurrender ? [btn('Teslim Ol', () => act(room.id, 'surrender'), 'pk fold')] : []));
     } else if (room.phase === 'betting' && !me.bet) {

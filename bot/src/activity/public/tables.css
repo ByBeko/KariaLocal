@@ -892,7 +892,13 @@
 /* Keçe yazısının alt satırı (oyun kuralı) ve Okey masasındaki yazı */
 .felt-mark small{font:700 11px system-ui,sans-serif;letter-spacing:2px;color:#fff;text-align:center;max-width:80%}
 .okf.okf-101{position:relative}
-.ok-felt{z-index:0}
+.ok-felt{z-index:0;display:grid;grid-template-columns:1fr 1fr;flex-direction:row;gap:0;opacity:1}
+.okf.okf-101{background:linear-gradient(180deg,#0f2a45,#0a1d33);box-shadow:inset 0 0 0 2px rgba(120,170,220,.22)}
+.ok-half{display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:2px solid rgba(120,170,220,.2);color:#9cc4ee;opacity:.16}
+.ok-half:first-child{border-left:0}
+.ok-half b{font:italic 900 clamp(46px,9vw,92px)/.9 Georgia,serif}
+.ok-half span{font:800 clamp(14px,2.6vw,26px) system-ui,sans-serif;letter-spacing:6px}
+.okf-101 .okf-mid{background:rgba(0,0,0,.28)}
 .okf-101>*:not(.felt-mark){position:relative;z-index:1}
 /* ── Müzik sadeleştirme: arama + mod seçici tek satır, Aktar küçük açılır menü, sözler sağdaki çalar kartında ── */
 .music-top{display:flex;gap:8px;align-items:stretch}
@@ -994,3 +1000,4 @@
 .pl-pick img{width:100%;height:100%;object-fit:cover}
 .pl-pick:has(img){border-style:solid}
 .pl-face{width:52px;height:52px;border-radius:12px}
+.split-gap{align-self:center;opacity:.5;color:#fff;margin:0 2px}

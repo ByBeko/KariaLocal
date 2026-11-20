@@ -419,7 +419,9 @@ export function initBoards(ctx) {
     },
   });
 
-  const okFelt = () => el('div', { className: 'felt-mark ok-felt' }, el('span', { textContent: 'OKEY 101' }), el('small', { textContent: '101 SAYI YA DA 5 ÇİFTLE AÇILIR • ELİNİ İLK BİTİREN POTU ALIR' }));
+  // Orta alan iki yarım: her birinde soluk "101 PLUS" yazısı (Okey 101 Plus masası gibi)
+  const okHalf = () => el('div', { className: 'ok-half' }, el('b', { textContent: '101' }), el('span', { textContent: 'PLUS' }));
+  const okFelt = () => el('div', { className: 'felt-mark ok-felt' }, okHalf(), okHalf());
 
   function drawOkey(room, data, root) {
     const playing = room.phase !== 'waiting' && room.players.length > 0;

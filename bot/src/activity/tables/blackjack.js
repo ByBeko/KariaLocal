@@ -5,6 +5,8 @@ import { UserError } from '../../utils/errors.js';
 import { Room, hold, release, cardJson, amountOf, isBot } from './hub.js';
 
 const SEATS = 6;
+const cardValue = (c) => (['J', 'Q', 'K'].includes(c.r) ? 10 : c.r === 'A' ? 11 : Number(c.r));
+const canSplit = (p) => p.cards.length === 2 && !p.first && !p.pending && cardValue(p.cards[0]) === cardValue(p.cards[1]);
 const BET_MS = 12_000;
 const TURN_MS = 20_000;
 const RESULT_MS = 5_500;
@@ -95,7 +97,7 @@ export class BlackjackTable extends Room {
       const j = Math.floor(Math.random() * (i + 1));
       [deck[i], deck[j]] = [deck[j], deck[i]];
     }
-    for (const p of players) Object.assign(p, { cards: [deck.pop(), deck.pop()], done: false, outcome: null, payout: 0, doubled: false, surrendered: false });
+    for (const p of players) Object.assign(p, { cards: [deck.pop(), deck.pop()], done: false, outcome: null, payout: 0, doubled: false, surrendered: false, first: null, pending: null });
     this.round = { deck, players, dealer: [deck.pop(), deck.pop()], turn: -1, deadline: 0 };
     this.phase = 'playing';
     if (isBlackjack(this.round.dealer)) return this.settle();
@@ -126,7 +128,25 @@ export class BlackjackTable extends Room {
     this.act(p, 'stand', {});
   }
 
+  /** İkiye ayrılmış elde ilk el bitince ikinci ele geçilir */
+  switchHand(p) {
+    p.first = { cards: p.cards, bet: p.bet, doubled: p.doubled };
+    p.cards = [...p.pending.cards, this.round.deck.pop()];
+    p.bet = p.pending.bet;
+    p.doubled = false;
+    p.pending = null;
+  }
+
   stand(p) {
+    if (p.pending) {
+      clearTimeout(this.timer);
+      this.switchHand(p);
+      if (this.seats[p.seat] === p && handTotal(p.cards) < 21) {
+        this.round.deadline = Date.now() + TURN_MS;
+        return this.schedule(() => this.stand(p), TURN_MS);
+      }
+      return this.stand(p);
+    }
     p.done = true;
     clearTimeout(this.timer);
     this.nextTurn();
@@ -140,12 +160,26 @@ export class BlackjackTable extends Room {
       while (handTotal(r.dealer) < 17) r.dealer.push(r.deck.pop());
     }
     const dealer = handTotal(r.dealer);
+    const rate = (cards, surrendered, firstHand) => {
+      const total = handTotal(cards);
+      const bj = isBlackjack(cards) && !firstHand;
+      return surrendered ? 'surrender' : dealerBj ? (bj ? 'push' : 'lose') : bj ? 'blackjack' : total > 21 ? 'bust' : dealer > 21 || total > dealer ? 'win' : total === dealer ? 'push' : 'lose';
+    };
     for (const p of r.players) {
-      const total = handTotal(p.cards);
-      const bj = isBlackjack(p.cards);
-      p.outcome = p.surrendered ? 'surrender' : dealerBj ? (bj ? 'push' : 'lose') : bj ? 'blackjack' : total > 21 ? 'bust' : dealer > 21 || total > dealer ? 'win' : total === dealer ? 'push' : 'lose';
-      p.payout = blackjackPayout(p.bet, p.outcome);
-      release(this.guildId, p.id, p.bet, p.payout);
+      const hands = [...(p.first ? [{ cards: p.first.cards, bet: p.first.bet }] : []), { cards: p.cards, bet: p.bet }];
+      let bet = 0;
+      let payout = 0;
+      for (const h of hands) {
+        const outcome = rate(h.cards, p.surrendered && h === hands[hands.length - 1], hands.length > 1);
+        const pay = blackjackPayout(h.bet, outcome);
+        release(this.guildId, p.id, h.bet, pay);
+        bet += h.bet;
+        payout += pay;
+        h.outcome = outcome;
+      }
+      p.outcome = hands.length > 1 ? (payout > bet ? 'win' : payout < bet ? 'lose' : 'push') : hands[0].outcome;
+      p.bet = bet;
+      p.payout = payout;
     }
     this.phase = 'result';
     this.past.unshift({ dealer: dealer > 21 ? 'Battı' : dealerBj ? 'Blackjack' : String(dealer), players: r.players.map((p) => ({ name: p.name, outcome: p.outcome, net: p.payout - p.bet })) });
@@ -171,6 +205,15 @@ export class BlackjackTable extends Room {
       p.cards.push(this.round.deck.pop());
       return this.stand(p);
     }
+    if (action === 'split') {
+      if (!canSplit(p)) throw new UserError('Bu eli ikiye ayıramazsın.');
+      hold(this.guildId, p.id, p.bet);
+      p.pending = { cards: [p.cards.pop()], bet: p.bet };
+      p.cards.push(this.round.deck.pop());
+      this.round.deadline = Date.now() + TURN_MS;
+      clearTimeout(this.timer);
+      return this.schedule(() => this.stand(p), TURN_MS);
+    }
     if (action === 'surrender') {
       if (p.cards.length !== 2) throw new UserError('Sadece ilk iki kartta teslim olabilirsin.');
       p.surrendered = true; // bahsin yarısı el sonunda döner
@@ -192,8 +235,8 @@ export class BlackjackTable extends Room {
       if (!s) return null;
       const playing = Boolean(r?.players.includes(s));
       return {
-        seat: s.seat, id: s.id, name: s.name, bet: s.bet,
-        cards: playing ? s.cards.map(cardJson) : [], total: playing ? handTotal(s.cards) : null,
+        seat: s.seat, id: s.id, name: s.name, bet: reveal ? s.bet : s.bet + (s.first?.bet ?? 0) + (s.pending?.bet ?? 0),
+        cards: playing ? s.cards.map(cardJson) : [], other: playing ? (s.first?.cards ?? s.pending?.cards ?? []).map(cardJson) : [], total: playing ? handTotal(s.cards) : null,
         outcome: reveal && playing ? s.outcome : null, payout: reveal && playing ? s.payout : null,
       };
     });
@@ -205,7 +248,7 @@ export class BlackjackTable extends Room {
       dealer: r ? (reveal ? r.dealer.map(cardJson) : [cardJson(r.dealer[0]), null]) : [],
       dealerTotal: r && reveal ? handTotal(r.dealer) : null,
       turn: r?.turn ?? -1, deadline: r?.deadline ?? 0, turnMs: TURN_MS,
-      controls: myTurn ? { canDouble: me.cards.length === 2, canSurrender: me.cards.length === 2 } : null, log: this.log, past: this.past,
+      controls: myTurn ? { canDouble: me.cards.length === 2, canSurrender: me.cards.length === 2 && !me.first && !me.pending, canSplit: canSplit(me) } : null, log: this.log, past: this.past,
     };
   }
 }
